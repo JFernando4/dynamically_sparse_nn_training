@@ -390,7 +390,7 @@ class DynamicSparseCIFARExperiment(Experiment):
                 self._inject_noise_and_prune(step=step_number + 1)
 
             epoch_end_time = time.perf_counter()
-            self._store_test_summaries(test_data, epoch_number=e, epoch_runtime=epoch_end_time - epoch_start_time)
+            self._store_test_summaries(test_dataloader, epoch_number=e, epoch_runtime=epoch_end_time - epoch_start_time)
 
             if self.permute_inputs:
                 training_data.set_transformation(Permute(np.random.permutation(np.arange(np.prod(self.image_dims)))))
