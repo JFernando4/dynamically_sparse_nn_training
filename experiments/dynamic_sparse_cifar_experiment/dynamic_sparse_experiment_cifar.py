@@ -301,8 +301,8 @@ class DynamicSparseCIFARExperiment(Experiment):
         with torch.no_grad():
             for _, sample in enumerate(test_data):
                 images = sample["image"] if self.is_conv else sample["image"].reshape(self.batch_size, self.flat_image_dims)
-                test_labels = sample["label"]
-                test_outputs = self.net.forward(images)
+                test_labels = sample["label"].to(self.device)
+                test_outputs = self.net.forward(images.to(self.device))
 
                 avg_loss += self.loss(test_outputs, test_labels)
                 avg_acc += torch.mean((test_outputs.argmax(axis=1) == test_labels.argmax(axis=1)).to(torch.float32))
@@ -361,10 +361,8 @@ class DynamicSparseCIFARExperiment(Experiment):
             epoch_start_time = time.perf_counter()
             for step_number, sample in enumerate(train_dataloader):
                 # sample observationa and target
-                image = sample["image"].reshape(self.batch_size, np.prod(self.image_dims))
-                label = sample["label"]
-                image.to(self.device)
-                label.to(self.device)
+                image = sample["image"].reshape(self.batch_size, np.prod(self.image_dims)).to(self.device)
+                label = sample["label"].to(self.device)
 
                 # reset gradients
                 for param in self.net.parameters(): param.grad = None  # apparently faster than optim.zero_grad()
