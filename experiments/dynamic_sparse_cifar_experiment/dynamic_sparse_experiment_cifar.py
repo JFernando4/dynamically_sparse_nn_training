@@ -285,6 +285,7 @@ class DynamicSparseCIFARExperiment(Experiment):
             self.results_dict["test_evaluation_runtime"][epoch_number] += torch.tensor(evaluation_run_time, dtype=torch.float32)
             self.results_dict["test_loss_per_epoch"][epoch_number] += test_loss
             self.results_dict["test_accuracy_per_epoch"][epoch_number] += test_accuracy
+            self._print("\t\tTest accuracy: {0:.4f}".format(test_accuracy))
             self._print("\t\tTest evaluation run time in seconds: {0:.4f}".format(evaluation_run_time))
         self._print("\t\tEpoch run time in seconds: {0:.4f}".format(epoch_runtime))
 
