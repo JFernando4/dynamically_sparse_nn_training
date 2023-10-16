@@ -73,7 +73,11 @@ class DynamicSparseCIFARExperiment(Experiment):
         self.batch_size = 100
         self.num_classes = 10
         self.image_dims = (32, 32 * 3)
+        self.flat_image_dims = np.prod(self.image_dims)
         self.num_images_per_epoch = 50000
+        self.num_test_samples = 10000
+        self.num_test_batches = self.num_test_samples / self.batch_size
+        self.is_conv = False
 
         """ Network set up """
         # initialize network
@@ -284,21 +288,25 @@ class DynamicSparseCIFARExperiment(Experiment):
             self._print("\t\tTest evaluation run time in seconds: {0:.4f}".format(evaluation_run_time))
         self._print("\t\tEpoch run time in seconds: {0:.4f}".format(epoch_runtime))
 
-    def evaluate_network(self, test_data: CifarDataSet):
+    def evaluate_network(self, test_data: DataLoader):
         """
         Evaluates the network on the test data
-        :param test_data: a pytorch DataSet object
+        :param test_data: a pytorch DataLoader object
         :return: (torch.Tensor) test loss, (torch.Tensor) test accuracy
         """
+
+        avg_loss = 0.0
+        avg_acc = 0.0
         with torch.no_grad():
-            test_outputs = self.net.forward(test_data[:]["image"].reshape(-1, np.prod(self.image_dims)))
-            test_labels = test_data[:]["label"]
+            for _, sample in enumerate(test_data):
+                images = sample["image"] if self.is_conv else sample["image"].reshape(self.batch_size, self.flat_image_dims)
+                test_labels = sample["label"]
+                test_outputs = self.net.forward(images)
 
-            loss = self.loss(test_outputs, test_labels)
-            acc = torch.mean((test_outputs.argmax(axis=1) == test_labels.argmax(axis=1)).to(torch.float32))
+                avg_loss += self.loss(test_outputs, test_labels)
+                avg_acc += torch.mean((test_outputs.argmax(axis=1) == test_labels.argmax(axis=1)).to(torch.float32))
 
-        self._print("\t\tTest accuracy: {0:.4f}".format(acc))
-        return loss, acc
+        return avg_loss / self.num_test_batches, avg_acc / self.num_test_batches
 
     def _store_pruning_summaries(self, num_different: list):
         """
@@ -313,10 +321,11 @@ class DynamicSparseCIFARExperiment(Experiment):
     def run(self):
         # load data
         training_data, training_dataloader = self.get_data(train=True, return_data_loader=True)
-        test_data = self.get_data(train=False, return_data_loader=False)
+        test_data, test_dataloader = self.get_data(train=False, return_data_loader=True)
 
         # train network
-        self.train(mnist_data_loader=training_dataloader, test_data=test_data, training_data=training_data)
+        self.train(train_dataloader=training_dataloader, test_dataloader=test_dataloader,
+                   test_data=test_data, training_data=training_data)
 
         self._plot_results()
         # summaries stored in memory automatically if using mlproj_manager
@@ -342,13 +351,14 @@ class DynamicSparseCIFARExperiment(Experiment):
 
         return mnist_data
 
-    def train(self, mnist_data_loader: DataLoader, test_data: CifarDataSet, training_data: CifarDataSet):
+    def train(self, train_dataloader: DataLoader, test_dataloader: DataLoader, test_data: CifarDataSet,
+              training_data: CifarDataSet):
 
         for e in range(self.num_epochs):
             self._print("\tEpoch number: {0}".format(e + 1))
-            self._transform_data(training_data)
+            self._transform_data(training_data, test_data)
             epoch_start_time = time.perf_counter()
-            for step_number, sample in enumerate(mnist_data_loader):
+            for step_number, sample in enumerate(train_dataloader):
                 # sample observationa and target
                 image = sample["image"].reshape(self.batch_size, np.prod(self.image_dims))
                 label = sample["label"]
@@ -385,55 +395,57 @@ class DynamicSparseCIFARExperiment(Experiment):
             if self.permute_inputs:
                 training_data.set_transformation(Permute(np.random.permutation(np.arange(np.prod(self.image_dims)))))
 
+    def _transform_data(self, training_data: CifarDataSet, test_data: CifarDataSet):
+        """
+        Applies a random transformation to the training data
+        :param training_data: CIFAR-10 train data
+        :param test_data: CIFAR-10 test data
+        :return: None, but transforms the data in the training data set
+        """
+        transformations = []
+
+        if self.num_transformations % 2 == 0:
+            self.current_rotation = round(self.current_rotation  + self.rotation_increase, 1)
+        if self.current_rotation > 0:
+            degrees = (self.current_rotation - 0.1, self.current_rotation)
+            transformations.append(RandomRotator(degrees=degrees))
+
+        if self.num_transformations % 2 == 0:  # multiple of 4
+            horizontal_prob = 0.0
+        else:
+            horizontal_prob = 1.0
+        if horizontal_prob > 0.0:
+            transformations.append(RandomHorizontalFlip(p=horizontal_prob))
+
+        if self.num_transformations % 100 == 0:
+            self.scale += self.scale_increase
+        if self.scale > 0.0:
+            transformations.append(RandomErasing(scale=(self.scale, self.scale + 0.01), ratio=(1, 1), value=(0, 0, 0),
+                                                 swap_colors=True))
+        if len(transformations) > 0:
+            new_transformation = transforms.Compose(transformations)
+            training_data.set_transformation(new_transformation)
+            test_data.set_transformation(new_transformation)
+        print(transformations)
+        self.num_transformations += 1
+
+        if self.num_transformations % 100 == 0:
+            self.current_rotation = - self.rotation_increase
+
     # def _transform_data(self, training_data: CifarDataSet):
     #     """
     #     Applies a random transformation to the training data
     #     :param training_data: an instance of CifarDataSet from mlproj-manager
     #     :return: None, but transforms the data in the training data set
     #     """
-    #     transformations = []
     #
-    #     if self.num_transformations % 2 == 0:
-    #         self.current_rotation = round(self.current_rotation  + self.rotation_increase, 1)
-    #     if self.current_rotation > 0:
-    #         degrees = (self.current_rotation - 0.1, self.current_rotation)
-    #         transformations.append(RandomRotator(degrees=degrees))
-    #
-    #     if self.num_transformations % 2 == 0:  # multiple of 4
-    #         horizontal_prob = 0.0
-    #     else:
-    #         horizontal_prob = 1.0
-    #     if horizontal_prob > 0.0:
-    #         transformations.append(RandomHorizontalFlip(p=horizontal_prob))
-    #
-    #     if self.num_transformations % 100 == 0:
-    #         self.scale += self.scale_increase
-    #     if self.scale > 0.0:
-    #         transformations.append(RandomErasing(scale=(self.scale, self.scale + 0.01), ratio=(1, 1), value=(0, 0, 0),
-    #                                              swap_colors=True))
-    #     if len(transformations) > 0:
-    #         new_transformation = transforms.Compose(transformations)
-    #         training_data.set_transformation(new_transformation)
-    #     print(transformations)
-    #     self.num_transformations += 1
-    #
-    #     if self.num_transformations % 100 == 0:
-    #         self.current_rotation = - self.rotation_increase
-
-    def _transform_data(self, training_data: CifarDataSet):
-        """
-        Applies a random transformation to the training data
-        :param training_data: an instance of CifarDataSet from mlproj-manager
-        :return: None, but transforms the data in the training data set
-        """
-
-        new_transformation = transforms.Compose(
-            [RandomVerticalFlip(p=0.5), RandomHorizontalFlip(p=0.5),
-             RandomGaussianNoise(mean=0.0, stddev=0.05),
-             RandomRotator(degrees=(0, 10))]
-        )
-        training_data.set_transformation(new_transformation)
-        return
+    #     new_transformation = transforms.Compose(
+    #         [RandomVerticalFlip(p=0.5), RandomHorizontalFlip(p=0.5),
+    #          RandomGaussianNoise(mean=0.0, stddev=0.05),
+    #          RandomRotator(degrees=(0, 10))]
+    #     )
+    #     training_data.set_transformation(new_transformation)
+    #     return
     #
     #     if self.num_transformations % 4 == 0:   # multiple of 4
     #         vertical_prob, horizontal_prob = (0.0, 0.0)
