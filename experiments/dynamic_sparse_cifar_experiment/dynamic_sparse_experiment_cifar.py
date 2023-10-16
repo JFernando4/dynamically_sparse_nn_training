@@ -347,7 +347,7 @@ class DynamicSparseCIFARExperiment(Experiment):
                                   label_preprocessing="one-hot",
                                   use_torch=True)
         if return_data_loader:
-            dataloader = DataLoader(mnist_data, batch_size=self.batch_size, shuffle=True)
+            dataloader = DataLoader(mnist_data, batch_size=self.batch_size, shuffle=True, num_workers=2)
             return mnist_data, dataloader
 
         return mnist_data
