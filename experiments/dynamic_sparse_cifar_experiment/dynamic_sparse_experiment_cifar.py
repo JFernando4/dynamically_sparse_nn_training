@@ -342,7 +342,7 @@ class DynamicSparseCIFARExperiment(Experiment):
         mnist_data = CifarDataSet(root_dir=self.data_path,
                                   train=train,
                                   cifar_type=10,
-                                  device=self.device,
+                                  device=None,
                                   image_normalization="minus-one-to-one",
                                   label_preprocessing="one-hot",
                                   use_torch=True)
@@ -363,6 +363,8 @@ class DynamicSparseCIFARExperiment(Experiment):
                 # sample observationa and target
                 image = sample["image"].reshape(self.batch_size, np.prod(self.image_dims))
                 label = sample["label"]
+                image.to(self.device)
+                label.to(self.device)
 
                 # reset gradients
                 for param in self.net.parameters(): param.grad = None  # apparently faster than optim.zero_grad()
