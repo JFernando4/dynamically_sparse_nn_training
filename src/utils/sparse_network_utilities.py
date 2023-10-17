@@ -27,10 +27,10 @@ def get_dense_weights_from_sparse_module(mod: SparseLinear, mask: torch.Tensor):
 
     mask_indices = mod.weight.indices()
     # initialize weights
-    new_weights = torch.zeros(mod.weight.size(), dtype=torch.float32)
+    new_weights = torch.zeros(mod.weight.size(), dtype=torch.float32, device=mod.weight.device)
     torch.nn.init.xavier_normal_(new_weights)
     # mask out the weights corresponding to the weights of the SparseLinear layer
-    negative_mask = 1.0 - mask
+    negative_mask = torch.ones_like(mask) - mask
     new_weights *= negative_mask
     # insert weights of the SparseLinear layer into the new weight matrix
     new_weights[mask_indices[0], mask_indices[1]] += mod.weight.values()
