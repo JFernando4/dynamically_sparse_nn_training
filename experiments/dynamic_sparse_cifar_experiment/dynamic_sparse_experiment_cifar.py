@@ -104,8 +104,8 @@ class DynamicSparseCIFARExperiment(Experiment):
 
         """ For non-stationary data transformations """
         self.num_transformations = 0
-        self.scale_increase = 0.05 #0.05
-        self.rotation_increase = 7.2 #3.5
+        self.scale_increase = 0.03 #0.05
+        self.rotation_increase = 14.4 # 7.2 #3.5
         self.transformations = self._get_transformations()
 
     # -------------------- Methods for initializing the experiment --------------------#
@@ -270,20 +270,20 @@ class DynamicSparseCIFARExperiment(Experiment):
             if (current_transformation_number % 2) == 1:
                 temp_transformations.append(RandomHorizontalFlip(p=1.0))
 
-            if (current_transformation_number % 100) == 0:
+            if (current_transformation_number % 50) == 0:
                 grayscale_image = not grayscale_image
             if grayscale_image:
                 temp_transformations.append(GrayScale(num_output_channels=3, swap_colors=True))
 
             # random eraser
-            if (current_transformation_number % 200) == 0:
+            if (current_transformation_number % 100) == 0:
                 current_scale = round(current_scale + self.scale_increase, 3)
             if current_scale > 0.0:
                 temp_transformations.append(RandomErasing(scale=(current_scale, round(current_scale + 0.01, 3)),
                                                           ratio=(1,2), value=(0,0,0), swap_colors=True))
 
             # random rotation
-            if (current_transformation_number % 100) == 0:
+            if (current_transformation_number % 50) == 0:
                 current_rotation = - self.rotation_increase
             if (current_transformation_number % 2) == 0:
                 current_rotation = round(current_rotation + self.rotation_increase, 1)
@@ -296,8 +296,8 @@ class DynamicSparseCIFARExperiment(Experiment):
         if self.reverse_transformation_order:
             transformations.reverse()
 
+        # for debugging:
         # for current_transformation_number, temp_transformations in enumerate(transformations):
-        #     # # for debugging:
         #     print("Transformation Number: {0}".format(current_transformation_number))
         #     for trans in temp_transformations:
         #         if isinstance(trans, RandomHorizontalFlip):
@@ -652,10 +652,10 @@ def main():
     file_path = os.path.dirname(os.path.abspath(__file__))
     experiment_parameters = {
         "stepsize": 0.01,   # 0.01 for mnist, 0.005 for cifar 10
-        "l1_factor": 0.0000001,    # 0.0000001 for cifar 10
+        "l1_factor": 0.0,    # 0.0000001 for cifar 10
         "l2_factor": 0.0,
         "topology_update_frequency": 20,
-        "sparsity_level": 0.99,
+        "sparsity_level": 0.0,
         "global_pruning": False,
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 1000,
