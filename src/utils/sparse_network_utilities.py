@@ -11,7 +11,8 @@ def get_mask_from_sparse_module(mod: SparseLinear):
 
     mask_indices = mod.weight.indices()
     current_mask = torch.zeros(mod.weight.size(), dtype=torch.float32)
-    current_mask[[mask_indices[0], mask_indices[1]]] += 1.0
+    ones_tensor = torch.ones_like(current_mask[[mask_indices[0], mask_indices[1]]])
+    current_mask[[mask_indices[0], mask_indices[1]]] += ones_tensor
     return current_mask
 
 
