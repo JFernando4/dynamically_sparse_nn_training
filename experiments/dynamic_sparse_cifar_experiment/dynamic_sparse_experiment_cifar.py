@@ -59,6 +59,8 @@ class DynamicSparseCIFARExperiment(Experiment):
                                                choices=["relu", "leaky_relu", "sigmoid", "tanh"])
         self.permute_inputs = access_dict(exp_params, "permute_inputs", False, val_type=bool)
         self.sparsify_last_layer = access_dict(exp_params, "sparsify_last_layer", default=False, val_type=bool)
+        self.reverse_transformation_order = access_dict(exp_params, "reverse_transformation_order",
+                                                        default=False, val_type=bool)
         self.plot = access_dict(exp_params, key="plot", default=False)
 
         assert 0.0 <= self.sparsity_level < 1.0
@@ -102,15 +104,9 @@ class DynamicSparseCIFARExperiment(Experiment):
 
         """ For non-stationary data transformations """
         self.num_transformations = 0
-        self.gaussian_noise_stddev_increase = 0.01
-        self.gaussian_noise_current_stddev = - self.gaussian_noise_stddev_increase
-        self.p_horizontal_flip = 0.0
-        self.p_vertical_flip = 0.0
-        self.scale_increase = 0.05
-        self.scale = - self.scale_increase
-        self.ratio = (1.0, 1.0)
+        self.scale_increase = 0.03 #0.05
         self.rotation_increase = 7.2 #3.5
-        self.current_rotation = - self.rotation_increase
+        self.transformations = self._get_transformations()
 
     # -------------------- Methods for initializing the experiment --------------------#
     def _initialize_network_architecture(self):
@@ -254,6 +250,58 @@ class DynamicSparseCIFARExperiment(Experiment):
             num_layers = self.num_layers if not self.sparsify_last_layer else self.num_layers + 1
             self.results_dict["num_units_pruned"] = torch.zeros((num_layers, total_topology_updates),
                                                                 dtype=torch.float32)
+
+    def _get_transformations(self):
+        """
+        Initializes all the non-stationary transformations applied to the data on each epoch
+        :return: list of transformations
+        """
+        transformations = []
+
+        current_scale = - self.scale_increase
+        current_rotation = - self.rotation_increase
+
+        for current_transformation_number in range(self.num_epochs):
+
+            temp_transformations = []
+
+            # horizontal flip
+            if (current_transformation_number % 2) == 1:
+                temp_transformations.append(RandomHorizontalFlip(p=1.0))
+
+            # random eraser
+            if (current_transformation_number % 100) == 0:
+                current_scale = round(current_scale + self.scale_increase, 3)
+            if current_scale > 0.0:
+                temp_transformations.append(RandomErasing(scale=(current_scale, round(current_scale + 0.01, 3)),
+                                                          ratio=(1,2), value=(0,0,0), swap_colors=True))
+
+            # random rotation
+            if (current_transformation_number % 100) == 0:
+                current_rotation = - self.rotation_increase
+            if (current_transformation_number % 2) == 0:
+                current_rotation = round(current_rotation + self.rotation_increase, 1)
+            if current_rotation > 0.0:
+                degrees = (round(current_rotation - 0.1,1), current_rotation)
+                temp_transformations.append(RandomRotator(degrees))
+
+            transformations.append(temp_transformations)
+
+        if self.reverse_transformation_order:
+            transformations.reverse()
+
+        # for current_transformation_number, temp_transformations in enumerate(transformations):
+        #     # # for debugging:
+        #     print("Transformation Number: {0}".format(current_transformation_number))
+        #     for trans in temp_transformations:
+        #         if isinstance(trans, RandomHorizontalFlip):
+        #             print("\tHorizontal Flip")
+        #         if isinstance(trans, RandomErasing):
+        #             print("\tErase: {0}\t{1}".format(trans.eraser.scale, trans.eraser.ratio))
+        #         if isinstance(trans, RandomRotator):
+        #             print("\tRotate: {0}".format(trans.rotator.degrees))
+
+        return transformations
 
     # ----------------------------- For storing summaries ----------------------------- #
     def _store_training_summaries(self):
@@ -403,35 +451,22 @@ class DynamicSparseCIFARExperiment(Experiment):
         :param test_data: CIFAR-10 test data
         :return: None, but transforms the data in the training data set
         """
-        transformations = []
 
-        if self.num_transformations % 2 == 0:
-            self.current_rotation = round(self.current_rotation  + self.rotation_increase, 1)
-        if self.current_rotation > 0:
-            degrees = (self.current_rotation - 0.1, self.current_rotation)
-            transformations.append(RandomRotator(degrees=degrees))
-
-        if self.num_transformations % 2 == 0:  # multiple of 4
-            horizontal_prob = 0.0
-        else:
-            horizontal_prob = 1.0
-        if horizontal_prob > 0.0:
-            transformations.append(RandomHorizontalFlip(p=horizontal_prob))
-
-        if self.num_transformations % 100 == 0:
-            self.scale += self.scale_increase
-        if self.scale > 0.0:
-            transformations.append(RandomErasing(scale=(self.scale, self.scale + 0.01), ratio=(1, 1), value=(0, 0, 0),
-                                                 swap_colors=True))
+        transformations = self.transformations[self.num_transformations]
         if len(transformations) > 0:
             new_transformation = transforms.Compose(transformations)
             training_data.set_transformation(new_transformation)
             test_data.set_transformation(new_transformation)
-        print(transformations)
-        self.num_transformations += 1
 
-        if self.num_transformations % 100 == 0:
-            self.current_rotation = - self.rotation_increase
+        for trans in transformations:
+            if isinstance(trans, RandomHorizontalFlip):
+                print("\tHorizontal Flip")
+            if isinstance(trans, RandomErasing):
+                print("\tErase: {0}\t{1}".format(trans.eraser.scale, trans.eraser.ratio))
+            if isinstance(trans, RandomRotator):
+                print("\tRotate: {0}".format(trans.rotator.degrees))
+
+        self.num_transformations += 1
 
     # def _transform_data(self, training_data: CifarDataSet):
     #     """
@@ -606,24 +641,25 @@ def main():
     file_path = os.path.dirname(os.path.abspath(__file__))
     experiment_parameters = {
         "stepsize": 0.01,   # 0.01 for mnist, 0.005 for cifar 10
-        "l1_factor": 0.0000001,    # 0.0000001 for cifar 10
+        "l1_factor": 0.0,    # 0.0000001 for cifar 10
         "l2_factor": 0.0,
         "topology_update_frequency": 20,
         "sparsity_level": 0.0,
         "global_pruning": False,
         "data_path": os.path.join(file_path, "data"),
-        "num_epochs": 200,
+        "num_epochs": 1000,
         "num_layers": 3,
         "num_hidden": 4000,
         "activation_function": "relu",
         "permute_inputs": False,
         "sparsify_last_layer": False,
+        "reverse_transformation_order": True,
         "plot": True
     }
 
     print(experiment_parameters)
     relevant_parameters = ["topology_update_frequency", "sparsity_level", "num_epochs", "num_layers", "num_hidden",
-                           "sparsify_last_layer"]
+                           "sparsify_last_layer", "reverse_transformation_order"]
     results_dir_name = ""
     for relevant_param in relevant_parameters:
         results_dir_name += "_" + relevant_param + "-" + str(experiment_parameters[relevant_param])
