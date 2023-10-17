@@ -395,7 +395,8 @@ class DynamicSparseCIFARExperiment(Experiment):
                                   label_preprocessing="one-hot",
                                   use_torch=True)
         if return_data_loader:
-            dataloader = DataLoader(mnist_data, batch_size=self.batch_size, shuffle=True, num_workers=6)
+            num_workers = 1 if self.device == "cpu" else 6
+            dataloader = DataLoader(mnist_data, batch_size=self.batch_size, shuffle=True, num_workers=num_workers)
             return mnist_data, dataloader
 
         return mnist_data
@@ -641,10 +642,10 @@ def main():
     file_path = os.path.dirname(os.path.abspath(__file__))
     experiment_parameters = {
         "stepsize": 0.01,   # 0.01 for mnist, 0.005 for cifar 10
-        "l1_factor": 0.0,    # 0.0000001 for cifar 10
+        "l1_factor": 0.0000001,    # 0.0000001 for cifar 10
         "l2_factor": 0.0,
         "topology_update_frequency": 20,
-        "sparsity_level": 0.0,
+        "sparsity_level": 0.99,
         "global_pruning": False,
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 1000,
@@ -654,7 +655,7 @@ def main():
         "permute_inputs": False,
         "sparsify_last_layer": False,
         "reverse_transformation_order": True,
-        "plot": True
+        "plot": False
     }
 
     print(experiment_parameters)
