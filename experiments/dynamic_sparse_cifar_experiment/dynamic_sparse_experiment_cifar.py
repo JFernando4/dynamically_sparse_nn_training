@@ -403,7 +403,7 @@ class DynamicSparseCIFARExperiment(Experiment):
                                   label_preprocessing="one-hot",
                                   use_torch=True)
         if return_data_loader:
-            num_workers = 1 if self.device.type == "cpu" else os.cpu_count()
+            num_workers = 1 if self.device.type == "cpu" else 12
             dataloader = DataLoader(mnist_data, batch_size=self.batch_size, shuffle=True, num_workers=num_workers)
             return mnist_data, dataloader
 
