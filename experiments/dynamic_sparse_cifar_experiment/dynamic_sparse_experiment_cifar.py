@@ -17,8 +17,8 @@ from mlproj_manager.experiments import Experiment
 from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict, Permute
 from mlproj_manager.util.neural_networks import get_optimizer, xavier_init_weights, get_activation_module
 from mlproj_manager.util.neural_networks.weights_initialization_and_manipulation import apply_regularization_to_module, apply_regularization_to_tensor
-from mlproj_manager.util.data_preprocessing_and_transformations.image_transformations import RandomVerticalFlip, \
-    RandomHorizontalFlip, RandomRotator, RandomGaussianNoise, RandomErasing
+from mlproj_manager.util.data_preprocessing_and_transformations.image_transformations import GrayScale, \
+    RandomHorizontalFlip, RandomRotator, RandomErasing
 
 # source files
 from src.utils import get_mask_from_sparse_module, get_dense_weights_from_sparse_module, \
@@ -104,7 +104,7 @@ class DynamicSparseCIFARExperiment(Experiment):
 
         """ For non-stationary data transformations """
         self.num_transformations = 0
-        self.scale_increase = 0.03 #0.05
+        self.scale_increase = 0.05 #0.05
         self.rotation_increase = 7.2 #3.5
         self.transformations = self._get_transformations()
 
@@ -260,6 +260,7 @@ class DynamicSparseCIFARExperiment(Experiment):
 
         current_scale = - self.scale_increase
         current_rotation = - self.rotation_increase
+        grayscale_image = True
 
         for current_transformation_number in range(self.num_epochs):
 
@@ -269,8 +270,13 @@ class DynamicSparseCIFARExperiment(Experiment):
             if (current_transformation_number % 2) == 1:
                 temp_transformations.append(RandomHorizontalFlip(p=1.0))
 
-            # random eraser
             if (current_transformation_number % 100) == 0:
+                grayscale_image = not grayscale_image
+            if grayscale_image:
+                temp_transformations.append(GrayScale(num_output_channels=3, swap_colors=True))
+
+            # random eraser
+            if (current_transformation_number % 200) == 0:
                 current_scale = round(current_scale + self.scale_increase, 3)
             if current_scale > 0.0:
                 temp_transformations.append(RandomErasing(scale=(current_scale, round(current_scale + 0.01, 3)),
@@ -296,8 +302,10 @@ class DynamicSparseCIFARExperiment(Experiment):
         #     for trans in temp_transformations:
         #         if isinstance(trans, RandomHorizontalFlip):
         #             print("\tHorizontal Flip")
+        #         if isinstance(trans, GrayScale):
+        #             print("\tGray Scale Image")
         #         if isinstance(trans, RandomErasing):
-        #             print("\tErase: {0}\t{1}".format(trans.eraser.scale, trans.eraser.ratio))
+        #             print("\tErase: {0}".format(trans.eraser.scale))
         #         if isinstance(trans, RandomRotator):
         #             print("\tRotate: {0}".format(trans.rotator.degrees))
 
@@ -462,6 +470,8 @@ class DynamicSparseCIFARExperiment(Experiment):
         for trans in transformations:
             if isinstance(trans, RandomHorizontalFlip):
                 print("\tHorizontal Flip")
+            if isinstance(trans, GrayScale):
+                print("\tGray Scale Image")
             if isinstance(trans, RandomErasing):
                 print("\tErase: {0}\t{1}".format(trans.eraser.scale, trans.eraser.ratio))
             if isinstance(trans, RandomRotator):
