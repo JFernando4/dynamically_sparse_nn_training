@@ -258,54 +258,54 @@ class DynamicSparseCIFARExperiment(Experiment):
         """
         transformations = []
 
-        # current_scale = - self.scale_increase
-        # current_rotation = - self.rotation_increase
-        # grayscale_image = True
-        #
-        # for current_transformation_number in range(self.num_epochs):
-        #
-        #     temp_transformations = []
-        #
-        #     # horizontal flip
-        #     if (current_transformation_number % 2) == 1:
-        #         temp_transformations.append(RandomHorizontalFlip(p=1.0))
-        #
-        #     if (current_transformation_number % 50) == 0:
-        #         grayscale_image = not grayscale_image
-        #     if grayscale_image:
-        #         temp_transformations.append(GrayScale(num_output_channels=3, swap_colors=True))
-        #
-        #     # random eraser
-        #     if (current_transformation_number % 100) == 0:
-        #         current_scale = round(current_scale + self.scale_increase, 3)
-        #     if current_scale > 0.0:
-        #         temp_transformations.append(RandomErasing(scale=(current_scale, round(current_scale + 0.01, 3)),
-        #                                                   ratio=(1,2), value=(0,0,0), swap_colors=True))
-        #
-        #     # random rotation
-        #     if (current_transformation_number % 50) == 0:
-        #         current_rotation = - self.rotation_increase
-        #     if (current_transformation_number % 2) == 0:
-        #         current_rotation = round(current_rotation + self.rotation_increase, 1)
-        #     if current_rotation > 0.0:
-        #         degrees = (round(current_rotation - 0.1,1), current_rotation)
-        #         temp_transformations.append(RandomRotator(degrees))
-        #
-        #     transformations.append(temp_transformations)
-
-        ninety_degree_rotation = False
+        current_scale = - self.scale_increase
+        current_rotation = - self.rotation_increase
+        grayscale_image = True
 
         for current_transformation_number in range(self.num_epochs):
 
             temp_transformations = []
 
             # horizontal flip
+            if (current_transformation_number % 2) == 1:
+                temp_transformations.append(RandomHorizontalFlip(p=1.0))
+
             if (current_transformation_number % 50) == 0:
-                ninety_degree_rotation = not ninety_degree_rotation
-            if ninety_degree_rotation:
-                temp_transformations.append(RandomRotator(degrees=(0.8999, 0.9001)))
+                grayscale_image = not grayscale_image
+            if grayscale_image:
+                temp_transformations.append(GrayScale(num_output_channels=3, swap_colors=True))
+
+            # random eraser
+            if (current_transformation_number % 100) == 0:
+                current_scale = round(current_scale + self.scale_increase, 3)
+            if current_scale > 0.0:
+                temp_transformations.append(RandomErasing(scale=(current_scale, round(current_scale + 0.01, 3)),
+                                                          ratio=(1,2), value=(0,0,0), swap_colors=True))
+
+            # random rotation
+            if (current_transformation_number % 50) == 0:
+                current_rotation = - self.rotation_increase
+            if (current_transformation_number % 2) == 0:
+                current_rotation = round(current_rotation + self.rotation_increase, 1)
+            if current_rotation > 0.0:
+                degrees = (round(current_rotation - 0.1,1), current_rotation)
+                temp_transformations.append(RandomRotator(degrees))
 
             transformations.append(temp_transformations)
+
+        # ninety_degree_rotation = False
+        #
+        # for current_transformation_number in range(self.num_epochs):
+        #
+        #     temp_transformations = []
+        #
+        #     # horizontal flip
+        #     if (current_transformation_number % 50) == 0:
+        #         ninety_degree_rotation = not ninety_degree_rotation
+        #     if ninety_degree_rotation:
+        #         temp_transformations.append(RandomRotator(degrees=(0.8999, 0.9001)))
+        #
+        #     transformations.append(temp_transformations)
 
         if self.reverse_transformation_order:
             transformations.reverse()
@@ -674,7 +674,7 @@ def main():
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 1000,
         "num_layers": 3,
-        "num_hidden": 4000,
+        "num_hidden": 500,
         "activation_function": "relu",
         "permute_inputs": False,
         "sparsify_last_layer": False,
