@@ -258,7 +258,8 @@ class DynamicSparseCIFARExperiment(Experiment):
         """
         transformations = []
 
-        current_scale = - self.scale_increase
+        total_scale = 0.0
+        current_scale = 0.0
         current_rotation = - self.rotation_increase
         grayscale_image = True
 
@@ -276,10 +277,10 @@ class DynamicSparseCIFARExperiment(Experiment):
                 temp_transformations.append(GrayScale(num_output_channels=3, swap_colors=True))
 
             # random eraser
-            if (current_transformation_number % 500) == 0:
-                current_scale = - self.scale_increase
+            if (current_transformation_number % 200) == 0:
+                total_scale = round(total_scale + self.scale_increase, 2)
             if (current_transformation_number % 100) == 0:
-                current_scale = round(current_scale + self.scale_increase, 3)
+                current_scale = total_scale if current_scale == 0.0 else 0.0
             if current_scale > 0.0:
                 temp_transformations.append(RandomErasing(scale=(current_scale, round(current_scale + 0.01, 3)),
                                                           ratio=(1,2), value=(0,0,0), swap_colors=True))
@@ -294,7 +295,7 @@ class DynamicSparseCIFARExperiment(Experiment):
                 temp_transformations.append(RandomRotator(degrees))
 
             transformations.append(temp_transformations)
-
+        transformations.append([])
         # ninety_degree_rotation = False
         #
         # for current_transformation_number in range(self.num_epochs):
@@ -613,17 +614,17 @@ def main():
         "stepsize": 0.01,   # 0.01 for mnist, 0.005 for cifar 10
         "l1_factor": 0.0,    # 0.0000001 for cifar 10
         "l2_factor": 0.0,
-        "topology_update_frequency": 20,
+        "topology_update_frequency": 200,
         "sparsity_level": 0.0,
         "global_pruning": False,
         "data_path": os.path.join(file_path, "data"),
-        "num_epochs": 1000,
+        "num_epochs": 1001,
         "num_layers": 3,
         "num_hidden": 100,
         "activation_function": "relu",
         "permute_inputs": False,
         "sparsify_last_layer": False,
-        "reverse_transformation_order": True,
+        "reverse_transformation_order": False,
         "plot": False
     }
 
@@ -639,8 +640,8 @@ def main():
                                        results_dir=os.path.join(file_path, "results", results_dir_name),
                                        run_index=0,
                                        verbose=True)
-    # exp.run()
-    # exp.store_results()
+    exp.run()
+    exp.store_results()
     final_time = time.perf_counter()
     print("The running time in minutes is: {0:.2f}".format((final_time - initial_time) / 60))
 
