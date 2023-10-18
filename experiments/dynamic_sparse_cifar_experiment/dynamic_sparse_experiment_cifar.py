@@ -495,63 +495,6 @@ class DynamicSparseCIFARExperiment(Experiment):
 
         self.num_transformations += 1
 
-    # def _transform_data(self, training_data: CifarDataSet):
-    #     """
-    #     Applies a random transformation to the training data
-    #     :param training_data: an instance of CifarDataSet from mlproj-manager
-    #     :return: None, but transforms the data in the training data set
-    #     """
-    #
-    #     new_transformation = transforms.Compose(
-    #         [RandomVerticalFlip(p=0.5), RandomHorizontalFlip(p=0.5),
-    #          RandomGaussianNoise(mean=0.0, stddev=0.05),
-    #          RandomRotator(degrees=(0, 10))]
-    #     )
-    #     training_data.set_transformation(new_transformation)
-    #     return
-    #
-    #     if self.num_transformations % 4 == 0:   # multiple of 4
-    #         vertical_prob, horizontal_prob = (0.0, 0.0)
-    #     elif self.num_transformations % 4 == 1:
-    #         vertical_prob, horizontal_prob = (0.0, 1.0)
-    #     elif self.num_transformations % 4 == 2:
-    #         vertical_prob, horizontal_prob = (1.0, 0.0)
-    #     else:
-    #         vertical_prob, horizontal_prob = (1.0, 1.0)
-    #
-    #     transformations = []
-    #     if horizontal_prob > 0.0:
-    #         transformations.append(RandomHorizontalFlip(p=horizontal_prob))
-    #     if vertical_prob > 0.0:
-    #         transformations.append(RandomVerticalFlip(p=vertical_prob))
-    #
-    #     if self.num_transformations % 4 == 0:
-    #         self.current_rotation += self.rotation_increase
-    #         if self.current_rotation > 87.5:
-    #             self.current_rotation = - self.rotation_increase
-    #     if self.current_rotation > 0:
-    #         degrees = (self.current_rotation - self.rotation_increase, self.current_rotation)
-    #         transformations.append(RandomRotator(degrees=degrees))
-    #
-    #     # if self.num_transformations % 4 == 0:
-    #     #     self.gaussian_noise_current_stddev += self.gaussian_noise_stddev_increase
-    #     #     if self.gaussian_noise_current_stddev > 0.25:
-    #     #         self.gaussian_noise_current_stddev = - self.gaussian_noise_stddev_increase
-    #     # if self.gaussian_noise_current_stddev > 0:
-    #     #     transformations.append(RandomGaussianNoise(mean=0, stddev=self.gaussian_noise_current_stddev))
-    #
-    #     if self.num_transformations % 100 == 0:
-    #         self.scale += self.scale_increase
-    #     if self.scale > 0.0:
-    #         transformations.append(RandomErasing(scale=(self.scale, self.scale + 0.01), ratio=(1, 1), value=(0, 0, 0),
-    #                                              swap_colors=True))
-    #
-    #     if len(transformations) > 0:
-    #         new_transformation = transforms.Compose(transformations)
-    #         training_data.set_transformation(new_transformation)
-    #     print(transformations)
-    #     self.num_transformations += 1
-
     def _apply_regularization(self):
         """
         Applies regularization to each layer of the network
@@ -676,7 +619,7 @@ def main():
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 1000,
         "num_layers": 3,
-        "num_hidden": 200,
+        "num_hidden": 100,
         "activation_function": "relu",
         "permute_inputs": False,
         "sparsify_last_layer": False,
@@ -696,8 +639,8 @@ def main():
                                        results_dir=os.path.join(file_path, "results", results_dir_name),
                                        run_index=0,
                                        verbose=True)
-    exp.run()
-    exp.store_results()
+    # exp.run()
+    # exp.store_results()
     final_time = time.perf_counter()
     print("The running time in minutes is: {0:.2f}".format((final_time - initial_time) / 60))
 
