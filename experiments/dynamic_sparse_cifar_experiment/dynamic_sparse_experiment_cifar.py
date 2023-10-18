@@ -128,7 +128,7 @@ class DynamicSparseCIFARExperiment(Experiment):
 
         # initialize hidden layers
         num_hidden = [self.num_hidden] * self.num_layers
-        num_hidden[self.num_layers // 2] = self.num_hidden // 4
+        # num_hidden[self.num_layers // 2] = self.num_hidden // 4
         for i in range(self.num_layers):
             # initialize module
             current_module = torch.nn.Linear(in_dims, num_hidden[i])
@@ -156,7 +156,7 @@ class DynamicSparseCIFARExperiment(Experiment):
         # num_hidden = [4000, 1000, 4000]
         # initialize hidden layers
         num_hidden = [self.num_hidden] * self.num_layers
-        num_hidden[self.num_layers // 2] = self.num_hidden // 4
+        # num_hidden[self.num_layers // 2] = self.num_hidden // 4
         for i in range(self.num_layers):
             # initialize module
             current_module = SparseLinear(in_dims, num_hidden[i], sparsity=self.sparsity_level)
