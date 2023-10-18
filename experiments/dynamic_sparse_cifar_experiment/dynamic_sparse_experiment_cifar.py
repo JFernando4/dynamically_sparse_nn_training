@@ -104,7 +104,7 @@ class DynamicSparseCIFARExperiment(Experiment):
 
         """ For non-stationary data transformations """
         self.num_transformations = 0
-        self.scale_increase = 0.03 #0.05
+        self.scale_increase = 0.05 #0.05
         self.rotation_increase = 14.4 # 7.2 #3.5
         self.transformations = self._get_transformations()
 
@@ -276,6 +276,8 @@ class DynamicSparseCIFARExperiment(Experiment):
                 temp_transformations.append(GrayScale(num_output_channels=3, swap_colors=True))
 
             # random eraser
+            if (current_transformation_number % 500) == 0:
+                current_scale = - self.scale_increase
             if (current_transformation_number % 100) == 0:
                 current_scale = round(current_scale + self.scale_increase, 3)
             if current_scale > 0.0:
@@ -487,7 +489,7 @@ class DynamicSparseCIFARExperiment(Experiment):
             if isinstance(trans, GrayScale):
                 print("\tGray Scale Image")
             if isinstance(trans, RandomErasing):
-                print("\tErase: {0}\t{1}".format(trans.eraser.scale, trans.eraser.ratio))
+                print("\tErase: {0}".format(trans.eraser.scale))
             if isinstance(trans, RandomRotator):
                 print("\tRotate: {0}".format(trans.rotator.degrees))
 
@@ -674,11 +676,11 @@ def main():
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 1000,
         "num_layers": 3,
-        "num_hidden": 500,
+        "num_hidden": 200,
         "activation_function": "relu",
         "permute_inputs": False,
         "sparsify_last_layer": False,
-        "reverse_transformation_order": False,
+        "reverse_transformation_order": True,
         "plot": False
     }
 
