@@ -293,7 +293,7 @@ class DynamicSparseCIFARExperiment(Experiment):
         #
         #     transformations.append(temp_transformations)
 
-        horizontal_flip = False
+        ninety_degree_rotation = False
 
         for current_transformation_number in range(self.num_epochs):
 
@@ -301,9 +301,9 @@ class DynamicSparseCIFARExperiment(Experiment):
 
             # horizontal flip
             if (current_transformation_number % 50) == 0:
-                horizontal_flip = not horizontal_flip
-            if horizontal_flip:
-                temp_transformations.append(RandomHorizontalFlip(p=1.0))
+                ninety_degree_rotation = not ninety_degree_rotation
+            if ninety_degree_rotation:
+                temp_transformations.append(RandomRotator(degrees=(0.8999, 0.9001)))
 
             transformations.append(temp_transformations)
 
