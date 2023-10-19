@@ -92,7 +92,7 @@ class DynamicSparseCIFARExperiment(Experiment):
         self.net.to(self.device)
 
         """ For summaries """
-        self.checkpoint = 100
+        self.checkpoint = 50
         self.current_ckpt, self.running_loss, self.running_accuracy, self.current_topology_update = (0, 0.0, 0.0, 0)
         self._initialize_summaries()
 
