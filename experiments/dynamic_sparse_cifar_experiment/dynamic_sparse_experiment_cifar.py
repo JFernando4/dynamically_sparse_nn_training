@@ -227,7 +227,7 @@ class DynamicSparseCIFARExperiment(Experiment):
         """
         Initializes the summaries for the experiment
         """
-        total_checkpoints = self.num_images_per_epoch * self.num_epochs // self.checkpoint
+        total_checkpoints = self.num_images_per_epoch * self.num_epochs // (self.checkpoint * self.batch_size)
         self.results_dict["train_loss_per_checkpoint"] = torch.zeros(total_checkpoints, device=self.device,
                                                                      dtype=torch.float32)
         self.results_dict["train_accuracy_per_checkpoint"] = torch.zeros(total_checkpoints, device=self.device,
