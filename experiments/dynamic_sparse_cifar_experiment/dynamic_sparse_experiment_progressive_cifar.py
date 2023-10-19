@@ -516,10 +516,10 @@ def main():
     }
 
     print(experiment_parameters)
-    relevant_parameters = ["topology_update_frequency", "sparsity_level", "num_epochs", "num_layers", "num_hidden",
-                           "sparsify_last_layer"]
-    results_dir_name = ""
-    for relevant_param in relevant_parameters:
+    relevant_parameters = ["num_epochs", "initial_num_classes", "fixed_classes", "num_layers", "num_hidden",
+                           "sparsity_level", "topology_update_frequency", "sparsify_last_layer"]
+    results_dir_name = "{0}-{1}".format(relevant_parameters[0], experiment_parameters[relevant_parameters[0]])
+    for relevant_param in relevant_parameters[1:]:
         results_dir_name += "_" + relevant_param + "-" + str(experiment_parameters[relevant_param])
 
     initial_time = time.perf_counter()
