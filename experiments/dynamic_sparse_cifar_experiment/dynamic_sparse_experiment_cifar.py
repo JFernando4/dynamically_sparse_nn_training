@@ -295,7 +295,7 @@ class DynamicSparseCIFARExperiment(Experiment):
                 temp_transformations.append(RandomRotator(degrees))
 
             transformations.append(temp_transformations)
-        transformations.append([])
+
         # ninety_degree_rotation = False
         #
         # for current_transformation_number in range(self.num_epochs):
@@ -618,7 +618,7 @@ def main():
         "sparsity_level": 0.0,
         "global_pruning": False,
         "data_path": os.path.join(file_path, "data"),
-        "num_epochs": 1001,
+        "num_epochs": 1600,
         "num_layers": 3,
         "num_hidden": 100,
         "activation_function": "relu",
