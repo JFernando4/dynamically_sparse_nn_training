@@ -56,6 +56,8 @@ class DynamicSparseCIFARExperiment(Experiment):
         self.activation_function = access_dict(exp_params, "activation_function", default="relu", val_type=str,
                                                choices=["relu", "leaky_relu", "sigmoid", "tanh"])
         self.sparsify_last_layer = access_dict(exp_params, "sparsify_last_layer", default=False, val_type=bool)
+        self.current_num_classes = access_dict(exp_params, "initial_num_classes", default=2, val_type=int)
+        self.fixed_classes = access_dict(exp_params, "fixed_classes", default=True, val_type=bool)
         self.plot = access_dict(exp_params, key="plot", default=False)
 
         assert 0.0 <= self.sparsity_level < 1.0
@@ -98,7 +100,6 @@ class DynamicSparseCIFARExperiment(Experiment):
 
         """ For data partitioning """
         self.all_classes = np.random.permutation(10)
-        self.current_class_index = 2
 
     # -------------------- Methods for initializing the experiment --------------------#
     def _initialize_network_architecture(self):
@@ -282,7 +283,7 @@ class DynamicSparseCIFARExperiment(Experiment):
             for _, sample in enumerate(test_data):
                 images = sample["image"] if self.is_conv else sample["image"].reshape(self.batch_size, self.flat_image_dims)
                 test_labels = sample["label"].to(self.device)
-                test_predictions = self.net.forward(images.to(self.device))[:, self.all_classes[:self.current_class_index]]
+                test_predictions = self.net.forward(images.to(self.device))[:, self.all_classes[:self.current_num_classes]]
 
                 avg_loss += self.loss(test_predictions, test_labels)
                 avg_acc += torch.mean((test_predictions.argmax(axis=1) == test_labels.argmax(axis=1)).to(torch.float32))
@@ -337,8 +338,8 @@ class DynamicSparseCIFARExperiment(Experiment):
     def train(self, train_dataloader: DataLoader, test_dataloader: DataLoader, test_data: CifarDataSet,
               training_data: CifarDataSet):
 
-        training_data.select_new_partition(self.all_classes[:self.current_class_index])
-        test_data.select_new_partition(self.all_classes[:self.current_class_index])
+        training_data.select_new_partition(self.all_classes[:self.current_num_classes])
+        test_data.select_new_partition(self.all_classes[:self.current_num_classes])
 
         for e in range(self.num_epochs):
             self._print("\tEpoch number: {0}".format(e + 1))
@@ -353,7 +354,7 @@ class DynamicSparseCIFARExperiment(Experiment):
                 for param in self.net.parameters(): param.grad = None  # apparently faster than optim.zero_grad()
 
                 # compute prediction and loss
-                predictions = self.net.forward(image)[:, self.all_classes[:self.current_class_index]]
+                predictions = self.net.forward(image)[:, self.all_classes[:self.current_num_classes]]
                 current_reg_loss = self.loss(predictions, label)
                 current_loss = current_reg_loss.detach().clone()
 
@@ -376,11 +377,11 @@ class DynamicSparseCIFARExperiment(Experiment):
             epoch_end_time = time.perf_counter()
             self._store_test_summaries(test_dataloader, epoch_number=e, epoch_runtime=epoch_end_time - epoch_start_time)
 
-            if ((e + 1) % 200) == 0:
-                print("New class added...")
-                self.current_class_index += 1
-                training_data.select_new_partition(self.all_classes[:self.current_class_index])
-                test_data.select_new_partition(self.all_classes[:self.current_class_index])
+            if ((e + 1) % 200) == 0 and (not self.fixed_classes):
+                self._print("\tNew class added...")
+                self.current_num_classes += 1
+                training_data.select_new_partition(self.all_classes[:self.current_num_classes])
+                test_data.select_new_partition(self.all_classes[:self.current_num_classes])
 
     def _apply_regularization(self):
         """
@@ -504,11 +505,13 @@ def main():
         "sparsity_level": 0.0,
         "global_pruning": False,
         "data_path": os.path.join(file_path, "data"),
-        "num_epochs": 1600,
+        "num_epochs": 200,
         "num_layers": 3,
         "num_hidden": 100,
         "activation_function": "relu",
         "sparsify_last_layer": False,
+        "initial_num_classes": 10,
+        "fixed_classes": True,
         "plot": False
     }
 
