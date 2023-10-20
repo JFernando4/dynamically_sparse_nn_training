@@ -151,6 +151,7 @@ class PermutedMNISTExperiment:
                 plt.close()
 
     def store_results(self):
+        os.makedirs(self.results_dir,exist_ok=True)
         for k, v in self.results_dict.items():
             file_name = "{0}.npy".format(k)
             file_path = os.path.join(self.results_dir, file_name)
