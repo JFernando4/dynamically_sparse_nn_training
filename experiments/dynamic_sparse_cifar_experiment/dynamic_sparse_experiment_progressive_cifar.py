@@ -20,7 +20,7 @@ from mlproj_manager.util.neural_networks.weights_initialization_and_manipulation
 
 # source files
 from src.utils import get_mask_from_sparse_module, get_dense_weights_from_sparse_module, \
-    get_sparse_mask_using_weight_magnitude, copy_bias_and_weights_to_sparse_module, copy_weights_to_sparse_module, SReLU
+    get_sparse_mask_using_weight_magnitude, copy_bias_and_weights_to_sparse_module, copy_weights_to_sparse_module
 
 
 class DynamicSparseCIFARExperiment(Experiment):
@@ -129,8 +129,7 @@ class DynamicSparseCIFARExperiment(Experiment):
             xavier_init_weights(current_module)
             # append module and activation function
             net.append(current_module)
-            # net.append(get_activation_module(self.activation_function))
-            net.append(SReLU(num_hidden[i]))
+            net.append(get_activation_module(self.activation_function))
             net.append(torch.nn.Dropout(p=0.3))
             in_dims = num_hidden[i]
 
