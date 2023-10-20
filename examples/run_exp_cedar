@@ -1,0 +1,20 @@
+#!/bin/bash
+#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=60000M
+#SBATCH --account=rrg-mtaylor3
+### #SBATCH --account=def-mtaylor3
+module load gcc/9.3.0 cuda/11.4 python/3.8
+
+
+export WANDB_DIR=/home/bgrooten/scratch/madi
+
+# Run experiment
+python permuted_mnist_problem_example.py \
+    --wandb_mode offline \
+    --seed $seed \
+    --algorithm $algo \
+    --tag "$(basename $0)" \
+    --console_log "job-id${SLURM_JOBID}.txt"
+
+

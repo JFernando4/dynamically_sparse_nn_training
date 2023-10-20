@@ -1,11 +1,13 @@
 # built-in libraries
 import time
 import os
+import argparse
 
 # third party libraries
 import torch
 from torch.utils.data import DataLoader
 import numpy as np
+import wandb
 
 # from ml project manager
 from mlproj_manager.problems import MnistDataSet
@@ -158,11 +160,33 @@ class PermutedMNISTExperiment:
             np.save(file_path, v.numpy())
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--wandb_mode', type=str, default='disabled', choices=['online', 'offline', 'disabled'])
+    parser.add_argument('--seed', type=int, default=0)
+    parser.add_argument('--algorithm', type=str, default='set')
+    parser.add_argument('--stepsize', type=float, default=0.001)
+    parser.add_argument('--l1_factor', type=float, default=0.0)
+    parser.add_argument('--l2_factor', type=float, default=0.0)
+    parser.add_argument('--data_path', type=str, default="data")
+    parser.add_argument('--num_epochs', type=int, default=150)
+    parser.add_argument('--num_layers', type=int, default=3)
+    parser.add_argument('--num_hidden', type=int, default=100)
+    parser.add_argument('--permute_inputs', type=bool, default=False)
+    parser.add_argument('--plot', type=bool, default=True)
+    args = parser.parse_args()
+    assert args.algorithm in ['set']
+    return args
+
+
 def main():
     """
     This is a quick demonstration of how to run the experiments. For a more systematic run, use the mlproj_manager
     scheduler.
     """
+    args = parse_args()
+    wandb.init(project="dstlop", entity="dst-lop", mode=args.wandb_mode, config=vars(args))
+
     file_path = os.path.dirname(os.path.abspath(__file__))
     experiment_parameters = {
         "stepsize": 0.001,
