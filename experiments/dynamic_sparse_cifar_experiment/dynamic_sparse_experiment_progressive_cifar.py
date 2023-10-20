@@ -377,7 +377,7 @@ class DynamicSparseCIFARExperiment(Experiment):
             epoch_end_time = time.perf_counter()
             self._store_test_summaries(test_dataloader, epoch_number=e, epoch_runtime=epoch_end_time - epoch_start_time)
 
-            if ((e + 1) % 200) == 0 and (not self.fixed_classes):
+            if ((e + 1) % 300) == 0 and (not self.fixed_classes):
                 self._print("\tNew class added...")
                 self.current_num_classes += 1
                 training_data.select_new_partition(self.all_classes[:self.current_num_classes])
@@ -505,13 +505,13 @@ def main():
         "sparsity_level": 0.0,
         "global_pruning": False,
         "data_path": os.path.join(file_path, "data"),
-        "num_epochs": 200,
+        "num_epochs": 2700,
         "num_layers": 3,
         "num_hidden": 100,
         "activation_function": "relu",
         "sparsify_last_layer": False,
-        "initial_num_classes": 10,
-        "fixed_classes": True,
+        "initial_num_classes": 2,
+        "fixed_classes": False,
         "plot": False
     }
 
