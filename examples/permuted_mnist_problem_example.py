@@ -169,7 +169,7 @@ def main():
         "l1_factor": 0.0,
         "l2_factor": 0.0,
         "data_path": os.path.join(file_path, "data"),
-        "num_epochs": 20,
+        "num_epochs": 150,
         "num_layers": 3,
         "num_hidden": 100,
         "permute_inputs": False,
