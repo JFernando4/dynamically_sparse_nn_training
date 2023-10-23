@@ -61,8 +61,7 @@ class ProgressiveCIFARExperiment(Experiment):
         self.net.apply(xavier_init_weights)
 
         # initialize optimizer
-        self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
-                                     weight_decay=self.weight_decay)
+        self.optim = torch.optim.Adam(self.net.parameters(), lr=self.stepsize, weight_decay=self.weight_decay)
 
         # define loss function
         self.loss = torch.nn.CrossEntropyLoss(reduction="mean")
