@@ -15,8 +15,9 @@ from sparselinear import SparseLinear
 from mlproj_manager.problems import CifarDataSet
 from mlproj_manager.experiments import Experiment
 from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict
-from mlproj_manager.util.neural_networks import xavier_init_weights, get_activation_module
+from mlproj_manager.util.neural_networks import xavier_init_weights, get_activation_module, get_conv_layer_output_dims
 from mlproj_manager.util.neural_networks.weights_initialization_and_manipulation import apply_regularization_to_module
+from mlproj_manager.util.data_preprocessing_and_transformations import ToTensor
 
 # source files
 from src.utils import get_mask_from_sparse_module, get_dense_weights_from_sparse_module, \
@@ -58,6 +59,9 @@ class DynamicSparseCIFARExperiment(Experiment):
         self.sparsify_last_layer = access_dict(exp_params, "sparsify_last_layer", default=False, val_type=bool)
         self.current_num_classes = access_dict(exp_params, "initial_num_classes", default=2, val_type=int)
         self.fixed_classes = access_dict(exp_params, "fixed_classes", default=True, val_type=bool)
+        self.architecture_type = access_dict(exp_params, "architecture_type", default="ff", val_type=str,
+                                             choices=["conv", "ff"])
+        self.is_conv = (self.architecture_type == "conv")
         self.plot = access_dict(exp_params, key="plot", default=False)
 
         assert 0.0 <= self.sparsity_level < 1.0
@@ -71,12 +75,11 @@ class DynamicSparseCIFARExperiment(Experiment):
         """ Training constants """
         self.batch_size = 100
         self.num_classes = 10
-        self.image_dims = (32, 32 * 3)
-        self.flat_image_dims = np.prod(self.image_dims)
+        self.image_dims = (32, 32, 3)
+        self.flat_image_dims = int(np.prod(self.image_dims))
         self.num_images_per_epoch = 50000
         self.num_test_samples = 10000
         self.num_test_batches = self.num_test_samples / self.batch_size
-        self.is_conv = False
 
         """ Network set up """
         # initialize network
@@ -107,17 +110,46 @@ class DynamicSparseCIFARExperiment(Experiment):
         Initializes the torch module representing the neural network
         """
 
+        if self.architecture_type == "conv":
+            return self._initialize_conv_network_architecture()
         if not self.sparsity_greater_than_zero:
             return self._initialize_dense_network_architecture()
         else:
             return self._initialize_sparse_network_architecture()
+
+    def _initialize_conv_network_architecture(self):
+        """ Initializes a convolutional neural network"""
+
+        h_out, w_out, prev_num_filters = self.image_dims
+        net = torch.nn.Sequential()
+        conv_layers_num_filters = [32, 64, 128]
+        for num_filters in conv_layers_num_filters:
+            net.append(torch.nn.Conv2d(in_channels=prev_num_filters, out_channels=num_filters, kernel_size=(3,3),
+                                       stride=(1,1), padding=(0,0), dilation=(1,1)))
+            h_out, w_out = get_conv_layer_output_dims(h_out, w_out, kernel_size=(3, 3), stride=(1, 1), padding=(0,0), dilatation=(1,1))
+            net.append(torch.nn.ReLU())
+            net.append(torch.nn.MaxPool2d(kernel_size=(3,3), stride=(1,1)))
+            h_out, w_out = get_conv_layer_output_dims(h_out, w_out, kernel_size=(3, 3), stride=(1, 1), padding=(0, 0), dilatation=(1, 1))
+            prev_num_filters = num_filters
+
+        net.append(torch.nn.Flatten())
+        in_features = h_out * w_out * prev_num_filters
+        linear_layers_num_units = [256, 128]
+        for num_units in linear_layers_num_units:
+            net.append(torch.nn.Linear(in_features=in_features, out_features=num_units))
+            net.append(torch.nn.ReLU())
+            in_features = num_units
+
+        net.append(torch.nn.Linear(in_features, out_features=self.num_classes))
+
+        return net
 
     def _initialize_dense_network_architecture(self):
         """
         Initializes the torch module representing a dense feedforward network
         """
         net = torch.nn.Sequential()
-        in_dims = int(np.prod(self.image_dims))
+        in_dims = self.flat_image_dims
 
         # initialize hidden layers
         num_hidden = [self.num_hidden] * self.num_layers
@@ -145,7 +177,7 @@ class DynamicSparseCIFARExperiment(Experiment):
         Initializes the torch module representing a sparse feedforward network
         """
         net = torch.nn.Sequential()
-        in_dims = int(np.prod(self.image_dims))
+        in_dims = self.flat_image_dims
         # num_hidden = [4000, 1000, 4000]
         # initialize hidden layers
         num_hidden = [self.num_hidden] * self.num_layers
@@ -321,19 +353,23 @@ class DynamicSparseCIFARExperiment(Experiment):
         :return: data set, (optionally) data loader
         """
         """ Loads MNIST data set """
-        mnist_data = CifarDataSet(root_dir=self.data_path,
+        cifar_data = CifarDataSet(root_dir=self.data_path,
                                   train=train,
                                   cifar_type=10,
                                   device=None,
                                   image_normalization="minus-one-to-one",
                                   label_preprocessing="one-hot",
                                   use_torch=True)
+
+        if self.is_conv:
+            cifar_data.set_transformation(ToTensor(swap_color_axis=True))
+
         if return_data_loader:
             num_workers = 1 if self.device.type == "cpu" else 12
-            dataloader = DataLoader(mnist_data, batch_size=self.batch_size, shuffle=True, num_workers=num_workers)
-            return mnist_data, dataloader
+            dataloader = DataLoader(cifar_data, batch_size=self.batch_size, shuffle=True, num_workers=num_workers)
+            return cifar_data, dataloader
 
-        return mnist_data
+        return cifar_data
 
     def train(self, train_dataloader: DataLoader, test_dataloader: DataLoader, test_data: CifarDataSet,
               training_data: CifarDataSet):
@@ -347,7 +383,8 @@ class DynamicSparseCIFARExperiment(Experiment):
             epoch_start_time = time.perf_counter()
             for step_number, sample in enumerate(train_dataloader):
                 # sample observationa and target
-                image = sample["image"].reshape(self.batch_size, np.prod(self.image_dims)).to(self.device)
+                image = sample["image"] if self.is_conv else sample["image"].reshape(self.batch_size, self.flat_image_dims)
+                image = image.to(self.device)
                 label = sample["label"].to(self.device)
 
                 # reset gradients
@@ -512,12 +549,13 @@ def main():
         "sparsify_last_layer": False,
         "initial_num_classes": 2,
         "fixed_classes": False,
+        "architecture_type": "conv",
         "plot": False
     }
 
     print(experiment_parameters)
-    relevant_parameters = ["num_epochs", "initial_num_classes", "fixed_classes", "num_layers", "num_hidden",
-                           "sparsity_level", "topology_update_frequency", "sparsify_last_layer"]
+    relevant_parameters = ["architecture_type", "num_epochs", "initial_num_classes", "fixed_classes", "num_layers",
+                           "num_hidden", "sparsity_level", "topology_update_frequency", "sparsify_last_layer"]
     results_dir_name = "{0}-{1}".format(relevant_parameters[0], experiment_parameters[relevant_parameters[0]])
     for relevant_param in relevant_parameters[1:]:
         results_dir_name += "_" + relevant_param + "-" + str(experiment_parameters[relevant_param])
