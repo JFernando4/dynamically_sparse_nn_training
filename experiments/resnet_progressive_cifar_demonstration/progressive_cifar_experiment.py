@@ -196,7 +196,8 @@ class ProgressiveCIFARExperiment(Experiment):
 
         training_data.select_new_partition(self.all_classes[:self.current_num_classes])
         test_data.select_new_partition(self.all_classes[:self.current_num_classes])
-
+        sched = torch.optim.lr_scheduler.OneCycleLR(self.optim, self.stepsize, epochs=self.num_epochs,
+                                                    steps_per_epoch=len(train_dataloader))
         for e in range(self.num_epochs):
             self._print("\tEpoch number: {0}".format(e + 1))
 
@@ -218,6 +219,7 @@ class ProgressiveCIFARExperiment(Experiment):
                 current_reg_loss.backward()
                 torch.nn.utils.clip_grad_value_(self.net.parameters(), clip_value=self.gradient_clip_val)
                 self.optim.step()
+                sched.step()
 
                 # store summaries
                 current_accuracy = torch.mean((predictions.argmax(axis=1) == label.argmax(axis=1)).to(torch.float32))
