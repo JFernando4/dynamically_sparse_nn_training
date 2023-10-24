@@ -29,8 +29,8 @@ class ProgressiveCIFARExperiment(Experiment):
         # set debugging options for pytorch
         debug = access_dict(exp_params, key="debug", default=True, val_type=bool)
         turn_off_debugging_processes(debug)
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
+        # torch.backends.cudnn.deterministic = True
+        # torch.backends.cudnn.benchmark = False
 
         # define torch device
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -39,6 +39,7 @@ class ProgressiveCIFARExperiment(Experiment):
         random_seeds = get_random_seeds()
         self.random_seed = random_seeds[self.run_index]
         torch.random.manual_seed(self.random_seed)
+        torch.cuda.manual_seed(self.random_seed)
         np.random.seed(self.random_seed)
 
         """ Experiment parameters """
@@ -169,6 +170,7 @@ class ProgressiveCIFARExperiment(Experiment):
             "model_weights": self.net.state_dict(),
             "torch_rng_state": torch.get_rng_state(),
             "numpy_rng_state": np.random.get_state(),
+            "cuda_rng_state": torch.cuda.get_rng_state(),
             "epoch_number": self.current_epoch,
             "current_num_classes": self.current_num_classes,
             "all_classes": self.all_classes,
@@ -236,6 +238,7 @@ class ProgressiveCIFARExperiment(Experiment):
 
         self.net.load_state_dict(checkpoint["model_weights"])
         torch.set_rng_state(checkpoint["torch_rng_state"])
+        torch.cuda.set_rng_state(checkpoint["cuda_rng_state"])
         np.random.set_state(checkpoint["numpy_rng_state"])
         self.current_epoch = checkpoint["epoch_number"]
         self.current_num_classes = checkpoint["current_num_classes"]
