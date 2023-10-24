@@ -14,7 +14,7 @@ from mlproj_manager.problems import CifarDataSet
 from mlproj_manager.experiments import Experiment
 from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict
 from mlproj_manager.util.neural_networks import xavier_init_weights, get_activation_module
-from mlproj_manager.util.data_preprocessing_and_transformations.image_transformations import ToTensor, Normalize, RandomHorizontalFlip, RandomRotator
+from mlproj_manager.util.data_preprocessing_and_transformations.image_transformations import ToTensor, Normalize, RandomHorizontalFlip, RandomRotator, RandomVerticalFlip
 
 
 class ProgressiveCIFARExperiment(Experiment):
@@ -185,6 +185,7 @@ class ProgressiveCIFARExperiment(Experiment):
         ]
         if train:
             transformations.append(RandomHorizontalFlip(p=0.5))
+            transformations.append(RandomVerticalFlip(p=0.5))
             transformations.append(RandomRotator(degrees=(0,10)))
         cifar_data.set_transformation(transforms.Compose(transformations))
 
