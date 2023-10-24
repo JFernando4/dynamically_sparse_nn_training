@@ -2,6 +2,7 @@
 import time
 import os
 import pickle
+import re
 
 # third party libraries
 import torch
@@ -205,9 +206,12 @@ class ProgressiveCIFARExperiment(Experiment):
         latest_checkpoint_file_name = ""
         for file_name in os.listdir(self.experiment_checkpoints_dir_path):
             file_name_without_extension, _ = os.path.splitext(file_name)
-            index, ckpt_id = file_name_without_extension.split("_")
-            index_int = int(index.split("-")[1])
-            ckpt_id_int = int(ckpt_id.split("-")[1])
+
+            # Use regular expressions to find key-value pairs
+            pairs = re.findall(r'(\w+)-(\d+)', file_name_without_extension)
+            index_int = int(pairs[0][1])
+            ckpt_id_int = int(pairs[1][1])
+            print(index_int, ckpt_id_int)
 
             if index_int != self.run_index:
                 continue
