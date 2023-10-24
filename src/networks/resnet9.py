@@ -4,7 +4,7 @@ import torch
 def conv_block(in_channels, out_channels, pool=False, norm_function=torch.nn.BatchNorm2d):
     layers = [
         torch.nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
-        torch.nn.BatchNorm2d(out_channels),
+        norm_function(out_channels),
         torch.nn.ReLU(inplace=True)
     ]
     if pool:
