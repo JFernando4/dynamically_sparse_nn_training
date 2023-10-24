@@ -300,7 +300,7 @@ class ProgressiveCIFARExperiment(Experiment):
             epoch_end_time = time.perf_counter()
             self._store_test_summaries(test_dataloader, epoch_number=e, epoch_runtime=epoch_end_time - epoch_start_time)
 
-            if ((e + 1) % 300) == 0 and (not self.fixed_classes):
+            if ((e + 1) % self.class_increase_frequency) == 0 and (not self.fixed_classes):
                 self._print("\tNew class added...")
                 self.current_num_classes += 1
                 training_data.select_new_partition(self.all_classes[:self.current_num_classes])
