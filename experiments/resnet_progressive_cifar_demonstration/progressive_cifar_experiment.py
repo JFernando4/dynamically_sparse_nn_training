@@ -16,6 +16,7 @@ from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, 
 from mlproj_manager.util.neural_networks import xavier_init_weights, get_activation_module
 from mlproj_manager.util.data_preprocessing_and_transformations import ToTensor, Normalize, RandomHorizontalFlip, RandomRotator, RandomVerticalFlip, RandomCrop
 
+from src import ResNet9
 
 class ProgressiveCIFARExperiment(Experiment):
 
@@ -57,7 +58,8 @@ class ProgressiveCIFARExperiment(Experiment):
 
         """ Network set up """
         # initialize network
-        self.net = resnet18(num_classes=10, norm_layer=torch.nn.Identity)
+        # self.net = resnet18(num_classes=10, norm_layer=torch.nn.Identity)
+        self.net = ResNet9(in_channels=3, num_classes=10, norm_function=torch.nn.BatchNorm2d)
         # self.net.apply(xavier_init_weights)
 
         # initialize optimizer
