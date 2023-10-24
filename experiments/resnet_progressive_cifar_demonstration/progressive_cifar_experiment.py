@@ -158,13 +158,19 @@ class ProgressiveCIFARExperiment(Experiment):
     def get_experiment_checkpoint(self):
         """ Creates a dictionary with all the necessary information to pause and resume the experiment """
 
+        partial_results = {}
+        for k, v in self.results_dict.items():
+            partial_results[k] = v.cpu()
+
         checkpoint = {
             "model_weights": self.net.state_dict(),
             "torch_rng_state": torch.get_rng_state(),
             "numpy_rng_state": np.random.get_state(),
             "epoch_number": self.current_epoch,
             "current_num_classes": self.current_num_classes,
-            "all_classes": self.all_classes
+            "all_classes": self.all_classes,
+            "current_running_avg_step": self.current_running_avg_step,
+            "partial_results": partial_results
         }
 
         return checkpoint
@@ -226,6 +232,11 @@ class ProgressiveCIFARExperiment(Experiment):
         self.current_epoch = checkpoint["epoch_number"]
         self.current_num_classes = checkpoint["current_num_classes"]
         self.all_classes = checkpoint["all_classes"]
+        self.current_running_avg_step = checkpoint["current_running_avg_step"]
+
+        partial_results = checkpoint["partial_results"]
+        for k, v in self.results_dict.items():
+            self.results_dict[k] = partial_results[k].to(self.device)
 
     # ----------------------------- For storing summaries ----------------------------- #
     def _store_training_summaries(self):
