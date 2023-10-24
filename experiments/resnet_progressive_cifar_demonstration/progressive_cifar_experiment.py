@@ -29,6 +29,8 @@ class ProgressiveCIFARExperiment(Experiment):
         # set debugging options for pytorch
         debug = access_dict(exp_params, key="debug", default=True, val_type=bool)
         turn_off_debugging_processes(debug)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
 
         # define torch device
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
