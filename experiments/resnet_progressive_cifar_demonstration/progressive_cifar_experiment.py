@@ -14,10 +14,11 @@ from torchvision import transforms
 from mlproj_manager.problems import CifarDataSet
 from mlproj_manager.experiments import Experiment
 from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict
-from mlproj_manager.util.neural_networks import xavier_init_weights, get_activation_module
+from mlproj_manager.util.neural_networks import xavier_init_weights
 from mlproj_manager.util.data_preprocessing_and_transformations import ToTensor, Normalize, RandomHorizontalFlip, RandomRotator, RandomVerticalFlip, RandomCrop
 
 from src import ResNet9
+
 
 class ProgressiveCIFARExperiment(Experiment):
 
@@ -55,7 +56,6 @@ class ProgressiveCIFARExperiment(Experiment):
         self.flat_image_dims = int(np.prod(self.image_dims))
         self.num_images_per_epoch = 50000
         self.num_test_samples = 10000
-        self.num_test_batches = self.num_test_samples / self.batch_size
 
         """ Network set up """
         # initialize network
@@ -78,7 +78,11 @@ class ProgressiveCIFARExperiment(Experiment):
         self.checkpoint = 50
         self.current_ckpt, self.running_loss, self.running_accuracy = (0, 0.0, 0.0)
         self._initialize_summaries()
-        self.training_checkpoint_path = os.path.join(self.results_dir, "training_checkpoints")
+
+        """ For creating experiment checkpoints """
+        self.experiment_checkpoints_dir_path = os.path.join(self.results_dir, "experiment_checkpoints")
+        self.checkpoint_identifier_name = "current_epoch"
+        self.checkpoint_save_frequency = 100    # save every 100 epochs
 
         """ For data partitioning """
         self.class_increase_frequency = 300
@@ -103,66 +107,125 @@ class ProgressiveCIFARExperiment(Experiment):
         self.results_dict["test_evaluation_runtime"] = torch.zeros(self.num_epochs, device=self.device,
                                                                    dtype=torch.float32)
 
-    def _save_model_and_random_state(self, epoch: int):
+    def save_experiment_checkpoint(self):
         """
         Saves all the information necessary to resume the experiment with the same index. Specifically, it stores: the
         random states of torch and numpy, the current weights of the model, the current checkpoint, the current number
         of classes, and the randomized list of classes
-        :param epoch: the current epoch number
-        :return: None, but generate new files in self.train_checkpoint_path
+
+        The function creates a file at self.training_checkpoint_path named:
+            "index-$experiment_index_$(checkpoint_identifier_name)-$(checkpoint_identifier_value)
+
+        The name should be an attribute of self defined in __init__ and the value should be an increasing sequence of
+        integers where higher values correspond to latter steps of the experiment
         """
 
-        os.makedirs(self.training_checkpoint_path, exist_ok=True)
-        file_name = "index-{0}_model_parameters_and_rng_state.p".format(self.run_index)
-        file_path = os.path.join(self.training_checkpoint_path, file_name)
+        os.makedirs(self.experiment_checkpoints_dir_path, exist_ok=True)
+        checkpoint_identifier_value = getattr(self, self.checkpoint_identifier_name)
+
+        if not isinstance(checkpoint_identifier_value, int):
+            warning_message = "The checkpoint identifier should be an increasing sequence of integers."\
+                              "Got {0} instead. This may result in unexpected behavior."
+            Warning(warning_message.format(checkpoint_identifier_value.__class__))
+
+        file_name = "index-{0}_{1}-{2}.p".format(self.run_index, self.checkpoint_identifier_name, checkpoint_identifier_value)
+        file_path = os.path.join(self.experiment_checkpoints_dir_path, file_name)
 
         # retrieve model parameters and random state
-        model_and_random_state = {
-            "model_weights": self.net.state_dict(),
-            "torch_rng_state": torch.get_rng_state(),
-            "numpy_rng_state": np.random.get_state(),
-            "epoch_number": epoch
-        }
+        experiment_checkpoint = self.get_experiment_checkpoint()
 
-        attempts = 100
+        attempts = 10
         successfully_saved = False
-        # attempt to store model parameters and random states
+
+        # attempt to save the experiment checkpoint
         for i in range(attempts):
             try:
-                with open(file_path, mode="wb") as model_and_random_state_file:
-                    pickle.dump(model_and_random_state, model_and_random_state_file)
-                with open(file_path, mode="rb") as model_and_random_state_file:
-                    pickle.load(model_and_random_state_file)
+                with open(file_path, mode="wb") as experiment_checkpoint_file:
+                    pickle.dump(experiment_checkpoint, experiment_checkpoint_file)
+                with open(file_path, mode="rb") as experiment_checkpoint_file:
+                    pickle.load(experiment_checkpoint_file)
                 successfully_saved = True
                 break
             except ValueError:
                 print("Something went wrong on attempt {0}.".format(i + 1))
 
         if successfully_saved:
-            print("Model parameters were successfully saved at:\n\t{0}".format(file_path))
+            self._print("Model parameters were successfully saved at:\n\t{0}".format(file_path))
         else:
-            print("Something went wrong when attempting to save the model parameters :(")
+            print("Something went wrong when attempting to save the experiment checkpoint.")
         return successfully_saved
 
-    def _load_model_and_random_state(self):
+    def get_experiment_checkpoint(self):
+        """ Creates a dictionary with all the necessary information to pause and resume the experiment """
+
+        checkpoint = {
+            "model_weights": self.net.state_dict(),
+            "torch_rng_state": torch.get_rng_state(),
+            "numpy_rng_state": np.random.get_state(),
+            "epoch_number": self.current_epoch,
+            "current_num_classes": self.current_num_classes,
+            "all_classes": self.all_classes
+        }
+
+        return checkpoint
+
+    def load_experiment_checkpoint(self):
         """
-        Loads the weights of the network, the rng states of numpy and torch, and epoch at which each of those were stored
-        :return: (int) corresponding to the number of epochs of the trained model
+        Loads the latest experiment checkpoint
         """
 
-        file_name = "index-{0}_model_parameters_and_rng_state.p".format(self.run_index)
-        file_path = os.path.join(self.training_checkpoint_path, file_name)
+        # find the file of the latest checkpoint
+        file_name = self.get_latest_checkpoint_filename()
+        if file_name == "":
+            return False
 
-        if os.path.isfile(file_path):
-            with open(file_path, mode="rb") as model_and_rng_path:
-                model_and_rng_state = pickle.load(model_and_rng_path)
-            self.net.load_state_dict(model_and_rng_state["model_weights"])
-            torch.set_rng_state(model_and_rng_state["torch_rng_state"])
-            np.random.set_state(model_and_rng_state["numpy_rng_state"])
-            print("The model and rng states were sucessfully loaded from:\n\t{0}".format(file_path))
-            return model_and_rng_state["epoch_number"]
-        else:
-            return 0
+        # get path to the latest checkpoint and check that it's a file
+        file_path = os.path.join(self.experiment_checkpoints_dir_path, file_name)
+        assert os.path.isfile(file_path)
+
+        # load checkpoint information
+        self._load_experiment_checkpoint(file_path)
+        print("Experiment checkpoint successfully loaded from:\n\t{0}".format(file_path))
+        return True
+
+    def get_latest_checkpoint_filename(self):
+        """
+        gets the path to the file of the last saved checkpoint of the experiment
+        """
+
+        latest_checkpoint_id = 0
+        latest_checkpoint_file_name = ""
+        for file_name in os.listdir(self.experiment_checkpoints_dir_path):
+            file_name_without_extension, _ = os.path.splitext(file_name)
+            index, ckpt_id = file_name_without_extension.split("_")
+            index_int = int(index.split("-")[1])
+            ckpt_id_int = int(ckpt_id.split("-")[1])
+
+            if index_int != self.run_index:
+                continue
+
+            if ckpt_id_int > latest_checkpoint_id:
+                latest_checkpoint_id = ckpt_id_int
+                latest_checkpoint_file_name = file_name
+
+        return latest_checkpoint_file_name
+
+    def _load_experiment_checkpoint(self, file_path):
+        """
+        Loads the checkpoint and assigns the experiment variables the recovered values
+        :param file_path: path to the experiment checkpoint
+        :return: (bool) if the variables were succesfully loaded
+        """
+
+        with open(file_path, mode="rb") as experiment_checkpoint_file:
+            checkpoint = pickle.load(experiment_checkpoint_file)
+
+        self.net.load_state_dict(checkpoint["model_weights"])
+        torch.set_rng_state(checkpoint["torch_rng_state"])
+        np.random.set_state(checkpoint["numpy_rng_state"])
+        self.current_epoch = checkpoint["epoch_number"]
+        self.current_num_classes = checkpoint["current_num_classes"]
+        self.all_classes = checkpoint["all_classes"]
 
     # ----------------------------- For storing summaries ----------------------------- #
     def _store_training_summaries(self):
