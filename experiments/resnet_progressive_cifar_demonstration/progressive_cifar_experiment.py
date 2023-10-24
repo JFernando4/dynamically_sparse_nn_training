@@ -150,7 +150,7 @@ class ProgressiveCIFARExperiment(Experiment):
                 print("Something went wrong on attempt {0}.".format(i + 1))
 
         if successfully_saved:
-            self._print("Model parameters were successfully saved at:\n\t{0}".format(file_path))
+            self._print("Checkpoing was successfully saved at:\n\t{0}".format(file_path))
         else:
             print("Something went wrong when attempting to save the experiment checkpoint.")
         return successfully_saved
@@ -198,6 +198,8 @@ class ProgressiveCIFARExperiment(Experiment):
         """
         gets the path to the file of the last saved checkpoint of the experiment
         """
+        if not os.path.isdir(self.experiment_checkpoints_dir_path):
+            return ""
 
         latest_checkpoint_id = 0
         latest_checkpoint_file_name = ""
