@@ -1,6 +1,7 @@
 # built-in libraries
 import time
 import os
+import pickle
 
 # third party libraries
 import torch
@@ -71,11 +72,13 @@ class ProgressiveCIFARExperiment(Experiment):
 
         # move network to device
         self.net.to(self.device)
+        self.current_epoch = 0
 
         """ For summaries """
         self.checkpoint = 50
         self.current_ckpt, self.running_loss, self.running_accuracy = (0, 0.0, 0.0)
         self._initialize_summaries()
+        self.training_checkpoint_path = os.path.join(self.results_dir, "training_checkpoints")
 
         """ For data partitioning """
         self.class_increase_frequency = 300
@@ -99,6 +102,67 @@ class ProgressiveCIFARExperiment(Experiment):
                                                                         dtype=torch.float32)
         self.results_dict["test_evaluation_runtime"] = torch.zeros(self.num_epochs, device=self.device,
                                                                    dtype=torch.float32)
+
+    def _save_model_and_random_state(self, epoch: int):
+        """
+        Saves all the information necessary to resume the experiment with the same index. Specifically, it stores: the
+        random states of torch and numpy, the current weights of the model, the current checkpoint, the current number
+        of classes, and the randomized list of classes
+        :param epoch: the current epoch number
+        :return: None, but generate new files in self.train_checkpoint_path
+        """
+
+        os.makedirs(self.training_checkpoint_path, exist_ok=True)
+        file_name = "index-{0}_model_parameters_and_rng_state.p".format(self.run_index)
+        file_path = os.path.join(self.training_checkpoint_path, file_name)
+
+        # retrieve model parameters and random state
+        model_and_random_state = {
+            "model_weights": self.net.state_dict(),
+            "torch_rng_state": torch.get_rng_state(),
+            "numpy_rng_state": np.random.get_state(),
+            "epoch_number": epoch
+        }
+
+        attempts = 100
+        successfully_saved = False
+        # attempt to store model parameters and random states
+        for i in range(attempts):
+            try:
+                with open(file_path, mode="wb") as model_and_random_state_file:
+                    pickle.dump(model_and_random_state, model_and_random_state_file)
+                with open(file_path, mode="rb") as model_and_random_state_file:
+                    pickle.load(model_and_random_state_file)
+                successfully_saved = True
+                break
+            except ValueError:
+                print("Something went wrong on attempt {0}.".format(i + 1))
+
+        if successfully_saved:
+            print("Model parameters were successfully saved at:\n\t{0}".format(file_path))
+        else:
+            print("Something went wrong when attempting to save the model parameters :(")
+        return successfully_saved
+
+    def _load_model_and_random_state(self):
+        """
+        Loads the weights of the network, the rng states of numpy and torch, and epoch at which each of those were stored
+        :return: (int) corresponding to the number of epochs of the trained model
+        """
+
+        file_name = "index-{0}_model_parameters_and_rng_state.p".format(self.run_index)
+        file_path = os.path.join(self.training_checkpoint_path, file_name)
+
+        if os.path.isfile(file_path):
+            with open(file_path, mode="rb") as model_and_rng_path:
+                model_and_rng_state = pickle.load(model_and_rng_path)
+            self.net.load_state_dict(model_and_rng_state["model_weights"])
+            torch.set_rng_state(model_and_rng_state["torch_rng_state"])
+            np.random.set_state(model_and_rng_state["numpy_rng_state"])
+            print("The model and rng states were sucessfully loaded from:\n\t{0}".format(file_path))
+            return model_and_rng_state["epoch_number"]
+        else:
+            return 0
 
     # ----------------------------- For storing summaries ----------------------------- #
     def _store_training_summaries(self):
