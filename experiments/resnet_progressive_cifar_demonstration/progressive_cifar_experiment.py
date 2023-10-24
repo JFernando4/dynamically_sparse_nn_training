@@ -296,6 +296,7 @@ class ProgressiveCIFARExperiment(Experiment):
         training_data, training_dataloader = self.get_data(train=True, return_data_loader=True)
         test_data, test_dataloader = self.get_data(train=False, return_data_loader=True)
 
+        self.load_experiment_checkpoint()
         # train network
         self.train(train_dataloader=training_dataloader, test_dataloader=test_dataloader,
                    test_data=test_data, training_data=training_data)
@@ -341,7 +342,7 @@ class ProgressiveCIFARExperiment(Experiment):
         training_data.select_new_partition(self.all_classes[:self.current_num_classes])
         test_data.select_new_partition(self.all_classes[:self.current_num_classes])
 
-        for e in range(self.num_epochs):
+        for e in range(self.current_epoch, self.num_epochs):
             self._print("\tEpoch number: {0}".format(e + 1))
 
             epoch_start_time = time.perf_counter()
@@ -379,6 +380,10 @@ class ProgressiveCIFARExperiment(Experiment):
                 self.current_num_classes += 1
                 training_data.select_new_partition(self.all_classes[:self.current_num_classes])
                 test_data.select_new_partition(self.all_classes[:self.current_num_classes])
+
+            self.current_epoch += 1
+            if self.current_epoch % self.checkpoint_save_frequency == 0:
+                self.save_experiment_checkpoint()
 
     def _plot_results(self):
         if self.plot:
