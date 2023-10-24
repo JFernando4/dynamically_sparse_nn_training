@@ -29,8 +29,8 @@ class ProgressiveCIFARExperiment(Experiment):
         # set debugging options for pytorch
         debug = access_dict(exp_params, key="debug", default=True, val_type=bool)
         turn_off_debugging_processes(debug)
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
+        # torch.backends.cudnn.deterministic = True
+        # torch.backends.cudnn.benchmark = False
 
         # define torch device
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -168,6 +168,7 @@ class ProgressiveCIFARExperiment(Experiment):
 
         checkpoint = {
             "model_weights": self.net.state_dict(),
+            "optim_state": self.optim.state_dict(),
             "torch_rng_state": torch.get_rng_state(),
             "numpy_rng_state": np.random.get_state(),
             "cuda_rng_state": torch.cuda.get_rng_state(),
@@ -237,6 +238,7 @@ class ProgressiveCIFARExperiment(Experiment):
             checkpoint = pickle.load(experiment_checkpoint_file)
 
         self.net.load_state_dict(checkpoint["model_weights"])
+        self.optim.load_state_dict(checkpoint["optim_state"])
         torch.set_rng_state(checkpoint["torch_rng_state"])
         torch.cuda.set_rng_state(checkpoint["cuda_rng_state"])
         np.random.set_state(checkpoint["numpy_rng_state"])
