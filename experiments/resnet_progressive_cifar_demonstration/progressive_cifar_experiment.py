@@ -57,8 +57,8 @@ class ProgressiveCIFARExperiment(Experiment):
 
         """ Network set up """
         # initialize network
-        self.net = resnet18(num_classes=10)
-        self.net.apply(xavier_init_weights)
+        self.net = resnet18(num_classes=10, norm_layer=torch.nn.Identity)
+        # self.net.apply(xavier_init_weights)
 
         # initialize optimizer
         self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
