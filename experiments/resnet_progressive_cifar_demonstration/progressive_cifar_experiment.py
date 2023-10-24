@@ -75,8 +75,8 @@ class ProgressiveCIFARExperiment(Experiment):
         self.current_epoch = 0
 
         """ For summaries """
-        self.checkpoint = 50
-        self.current_ckpt, self.running_loss, self.running_accuracy = (0, 0.0, 0.0)
+        self.running_avg_window = 50
+        self.current_running_avg_step, self.running_loss, self.running_accuracy = (0, 0.0, 0.0)
         self._initialize_summaries()
 
         """ For creating experiment checkpoints """
@@ -93,7 +93,7 @@ class ProgressiveCIFARExperiment(Experiment):
         """
         Initializes the summaries for the experiment
         """
-        total_checkpoints = self.num_images_per_epoch * self.num_epochs // (self.checkpoint * self.batch_size)
+        total_checkpoints = self.num_images_per_epoch * self.num_epochs // (self.running_avg_window * self.batch_size)
         self.results_dict["train_loss_per_checkpoint"] = torch.zeros(total_checkpoints, device=self.device,
                                                                      dtype=torch.float32)
         self.results_dict["train_accuracy_per_checkpoint"] = torch.zeros(total_checkpoints, device=self.device,
@@ -230,13 +230,13 @@ class ProgressiveCIFARExperiment(Experiment):
     # ----------------------------- For storing summaries ----------------------------- #
     def _store_training_summaries(self):
         # store train data
-        self.results_dict["train_loss_per_checkpoint"][self.current_ckpt] += self.running_loss / self.checkpoint
-        self.results_dict["train_accuracy_per_checkpoint"][self.current_ckpt] += self.running_accuracy / self.checkpoint
+        self.results_dict["train_loss_per_checkpoint"][self.current_running_avg_step] += self.running_loss / self.running_avg_window
+        self.results_dict["train_accuracy_per_checkpoint"][self.current_running_avg_step] += self.running_accuracy / self.running_avg_window
 
-        self._print("\t\tOnline accuracy: {0:.2f}".format(self.running_accuracy / self.checkpoint))
+        self._print("\t\tOnline accuracy: {0:.2f}".format(self.running_accuracy / self.running_avg_window))
         self.running_loss *= 0.0
         self.running_accuracy *= 0.0
-        self.current_ckpt += 1
+        self.current_running_avg_step += 1
 
     def _store_test_summaries(self, test_data, epoch_number: int, epoch_runtime: float):
         """ Computes test summaries and stores them in results dir """
@@ -356,7 +356,7 @@ class ProgressiveCIFARExperiment(Experiment):
                 current_accuracy = torch.mean((predictions.argmax(axis=1) == label.argmax(axis=1)).to(torch.float32))
                 self.running_loss += current_loss
                 self.running_accuracy += current_accuracy.detach()
-                if (step_number + 1) % self.checkpoint == 0:
+                if (step_number + 1) % self.running_avg_window == 0:
                     self._print("\t\tStep Number: {0}".format(step_number + 1))
                     self._store_training_summaries()
 
