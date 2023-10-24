@@ -82,7 +82,7 @@ class ProgressiveCIFARExperiment(Experiment):
         """ For creating experiment checkpoints """
         self.experiment_checkpoints_dir_path = os.path.join(self.results_dir, "experiment_checkpoints")
         self.checkpoint_identifier_name = "current_epoch"
-        self.checkpoint_save_frequency = 100    # save every 100 epochs
+        self.checkpoint_save_frequency = 1 #100    # save every 100 epochs
 
         """ For data partitioning """
         self.class_increase_frequency = 300
@@ -414,9 +414,9 @@ def main():
         "momentum": 0.9,
         "gradient_clip_val": 0.1,
         "data_path": os.path.join(file_path, "data"),
-        "num_epochs": 2700,
+        "num_epochs": 5,
         "initial_num_classes": 2,
-        "fixed_classes": False,
+        "fixed_classes": True,
         "plot": False
     }
 
