@@ -86,7 +86,7 @@ class ProgressiveCIFARExperiment(Experiment):
         """ For creating experiment checkpoints """
         self.experiment_checkpoints_dir_path = os.path.join(self.results_dir, "experiment_checkpoints")
         self.checkpoint_identifier_name = "current_epoch"
-        self.checkpoint_save_frequency = 1 #100    # save every 100 epochs
+        self.checkpoint_save_frequency = 300    # save every 300 epochs
 
         """ For data partitioning """
         self.class_increase_frequency = 300
@@ -216,7 +216,6 @@ class ProgressiveCIFARExperiment(Experiment):
             pairs = re.findall(r'(\w+)-(\d+)', file_name_without_extension)
             index_int = int(pairs[0][1])
             ckpt_id_int = int(pairs[1][1])
-            print(index_int, ckpt_id_int)
 
             if index_int != self.run_index:
                 continue
@@ -423,12 +422,12 @@ def main():
     file_path = os.path.dirname(os.path.abspath(__file__))
     experiment_parameters = {
         "stepsize": 0.01,
-        "weight_decay": 0.0001,
+        "weight_decay": 0.001,
         "momentum": 0.9,
         "gradient_clip_val": 0.1,
         "data_path": os.path.join(file_path, "data"),
-        "num_epochs": 5,
-        "initial_num_classes": 2,
+        "num_epochs": 300,
+        "initial_num_classes": 10,
         "fixed_classes": True,
         "plot": False
     }
