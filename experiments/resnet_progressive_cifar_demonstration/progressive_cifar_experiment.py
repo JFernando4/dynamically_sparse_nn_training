@@ -6,7 +6,6 @@ import re
 
 # third party libraries
 import torch
-from torch.nn.init import kaiming_normal, xavier_normal
 from torch.utils.data import DataLoader
 import numpy as np
 from torchvision.models import resnet18, resnet50
@@ -15,8 +14,8 @@ from torchvision import transforms
 # from ml project manager
 from mlproj_manager.problems import CifarDataSet
 from mlproj_manager.experiments import Experiment
-from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict
-from mlproj_manager.util.data_preprocessing_and_transformations import ToTensor, Normalize
+from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict, init_weights_kaiming
+from mlproj_manager.util.data_preprocessing_and_transformations import ToTensor, Normalize, RandomCrop, RandomHorizontalFlip
 
 from src import ResNet9
 
@@ -51,6 +50,7 @@ class ProgressiveCIFARExperiment(Experiment):
         self.num_epochs = access_dict(exp_params, "num_epochs", default=1, val_type=int)
         self.current_num_classes = access_dict(exp_params, "initial_num_classes", default=2, val_type=int)
         self.fixed_classes = access_dict(exp_params, "fixed_classes", default=True, val_type=bool)
+        self.reset_heads = access_dict(exp_params, "reset_heads", default=False, val_type=bool)
         self.plot = access_dict(exp_params, key="plot", default=False)
 
         """ Training constants """
@@ -64,8 +64,8 @@ class ProgressiveCIFARExperiment(Experiment):
         """ Network set up """
         # initialize network
         # self.net = resnet18(num_classes=10, norm_layer=torch.nn.Identity)
-        # self.net = ResNet9(in_channels=3, num_classes=10, norm_function=torch.nn.BatchNorm2d)
-        self.net = resnet50(num_classes=10, norm_layer=torch.nn.BatchNorm2d)
+        self.net = ResNet9(in_channels=3, num_classes=10, norm_function=torch.nn.BatchNorm2d)
+        # self.net = resnet50(num_classes=10, norm_layer=torch.nn.BatchNorm2d)
         # self.net.apply(xavier_init_weights)
 
         # initialize optimizer
@@ -90,7 +90,7 @@ class ProgressiveCIFARExperiment(Experiment):
         self.checkpoint_save_frequency = 300    # save every 300 epochs
 
         """ For data partitioning """
-        self.class_increase_frequency = 300
+        self.class_increase_frequency = 100
         self.all_classes = np.random.permutation(10)
 
     # -------------------- Methods for initializing the experiment --------------------#
@@ -337,6 +337,10 @@ class ProgressiveCIFARExperiment(Experiment):
             ToTensor(swap_color_axis=True),  # reshape to (C x H x W)
             Normalize(mean=(0.491, 0.482, 0.446), std=(0.247, 0.243, 0.261)),  # center by mean and divide by std
         ]
+        # if train:
+        #     transformations.append(RandomHorizontalFlip(p=0.5))
+        #     transformations.append(RandomCrop(size=32, padding=4, padding_mode="reflect"))
+
         cifar_data.set_transformation(transforms.Compose(transformations))
 
         if return_data_loader:
@@ -390,6 +394,8 @@ class ProgressiveCIFARExperiment(Experiment):
                 self.current_num_classes += 1
                 training_data.select_new_partition(self.all_classes[:self.current_num_classes])
                 test_data.select_new_partition(self.all_classes[:self.current_num_classes])
+                if self.reset_heads:
+                    init_weights_kaiming(self.net.classifier[-1], nonlinearity="linear", normal=True)
 
             self.current_epoch += 1
             if self.current_epoch % self.checkpoint_save_frequency == 0:
@@ -424,15 +430,16 @@ def main():
         "momentum": 0.9,
         "gradient_clip_val": 0.1,
         "data_path": os.path.join(file_path, "data"),
-        "num_epochs": 100,
-        "initial_num_classes": 10,
-        "fixed_classes": True,
+        "num_epochs": 900,
+        "initial_num_classes": 2,
+        "fixed_classes": False,
+        "reset_heads": True,
         "plot": False
     }
 
     print(experiment_parameters)
     relevant_parameters = ["num_epochs", "initial_num_classes", "fixed_classes", "stepsize", "weight_decay", "momentum",
-                           "gradient_clip_val"]
+                           "gradient_clip_val", "reset_heads"]
     results_dir_name = "{0}-{1}".format(relevant_parameters[0], experiment_parameters[relevant_parameters[0]])
     for relevant_param in relevant_parameters[1:]:
         results_dir_name += "_" + relevant_param + "-" + str(experiment_parameters[relevant_param])
