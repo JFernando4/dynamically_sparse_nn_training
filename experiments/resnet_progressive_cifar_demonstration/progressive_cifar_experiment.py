@@ -404,6 +404,7 @@ class ProgressiveCIFARExperiment(Experiment):
                 if self.reset_head:
                     init_weights_kaiming(self.net.classifier[-1], nonlinearity="linear", normal=True)
                 if self.reset_network:
+                    self.net = ResNet9(in_channels=3, num_classes=10, norm_function=torch.nn.BatchNorm2d)
                     self.net.apply(kaiming_init_resnet_module)
                     self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
                                                  weight_decay=self.weight_decay)
