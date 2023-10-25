@@ -17,7 +17,7 @@ from mlproj_manager.experiments import Experiment
 from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict, init_weights_kaiming
 from mlproj_manager.util.data_preprocessing_and_transformations import ToTensor, Normalize, RandomCrop, RandomHorizontalFlip
 
-from src import ResNet9
+from src import ResNet9, kaiming_init_resnet_module
 
 
 class ProgressiveCIFARExperiment(Experiment):
@@ -50,7 +50,10 @@ class ProgressiveCIFARExperiment(Experiment):
         self.num_epochs = access_dict(exp_params, "num_epochs", default=1, val_type=int)
         self.current_num_classes = access_dict(exp_params, "initial_num_classes", default=2, val_type=int)
         self.fixed_classes = access_dict(exp_params, "fixed_classes", default=True, val_type=bool)
-        self.reset_heads = access_dict(exp_params, "reset_heads", default=False, val_type=bool)
+        self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
+        self.reset_network = access_dict(exp_params, "reset_network", default=False, val_type=bool)
+        if self.reset_head and self.reset_network:
+            print(Warning("Resetting the whole network supersedes resetting the head of the network. There's no need to set both to True."))
         self.plot = access_dict(exp_params, key="plot", default=False)
 
         """ Training constants """
@@ -66,7 +69,7 @@ class ProgressiveCIFARExperiment(Experiment):
         # self.net = resnet18(num_classes=10, norm_layer=torch.nn.Identity)
         self.net = ResNet9(in_channels=3, num_classes=10, norm_function=torch.nn.BatchNorm2d)
         # self.net = resnet50(num_classes=10, norm_layer=torch.nn.BatchNorm2d)
-        # self.net.apply(xavier_init_weights)
+        self.net.apply(kaiming_init_resnet_module)
 
         # initialize optimizer
         self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
@@ -389,17 +392,19 @@ class ProgressiveCIFARExperiment(Experiment):
             epoch_end_time = time.perf_counter()
             self._store_test_summaries(test_dataloader, epoch_number=e, epoch_runtime=epoch_end_time - epoch_start_time)
 
+            self.current_epoch += 1
+            if self.current_epoch % self.checkpoint_save_frequency == 0:
+                self.save_experiment_checkpoint()
+
             if ((e + 1) % self.class_increase_frequency) == 0 and (not self.fixed_classes):
                 self._print("\tNew class added...")
                 self.current_num_classes += 1
                 training_data.select_new_partition(self.all_classes[:self.current_num_classes])
                 test_data.select_new_partition(self.all_classes[:self.current_num_classes])
-                if self.reset_heads:
+                if self.reset_head:
                     init_weights_kaiming(self.net.classifier[-1], nonlinearity="linear", normal=True)
-
-            self.current_epoch += 1
-            if self.current_epoch % self.checkpoint_save_frequency == 0:
-                self.save_experiment_checkpoint()
+                if self.reset_network:
+                    self.net.apply(kaiming_init_resnet_module)
 
     def _plot_results(self):
         if self.plot:
@@ -433,13 +438,14 @@ def main():
         "num_epochs": 900,
         "initial_num_classes": 2,
         "fixed_classes": False,
-        "reset_heads": True,
+        "reset_head": True,
+        "reset_network": False,
         "plot": False
     }
 
     print(experiment_parameters)
     relevant_parameters = ["num_epochs", "initial_num_classes", "fixed_classes", "stepsize", "weight_decay", "momentum",
-                           "gradient_clip_val", "reset_heads"]
+                           "gradient_clip_val", "reset_head"]
     results_dir_name = "{0}-{1}".format(relevant_parameters[0], experiment_parameters[relevant_parameters[0]])
     for relevant_param in relevant_parameters[1:]:
         results_dir_name += "_" + relevant_param + "-" + str(experiment_parameters[relevant_param])
