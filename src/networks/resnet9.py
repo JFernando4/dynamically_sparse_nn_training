@@ -11,7 +11,10 @@ def kaiming_init_resnet_module(nn_module: torch.nn.Module):
     """
 
     if isinstance(nn_module, torch.nn.Conv2d) or isinstance(nn_module, torch.nn.Linear):
-        torch.nn.init.kaiming_normal_(nn_module.weight, nonlinearity="relu")
+        if isinstance(nn_module, torch.nn.Conv2d):
+            torch.nn.init.kaiming_normal_(nn_module.weight, nonlinearity="relu")
+        else:   # the only linear layer in a resnet is the output layer
+            torch.nn.init.kaiming_normal_(nn_module.weight, nonlinearity="linear")
         torch.nn.init.constant_(nn_module.bias, 1.0)
 
     if isinstance(nn_module, torch.nn.BatchNorm2d):
