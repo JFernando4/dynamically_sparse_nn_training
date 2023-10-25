@@ -84,14 +84,14 @@ class ProgressiveCIFARExperiment(Experiment):
         self.current_running_avg_step, self.running_loss, self.running_accuracy = (0, 0.0, 0.0)
         self._initialize_summaries()
 
-        """ For creating experiment checkpoints """
-        self.experiment_checkpoints_dir_path = os.path.join(self.results_dir, "experiment_checkpoints")
-        self.checkpoint_identifier_name = "current_epoch"
-        self.checkpoint_save_frequency = 300    # save every 300 epochs
-
         """ For data partitioning """
         self.class_increase_frequency = 100
         self.all_classes = np.random.permutation(10)
+
+        """ For creating experiment checkpoints """
+        self.experiment_checkpoints_dir_path = os.path.join(self.results_dir, "experiment_checkpoints")
+        self.checkpoint_identifier_name = "current_epoch"
+        self.checkpoint_save_frequency = self.class_increase_frequency  # save every time a new class is added
 
     # -------------------- Methods for initializing the experiment --------------------#
     def _initialize_summaries(self):
