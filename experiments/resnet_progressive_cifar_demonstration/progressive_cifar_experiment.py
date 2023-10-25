@@ -6,17 +6,17 @@ import re
 
 # third party libraries
 import torch
+from torch.nn.init import kaiming_normal, xavier_normal
 from torch.utils.data import DataLoader
 import numpy as np
-from torchvision.models import resnet18
+from torchvision.models import resnet18, resnet50
 from torchvision import transforms
 
 # from ml project manager
 from mlproj_manager.problems import CifarDataSet
 from mlproj_manager.experiments import Experiment
 from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict
-from mlproj_manager.util.neural_networks import xavier_init_weights
-from mlproj_manager.util.data_preprocessing_and_transformations import ToTensor, Normalize, RandomHorizontalFlip, RandomRotator, RandomVerticalFlip, RandomCrop
+from mlproj_manager.util.data_preprocessing_and_transformations import ToTensor, Normalize
 
 from src import ResNet9
 
@@ -64,7 +64,8 @@ class ProgressiveCIFARExperiment(Experiment):
         """ Network set up """
         # initialize network
         # self.net = resnet18(num_classes=10, norm_layer=torch.nn.Identity)
-        self.net = ResNet9(in_channels=3, num_classes=10, norm_function=torch.nn.BatchNorm2d)
+        # self.net = ResNet9(in_channels=3, num_classes=10, norm_function=torch.nn.BatchNorm2d)
+        self.net = resnet50(num_classes=10, norm_layer=torch.nn.BatchNorm2d)
         # self.net.apply(xavier_init_weights)
 
         # initialize optimizer
@@ -294,7 +295,7 @@ class ProgressiveCIFARExperiment(Experiment):
             for _, sample in enumerate(test_data):
                 images = sample["image"].to(self.device)
                 test_labels = sample["label"].to(self.device)
-                test_predictions = self.net.forward(images.to(self.device))[:, self.all_classes[:self.current_num_classes]]
+                test_predictions = self.net.forward(images)[:, self.all_classes[:self.current_num_classes]]
 
                 avg_loss += self.loss(test_predictions, test_labels)
                 avg_acc += torch.mean((test_predictions.argmax(axis=1) == test_labels.argmax(axis=1)).to(torch.float32))
@@ -336,9 +337,6 @@ class ProgressiveCIFARExperiment(Experiment):
             ToTensor(swap_color_axis=True),  # reshape to (C x H x W)
             Normalize(mean=(0.491, 0.482, 0.446), std=(0.247, 0.243, 0.261)),  # center by mean and divide by std
         ]
-        # if train:
-        #     transformations.append(RandomHorizontalFlip(p=0.5))
-        #     transformations.append(RandomCrop(size=32, padding=4, padding_mode="reflect"))
         cifar_data.set_transformation(transforms.Compose(transformations))
 
         if return_data_loader:
@@ -422,11 +420,11 @@ def main():
     file_path = os.path.dirname(os.path.abspath(__file__))
     experiment_parameters = {
         "stepsize": 0.01,
-        "weight_decay": 0.001,
+        "weight_decay": 0.0001,
         "momentum": 0.9,
         "gradient_clip_val": 0.1,
         "data_path": os.path.join(file_path, "data"),
-        "num_epochs": 300,
+        "num_epochs": 100,
         "initial_num_classes": 10,
         "fixed_classes": True,
         "plot": False
