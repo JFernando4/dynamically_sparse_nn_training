@@ -12,7 +12,10 @@ from torchvision.models._meta import _IMAGENET_CATEGORIES
 from torchvision.models._utils import _ovewrite_named_param, handle_legacy_interface
 
 """ 
-This is a modified version of torchvision's code for instantiating resnets. The only difference is that the bias are 
+This is a modified version of torchvision's code for instantiating resnets. Here's a list of the changes made to the 
+source code:
+    - All convolutional layers now have bias set to True, where they were original set to False.
+    -  
 set to True for all the convolutional layers, where they were original set to False. To see the source code, go to:
     torchvision.models.resnet
 """
@@ -122,8 +125,10 @@ class ResNet(nn.Module):
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0])
-        self.layer2 = self._make_layer(block, 128, layers[1], stride=2, dilate=replace_stride_with_dilation[0])
-        self.layer3 = self._make_layer(block, 256, layers[2], stride=2, dilate=replace_stride_with_dilation[1])
+        self.layer2 = self._make_layer(block, 128, layers[1], stride=1, dilate=replace_stride_with_dilation[0])
+        self.maxpool2 = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        self.layer3 = self._make_layer(block, 256, layers[2], stride=1, dilate=replace_stride_with_dilation[1])
+        self.maxpool3 = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=1, dilate=replace_stride_with_dilation[2])
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(512 * block.expansion, num_classes)
@@ -193,7 +198,9 @@ class ResNet(nn.Module):
 
         x = self.layer1(x)
         x = self.layer2(x)
+        x = self.maxpool2(x)
         x = self.layer3(x)
+        x = self.maxpool3(x)
         x = self.layer4(x)
 
         x = self.avgpool(x)
