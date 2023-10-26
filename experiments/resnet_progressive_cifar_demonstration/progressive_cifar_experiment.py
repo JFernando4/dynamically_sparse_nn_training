@@ -8,7 +8,7 @@ import re
 import torch
 from torch.utils.data import DataLoader
 import numpy as np
-from torchvision.models import resnet18, resnet50
+from torchvision.models import resnet18, resnet34
 from torchvision import transforms
 
 # from ml project manager
@@ -67,8 +67,8 @@ class ProgressiveCIFARExperiment(Experiment):
         """ Network set up """
         # initialize network
         # self.net = resnet18(num_classes=10, norm_layer=torch.nn.Identity)
-        self.net = ResNet9(in_channels=3, num_classes=10, norm_function=torch.nn.BatchNorm2d)
-        # self.net = resnet50(num_classes=10, norm_layer=torch.nn.BatchNorm2d)
+        # self.net = ResNet9(in_channels=3, num_classes=10, norm_function=torch.nn.BatchNorm2d)
+        self.net = resnet34(num_classes=10, norm_layer=torch.nn.BatchNorm2d)
         self.net.apply(kaiming_init_resnet_module)
 
         # initialize optimizer
@@ -340,9 +340,9 @@ class ProgressiveCIFARExperiment(Experiment):
             ToTensor(swap_color_axis=True),  # reshape to (C x H x W)
             Normalize(mean=(0.491, 0.482, 0.446), std=(0.247, 0.243, 0.261)),  # center by mean and divide by std
         ]
-        # if train:
-        #     transformations.append(RandomHorizontalFlip(p=0.5))
-        #     transformations.append(RandomCrop(size=32, padding=4, padding_mode="reflect"))
+        if train:
+            transformations.append(RandomHorizontalFlip(p=0.5))
+            transformations.append(RandomCrop(size=32, padding=4, padding_mode="reflect"))
 
         cifar_data.set_transformation(transforms.Compose(transformations))
 
@@ -402,9 +402,9 @@ class ProgressiveCIFARExperiment(Experiment):
                 training_data.select_new_partition(self.all_classes[:self.current_num_classes])
                 test_data.select_new_partition(self.all_classes[:self.current_num_classes])
                 if self.reset_head:
-                    init_weights_kaiming(self.net.classifier[-1], nonlinearity="linear", normal=True)
+                    kaiming_init_resnet_module(self.net.fc)
                 if self.reset_network:
-                    self.net = ResNet9(in_channels=3, num_classes=10, norm_function=torch.nn.BatchNorm2d)
+                    self.net = resnet34(in_channels=3, num_classes=10, norm_function=torch.nn.BatchNorm2d)
                     self.net.apply(kaiming_init_resnet_module)
                     self.net.to(self.device)
                     self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
