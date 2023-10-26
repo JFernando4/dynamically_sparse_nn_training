@@ -8,7 +8,7 @@ import re
 import torch
 from torch.utils.data import DataLoader
 import numpy as np
-from torchvision.models import resnet18, resnet34
+from torchvision.models import resnet18
 from torchvision import transforms
 
 # from ml project manager
@@ -17,7 +17,7 @@ from mlproj_manager.experiments import Experiment
 from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict, init_weights_kaiming
 from mlproj_manager.util.data_preprocessing_and_transformations import ToTensor, Normalize, RandomCrop, RandomHorizontalFlip
 
-from src import ResNet9, kaiming_init_resnet_module
+from src import ResNet9, kaiming_init_resnet_module, build_resnet34
 
 
 class ProgressiveCIFARExperiment(Experiment):
@@ -68,7 +68,7 @@ class ProgressiveCIFARExperiment(Experiment):
         # initialize network
         # self.net = resnet18(num_classes=10, norm_layer=torch.nn.Identity)
         # self.net = ResNet9(in_channels=3, num_classes=10, norm_function=torch.nn.BatchNorm2d)
-        self.net = resnet34(num_classes=10, norm_layer=torch.nn.BatchNorm2d)
+        self.net = build_resnet34(num_classes=10, norm_layer=torch.nn.BatchNorm2d)
         self.net.apply(kaiming_init_resnet_module)
 
         # initialize optimizer
