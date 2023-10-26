@@ -17,7 +17,7 @@ from mlproj_manager.experiments import Experiment
 from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict, init_weights_kaiming
 from mlproj_manager.util.data_preprocessing_and_transformations import ToTensor, Normalize, RandomCrop, RandomHorizontalFlip
 
-from src import ResNet9, kaiming_init_resnet_module, build_resnet34
+from src import ResNet9, kaiming_init_resnet_module, build_resnet34, build_resnet18
 
 
 class ProgressiveCIFARExperiment(Experiment):
