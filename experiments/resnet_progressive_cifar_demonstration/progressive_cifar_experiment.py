@@ -88,7 +88,7 @@ class ProgressiveCIFARExperiment(Experiment):
         self._initialize_summaries()
 
         """ For data partitioning """
-        self.class_increase_frequency = 100
+        self.class_increase_frequency = 500
         self.all_classes = np.random.permutation(10)
 
         """ For creating experiment checkpoints """
@@ -439,7 +439,7 @@ def main():
         "momentum": 0.9,
         "gradient_clip_val": 0.1,
         "data_path": os.path.join(file_path, "data"),
-        "num_epochs": 100,
+        "num_epochs": 500,
         "initial_num_classes": 10,
         "fixed_classes": True,
         "reset_head": False,
