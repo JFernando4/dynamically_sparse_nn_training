@@ -229,3 +229,12 @@ def build_resnet34(num_classes: int, norm_layer):
     :return: an instance of ResNet with the correct number of layers for ResNet34
     """
     return ResNet(BasicBlock, layers=[3, 4, 6, 3], norm_layer=norm_layer, num_classes=num_classes)
+
+
+def build_resnet10(num_classes: int, norm_layer):
+    """
+    :param num_classes: number of classes for the classification problem
+    :param norm_layer: type of normalization. Options: [torch.nn.BatchNorm2d, torch.nn.Identity]
+    :return: an instance of ResNet with the correct number of layers for ResNet34
+    """
+    return ResNet(BasicBlock, layers=[1, 1, 1, 1], norm_layer=norm_layer, num_classes=num_classes)
