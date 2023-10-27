@@ -95,6 +95,7 @@ class ProgressiveCIFARExperiment(Experiment):
         self.experiment_checkpoints_dir_path = os.path.join(self.results_dir, "experiment_checkpoints")
         self.checkpoint_identifier_name = "current_epoch"
         self.checkpoint_save_frequency = self.class_increase_frequency  # save every time a new class is added
+        self.delete_old_checkpoints = False
 
     # -------------------- Methods for initializing the experiment --------------------#
     def _initialize_summaries(self):
@@ -132,9 +133,8 @@ class ProgressiveCIFARExperiment(Experiment):
         checkpoint_identifier_value = getattr(self, self.checkpoint_identifier_name)
 
         if not isinstance(checkpoint_identifier_value, int):
-            warning_message = "The checkpoint identifier should be an increasing sequence of integers."\
-                              "Got {0} instead. This may result in unexpected behavior."
-            Warning(warning_message.format(checkpoint_identifier_value.__class__))
+            warning_message = "The checkpoint identifier should be an integer. Got {0} instead, which result in unexpected behaviour."
+            print(Warning(warning_message.format(checkpoint_identifier_value.__class__)))
 
         file_name = "index-{0}_{1}-{2}.p".format(self.run_index, self.checkpoint_identifier_name, checkpoint_identifier_value)
         file_path = os.path.join(self.experiment_checkpoints_dir_path, file_name)
@@ -142,15 +142,27 @@ class ProgressiveCIFARExperiment(Experiment):
         # retrieve model parameters and random state
         experiment_checkpoint = self.get_experiment_checkpoint()
 
+        successfully_saved = self.create_checkpoint_file(file_path, experiment_checkpoint)
+
+        if successfully_saved and self.delete_old_checkpoints:
+            self.delete_previous_checkpoint()
+
+    def create_checkpoint_file(self, filepath: str, experiment_checkpoint: dict):
+        """
+        Creates a pickle file that contains the dictionary corresponding to the checkpoint
+        :param filepath: path where the checkpoint is to be stored
+        :param experiment_checkpoint: dictionary with data corresponding ot the current state of the experiment
+        :return: bool, True if checkpoint was successfully saved
+        """
         attempts = 10
         successfully_saved = False
 
         # attempt to save the experiment checkpoint
         for i in range(attempts):
             try:
-                with open(file_path, mode="wb") as experiment_checkpoint_file:
+                with open(filepath, mode="wb") as experiment_checkpoint_file:
                     pickle.dump(experiment_checkpoint, experiment_checkpoint_file)
-                with open(file_path, mode="rb") as experiment_checkpoint_file:
+                with open(filepath, mode="rb") as experiment_checkpoint_file:
                     pickle.load(experiment_checkpoint_file)
                 successfully_saved = True
                 break
@@ -158,10 +170,22 @@ class ProgressiveCIFARExperiment(Experiment):
                 print("Something went wrong on attempt {0}.".format(i + 1))
 
         if successfully_saved:
-            self._print("Checkpoing was successfully saved at:\n\t{0}".format(file_path))
+            self._print("Checkpoint was successfully saved at:\n\t{0}".format(filepath))
         else:
             print("Something went wrong when attempting to save the experiment checkpoint.")
+
         return successfully_saved
+
+    def delete_previous_checkpoint(self):
+        """ Deletes the previous saved checkpoint """
+
+        prev_ckpt_identifier_value = int(getattr(self, self.checkpoint_identifier_name) - self.checkpoint_save_frequency)
+        file_name = "index-{0}_{1}-{2}.p".format(self.run_index, self.checkpoint_identifier_name, prev_ckpt_identifier_value)
+        file_path = os.path.join(self.experiment_checkpoints_dir_path, file_name)
+
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+            print("The following file was deleted: {0}".format(file_path))
 
     def get_experiment_checkpoint(self):
         """ Creates a dictionary with all the necessary information to pause and resume the experiment """
