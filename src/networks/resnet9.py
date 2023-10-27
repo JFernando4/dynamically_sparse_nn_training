@@ -22,6 +22,10 @@ def kaiming_init_resnet_module(nn_module: torch.nn.Module):
         torch.nn.init.constant_(nn_module.weight, 1.0)
         torch.nn.init.constant_(nn_module.bias, 0.0)
 
+"""
+The implementation bellow is from this website:
+    https://www.kaggle.com/code/kmldas/cifar10-resnet-90-accuracy-less-than-5-min#Classifying-CIFAR10-images-using-a-ResNet-and-Regularization-techniques-in-PyTorch
+"""
 
 def conv_block(in_channels, out_channels, pool=False, norm_function=torch.nn.BatchNorm2d):
     layers = [
