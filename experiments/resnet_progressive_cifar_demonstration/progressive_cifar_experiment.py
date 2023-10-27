@@ -416,11 +416,13 @@ class ProgressiveCIFARExperiment(Experiment):
             epoch_end_time = time.perf_counter()
             self._store_test_summaries(test_dataloader, epoch_number=e, epoch_runtime=epoch_end_time - epoch_start_time)
 
-            if ((e + 1) % self.class_increase_frequency) == 0 and (not self.fixed_classes):
-                self._print("\tNew class added...")
+            self.current_epoch += 1
+            if (self.current_epoch % self.class_increase_frequency) == 0 and (not self.fixed_classes):
+                self._save_model_parameters()
                 self.current_num_classes += 1
                 training_data.select_new_partition(self.all_classes[:self.current_num_classes])
                 test_data.select_new_partition(self.all_classes[:self.current_num_classes])
+                self._print("\tNew class added...")
                 if self.reset_head:
                     kaiming_init_resnet_module(self.net.fc)
                 if self.reset_network:
@@ -430,9 +432,26 @@ class ProgressiveCIFARExperiment(Experiment):
                     self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
                                                  weight_decay=self.weight_decay)
 
-            self.current_epoch += 1
             if self.current_epoch % self.checkpoint_save_frequency == 0:
                 self.save_experiment_checkpoint()
+
+    def _save_model_parameters(self):
+        """ Stores the parameters of the model, so it can be evaluated after the experiment is over """
+
+        model_parameters_dir_path = os.path.join(self.results_dir, "model_parameters")
+        os.makedirs(model_parameters_dir_path, exist_ok=True)
+
+        file_name = "index-{0}_epoch-{1}.pt".format(self.run_index, self.current_epoch)
+        file_path = os.path.join(model_parameters_dir_path, file_name)
+
+        attempts = 10
+        for i in range(attempts):
+            try:
+                torch.save(self.net.state_dict(), file_path)
+                torch.load(file_path)                           # check that parameters were stored correctly
+                break
+            except ValueError:
+                print("Something went wrong on attempt {0}! Attempting to store the parameters again...".format(i + 1))
 
     def _plot_results(self):
         if self.plot:
