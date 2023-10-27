@@ -392,10 +392,6 @@ class ProgressiveCIFARExperiment(Experiment):
             epoch_end_time = time.perf_counter()
             self._store_test_summaries(test_dataloader, epoch_number=e, epoch_runtime=epoch_end_time - epoch_start_time)
 
-            self.current_epoch += 1
-            if self.current_epoch % self.checkpoint_save_frequency == 0:
-                self.save_experiment_checkpoint()
-
             if ((e + 1) % self.class_increase_frequency) == 0 and (not self.fixed_classes):
                 self._print("\tNew class added...")
                 self.current_num_classes += 1
@@ -404,11 +400,15 @@ class ProgressiveCIFARExperiment(Experiment):
                 if self.reset_head:
                     kaiming_init_resnet_module(self.net.fc)
                 if self.reset_network:
-                    self.net = resnet34(in_channels=3, num_classes=10, norm_function=torch.nn.BatchNorm2d)
+                    self.net = resnet18(in_channels=3, num_classes=10, norm_function=torch.nn.BatchNorm2d)
                     self.net.apply(kaiming_init_resnet_module)
                     self.net.to(self.device)
                     self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
                                                  weight_decay=self.weight_decay)
+
+            self.current_epoch += 1
+            if self.current_epoch % self.checkpoint_save_frequency == 0:
+                self.save_experiment_checkpoint()
 
     def _plot_results(self):
         if self.plot:
