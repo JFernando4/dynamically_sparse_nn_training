@@ -68,7 +68,7 @@ class ProgressiveCIFARExperiment(Experiment):
         # initialize network
         # self.net = resnet18(num_classes=10, norm_layer=torch.nn.Identity)
         # self.net = ResNet9(in_channels=3, num_classes=10, norm_function=torch.nn.BatchNorm2d)
-        self.net = build_resnet10(num_classes=10, norm_layer=torch.nn.BatchNorm2d)
+        self.net = build_resnet34(num_classes=10, norm_layer=torch.nn.BatchNorm2d)
         self.net.apply(kaiming_init_resnet_module)
 
         # initialize optimizer
@@ -364,9 +364,9 @@ class ProgressiveCIFARExperiment(Experiment):
             ToTensor(swap_color_axis=True),  # reshape to (C x H x W)
             Normalize(mean=(0.491, 0.482, 0.446), std=(0.247, 0.243, 0.261)),  # center by mean and divide by std
         ]
-        if train:
-            transformations.append(RandomHorizontalFlip(p=0.5))
-            transformations.append(RandomCrop(size=32, padding=4, padding_mode="reflect"))
+        # if train:
+        #     transformations.append(RandomHorizontalFlip(p=0.5))
+        #     transformations.append(RandomCrop(size=32, padding=4, padding_mode="reflect"))
 
         cifar_data.set_transformation(transforms.Compose(transformations))
 
@@ -482,7 +482,7 @@ def main():
         "momentum": 0.9,
         "gradient_clip_val": 0.1,
         "data_path": os.path.join(file_path, "data"),
-        "num_epochs": 500,
+        "num_epochs": 300,
         "initial_num_classes": 10,
         "fixed_classes": True,
         "reset_head": False,
