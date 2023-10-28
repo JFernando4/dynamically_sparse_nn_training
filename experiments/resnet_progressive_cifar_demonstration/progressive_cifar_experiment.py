@@ -67,8 +67,8 @@ class ProgressiveCIFARExperiment(Experiment):
         """ Network set up """
         # initialize network
         # self.net = resnet18(num_classes=10, norm_layer=torch.nn.Identity)
-        self.net = ResNet9(in_channels=3, num_classes=10, norm_function=torch.nn.BatchNorm2d)
-        # self.net = build_resnet34(num_classes=10, norm_layer=torch.nn.BatchNorm2d)
+        # self.net = ResNet9(in_channels=3, num_classes=10, norm_function=torch.nn.BatchNorm2d)
+        self.net = build_resnet18(num_classes=10, norm_layer=torch.nn.BatchNorm2d)
         self.net.apply(kaiming_init_resnet_module)
 
         # initialize optimizer
