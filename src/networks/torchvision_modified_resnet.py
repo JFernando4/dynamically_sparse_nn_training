@@ -131,7 +131,7 @@ class ResNet(nn.Module):
         self.maxpool3 = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=1, dilate=replace_stride_with_dilation[2])
         # self.output_pool = nn.AdaptiveAvgPool2d((1, 1))
-        self.output_pool = nn.AdaptiveMaxPool2d((1,1))
+        self.output_pool = nn.AdaptiveMaxPool2d((2,2))
         self.fc = nn.Linear(512 * block.expansion, num_classes)
 
         for m in self.modules():
