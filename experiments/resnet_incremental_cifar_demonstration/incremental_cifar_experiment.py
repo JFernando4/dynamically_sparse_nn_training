@@ -20,7 +20,7 @@ from mlproj_manager.util.data_preprocessing_and_transformations import ToTensor,
 from src import ResNet9, kaiming_init_resnet_module, build_resnet34, build_resnet18, build_resnet10
 
 
-class ProgressiveCIFARExperiment(Experiment):
+class IncrementalCIFARExperiment(Experiment):
 
     def __init__(self, exp_params: dict, results_dir: str, run_index: int, verbose=True):
         super().__init__(exp_params, results_dir, run_index, verbose)
@@ -510,7 +510,7 @@ def main():
         results_dir_name += "_" + relevant_param + "-" + str(experiment_parameters[relevant_param])
 
     initial_time = time.perf_counter()
-    exp = ProgressiveCIFARExperiment(experiment_parameters,
+    exp = IncrementalCIFARExperiment(experiment_parameters,
                                      results_dir=os.path.join(file_path, "results", results_dir_name),
                                      run_index=0,
                                      verbose=True)
