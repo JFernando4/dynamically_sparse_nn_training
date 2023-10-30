@@ -3,6 +3,7 @@ import time
 import os
 import pickle
 import re
+from copy import deepcopy
 
 # third party libraries
 import torch
@@ -67,7 +68,7 @@ class ProgressiveCIFARExperiment(Experiment):
         """ Network set up """
         # initialize network
         # self.net = resnet18(num_classes=10, norm_layer=torch.nn.Identity)
-        self.net = ResNet9(in_channels=3, num_classes=10, norm_function=torch.nn.BatchNorm2d)
+        self.net = ResNet9(in_channels=3, num_classes=self.num_classes, norm_function=torch.nn.BatchNorm2d)
         # self.net = build_resnet18(num_classes=10, norm_layer=torch.nn.BatchNorm2d)
         self.net.apply(kaiming_init_resnet_module)
 
@@ -88,8 +89,10 @@ class ProgressiveCIFARExperiment(Experiment):
         self._initialize_summaries()
 
         """ For data partitioning """
-        self.class_increase_frequency = 500
+        self.class_increase_frequency = 300
         self.all_classes = np.random.permutation(10)
+        self.best_accuracy = torch.tensor(0.0, device=self.device, dtype=torch.float32)
+        self.best_accuracy_model_parameters = {}
 
         """ For creating experiment checkpoints """
         self.experiment_checkpoints_dir_path = os.path.join(self.results_dir, "experiment_checkpoints")
@@ -298,6 +301,10 @@ class ProgressiveCIFARExperiment(Experiment):
         test_loss, test_accuracy = self.evaluate_network(test_data)
         test_evaluation_end_time = time.perf_counter()
         self.net.train()
+        # store parameters of the best accuracy model
+        if test_accuracy > self.best_accuracy:
+            self.best_accuracy = test_accuracy
+            self.best_accuracy_model_parameters = deepcopy(self.net.state_dict())
         # store summaries
         evaluation_run_time = test_evaluation_end_time - test_evaluation_start_time
         self.results_dict["test_evaluation_runtime"][epoch_number] += torch.tensor(evaluation_run_time, dtype=torch.float32)
@@ -429,6 +436,9 @@ class ProgressiveCIFARExperiment(Experiment):
         if self.current_num_classes == self.num_classes: return
 
         if (self.current_epoch % self.class_increase_frequency) == 0 and (not self.fixed_classes):
+            self.net.load_state_dict(self.best_accuracy_model_parameters)
+            self.best_accuracy = torch.zeros_like(self.best_accuracy)
+            self.best_accuracy_model_parameters = {}
             self._save_model_parameters()
             self.current_num_classes += 1
             training_data.select_new_partition(self.all_classes[:self.current_num_classes])
@@ -438,7 +448,7 @@ class ProgressiveCIFARExperiment(Experiment):
                 # kaiming_init_resnet_module(self.net.fc)                   # for resnet 10, 18 and 34
                 kaiming_init_resnet_module(self.net.classifier[-1])  # for resnet 9
             if self.reset_network:
-                self.net = ResNet9(in_channels=3, num_classes=10, norm_function=torch.nn.BatchNorm2d)
+                self.net = ResNet9(in_channels=3, num_classes=self.num_classes, norm_function=torch.nn.BatchNorm2d)
                 self.net.apply(kaiming_init_resnet_module)
                 self.net.to(self.device)
                 self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
