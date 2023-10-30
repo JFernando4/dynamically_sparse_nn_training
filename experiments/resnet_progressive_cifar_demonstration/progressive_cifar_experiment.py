@@ -9,7 +9,6 @@ from copy import deepcopy
 import torch
 from torch.utils.data import DataLoader
 import numpy as np
-from torchvision.models import resnet18
 from torchvision import transforms
 
 # from ml project manager
@@ -29,8 +28,6 @@ class ProgressiveCIFARExperiment(Experiment):
         # set debugging options for pytorch
         debug = access_dict(exp_params, key="debug", default=True, val_type=bool)
         turn_off_debugging_processes(debug)
-        # torch.backends.cudnn.deterministic = True
-        # torch.backends.cudnn.benchmark = False
 
         # define torch device
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -448,12 +445,7 @@ class ProgressiveCIFARExperiment(Experiment):
                 # kaiming_init_resnet_module(self.net.fc)                   # for resnet 10, 18 and 34
                 kaiming_init_resnet_module(self.net.classifier[-1])  # for resnet 9
             if self.reset_network:
-                self.net = ResNet9(in_channels=3, num_classes=self.num_classes, norm_function=torch.nn.BatchNorm2d)
                 self.net.apply(kaiming_init_resnet_module)
-                self.net.to(self.device)
-                self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
-                                             weight_decay=self.weight_decay)
-
 
     def _save_model_parameters(self):
         """ Stores the parameters of the model, so it can be evaluated after the experiment is over """
