@@ -417,24 +417,33 @@ class ProgressiveCIFARExperiment(Experiment):
             self._store_test_summaries(test_dataloader, epoch_number=e, epoch_runtime=epoch_end_time - epoch_start_time)
 
             self.current_epoch += 1
-            if (self.current_epoch % self.class_increase_frequency) == 0 and (not self.fixed_classes):
-                self._save_model_parameters()
-                self.current_num_classes += 1
-                training_data.select_new_partition(self.all_classes[:self.current_num_classes])
-                test_data.select_new_partition(self.all_classes[:self.current_num_classes])
-                self._print("\tNew class added...")
-                if self.reset_head:
-                    # kaiming_init_resnet_module(self.net.fc)                   # for resnet 10, 18 and 34
-                    kaiming_init_resnet_module(self.net.classifier[-1])         # for resnet 9
-                if self.reset_network:
-                    self.net = ResNet9(in_channels=3, num_classes=10, norm_function=torch.nn.BatchNorm2d)
-                    self.net.apply(kaiming_init_resnet_module)
-                    self.net.to(self.device)
-                    self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
-                                                 weight_decay=self.weight_decay)
+            self.extend_classes(training_data, test_data)
 
             if self.current_epoch % self.checkpoint_save_frequency == 0:
                 self.save_experiment_checkpoint()
+
+    def extend_classes(self, training_data: CifarDataSet, test_data: CifarDataSet):
+        """
+        Adds one new class to the data set with certain frequency
+        """
+        if self.current_num_classes == self.num_classes: return
+
+        if (self.current_epoch % self.class_increase_frequency) == 0 and (not self.fixed_classes):
+            self._save_model_parameters()
+            self.current_num_classes += 1
+            training_data.select_new_partition(self.all_classes[:self.current_num_classes])
+            test_data.select_new_partition(self.all_classes[:self.current_num_classes])
+            self._print("\tNew class added...")
+            if self.reset_head:
+                # kaiming_init_resnet_module(self.net.fc)                   # for resnet 10, 18 and 34
+                kaiming_init_resnet_module(self.net.classifier[-1])  # for resnet 9
+            if self.reset_network:
+                self.net = ResNet9(in_channels=3, num_classes=10, norm_function=torch.nn.BatchNorm2d)
+                self.net.apply(kaiming_init_resnet_module)
+                self.net.to(self.device)
+                self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
+                                             weight_decay=self.weight_decay)
+
 
     def _save_model_parameters(self):
         """ Stores the parameters of the model, so it can be evaluated after the experiment is over """
