@@ -406,7 +406,7 @@ class IncrementalCIFARExperiment(Experiment):
 
                 # backpropagate and update weights
                 current_reg_loss.backward()
-                torch.nn.utils.clip_grad_value_(self.net.parameters(), clip_value=self.gradient_clip_val)
+                # torch.nn.utils.clip_grad_value_(self.net.parameters(), clip_value=self.gradient_clip_val)
                 self.optim.step()
 
                 # store summaries
@@ -492,7 +492,7 @@ def main():
         "stepsize": 0.01,
         "weight_decay": 0.0001,
         "momentum": 0.9,
-        "gradient_clip_val": 0.1,
+        "gradient_clip_val": 0.0,
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 2700,
         "initial_num_classes": 2,
@@ -512,7 +512,7 @@ def main():
     initial_time = time.perf_counter()
     exp = IncrementalCIFARExperiment(experiment_parameters,
                                      results_dir=os.path.join(file_path, "results", results_dir_name),
-                                     run_index=0,
+                                     run_index=1,
                                      verbose=True)
     exp.run()
     exp.store_results()
