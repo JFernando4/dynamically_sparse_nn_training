@@ -494,9 +494,9 @@ def main():
         "momentum": 0.9,
         "gradient_clip_val": 0.0,
         "data_path": os.path.join(file_path, "data"),
-        "num_epochs": 2700,
-        "initial_num_classes": 2,
-        "fixed_classes": False,
+        "num_epochs": 350,
+        "initial_num_classes": 10,
+        "fixed_classes": True,
         "reset_head": False,
         "reset_network": False,
         "plot": False
