@@ -49,6 +49,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.fixed_classes = access_dict(exp_params, "fixed_classes", default=True, val_type=bool)
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
         self.reset_network = access_dict(exp_params, "reset_network", default=False, val_type=bool)
+        self.use_data_augmentation = access_dict(exp_params, "use_data_augmentation", default=False, val_type=bool)
         if self.reset_head and self.reset_network:
             print(Warning("Resetting the whole network supersedes resetting the head of the network. There's no need to set both to True."))
         self.plot = access_dict(exp_params, key="plot", default=False)
@@ -85,7 +86,7 @@ class IncrementalCIFARExperiment(Experiment):
         self._initialize_summaries()
 
         """ For data partitioning """
-        self.class_increase_frequency = 300
+        self.class_increase_frequency = 500
         self.all_classes = np.random.permutation(10)
         self.best_accuracy = torch.tensor(0.0, device=self.device, dtype=torch.float32)
         self.best_accuracy_model_parameters = {}
@@ -367,9 +368,8 @@ class IncrementalCIFARExperiment(Experiment):
             ToTensor(swap_color_axis=True),  # reshape to (C x H x W)
             Normalize(mean=(0.491, 0.482, 0.446), std=(0.247, 0.243, 0.261)),  # center by mean and divide by std
         ]
-        # if train:
-        #     transformations.append(RandomHorizontalFlip(p=0.5))
-        #     transformations.append(RandomCrop(size=32, padding=4, padding_mode="reflect"))
+        if train and self.use_data_augmentation:
+            transformations.append(RandomCrop(size=32, padding=4, padding_mode="reflect"))
 
         cifar_data.set_transformation(transforms.Compose(transformations))
 
