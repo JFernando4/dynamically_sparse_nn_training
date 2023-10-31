@@ -43,7 +43,6 @@ class IncrementalCIFARExperiment(Experiment):
         self.stepsize = exp_params["stepsize"]
         self.weight_decay = exp_params["weight_decay"]
         self.momentum = exp_params["momentum"]
-        self.gradient_clip_val = exp_params["gradient_clip_val"]
         self.data_path = exp_params["data_path"]
         self.num_epochs = access_dict(exp_params, "num_epochs", default=1, val_type=int)
         self.current_num_classes = access_dict(exp_params, "initial_num_classes", default=2, val_type=int)
@@ -406,7 +405,6 @@ class IncrementalCIFARExperiment(Experiment):
 
                 # backpropagate and update weights
                 current_reg_loss.backward()
-                # torch.nn.utils.clip_grad_value_(self.net.parameters(), clip_value=self.gradient_clip_val)
                 self.optim.step()
 
                 # store summaries
@@ -492,19 +490,19 @@ def main():
         "stepsize": 0.01,
         "weight_decay": 0.0001,
         "momentum": 0.9,
-        "gradient_clip_val": 0.0,
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 350,
         "initial_num_classes": 10,
         "fixed_classes": True,
         "reset_head": False,
         "reset_network": False,
+        "use_data_augmentation": False,
         "plot": False
     }
 
     print(experiment_parameters)
     relevant_parameters = ["num_epochs", "initial_num_classes", "fixed_classes", "stepsize", "weight_decay", "momentum",
-                           "gradient_clip_val", "reset_head", "reset_network"]
+                           "reset_head", "reset_network", "use_data_augmentation"]
     results_dir_name = "{0}-{1}".format(relevant_parameters[0], experiment_parameters[relevant_parameters[0]])
     for relevant_param in relevant_parameters[1:]:
         results_dir_name += "_" + relevant_param + "-" + str(experiment_parameters[relevant_param])
