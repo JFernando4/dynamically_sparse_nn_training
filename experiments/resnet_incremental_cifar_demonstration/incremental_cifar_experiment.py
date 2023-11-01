@@ -15,7 +15,7 @@ from torchvision import transforms
 from mlproj_manager.problems import CifarDataSet
 from mlproj_manager.experiments import Experiment
 from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict, init_weights_kaiming
-from mlproj_manager.util.data_preprocessing_and_transformations import ToTensor, Normalize, RandomCrop, RandomHorizontalFlip
+from mlproj_manager.util.data_preprocessing_and_transformations import ToTensor, Normalize, RandomCrop, RandomHorizontalFlip, RandomRotator
 
 from src import ResNet9, kaiming_init_resnet_module, build_resnet34, build_resnet18, build_resnet10
 
@@ -51,6 +51,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.reset_network = access_dict(exp_params, "reset_network", default=False, val_type=bool)
         self.use_data_augmentation = access_dict(exp_params, "use_data_augmentation", default=False, val_type=bool)
         self.use_cifar100 = access_dict(exp_params, "use_cifar100", default=False, val_type=bool)
+        self.use_lr_schedule = access_dict(exp_params, "use_lr_schedule", default=False, val_type=bool)
         if self.reset_head and self.reset_network:
             print(Warning("Resetting the whole network supersedes resetting the head of the network. There's no need to set both to True."))
         self.plot = access_dict(exp_params, key="plot", default=False)
@@ -87,7 +88,7 @@ class IncrementalCIFARExperiment(Experiment):
         self._initialize_summaries()
 
         """ For data partitioning """
-        self.class_increase_frequency = 500
+        self.class_increase_frequency = 200
         self.all_classes = np.random.permutation(self.num_classes)
         self.best_accuracy = torch.tensor(0.0, device=self.device, dtype=torch.float32)
         self.best_accuracy_model_parameters = {}
@@ -375,6 +376,7 @@ class IncrementalCIFARExperiment(Experiment):
         if train and self.use_data_augmentation:
             transformations.append(RandomHorizontalFlip(p=0.5))
             transformations.append(RandomCrop(size=32, padding=4, padding_mode="reflect"))
+            transformations.append(RandomRotator(degrees=(0,15)))
 
         cifar_data.set_transformation(transforms.Compose(transformations))
 
@@ -393,6 +395,7 @@ class IncrementalCIFARExperiment(Experiment):
 
         for e in range(self.current_epoch, self.num_epochs):
             self._print("\tEpoch number: {0}".format(e + 1))
+            self.set_lr()
 
             epoch_start_time = time.perf_counter()
             for step_number, sample in enumerate(train_dataloader):
@@ -428,6 +431,18 @@ class IncrementalCIFARExperiment(Experiment):
 
             if self.current_epoch % self.checkpoint_save_frequency == 0:
                 self.save_experiment_checkpoint()
+
+    def set_lr(self):
+        """ Changes the learning rate of the optimizer according to the current epoch of the task """
+        if not self.use_lr_schedule: return
+
+        if (self.current_epoch % self.class_increase_frequency) == 0:
+            self.optim.lr = self.stepsize
+        elif (self.current_epoch % self.class_increase_frequency) == 59:
+            self.optim.lr = round(self.stepsize * 0.2, 3)
+        elif (self.current_epoch % self.class_increase_frequency) == 119:
+            self.optim.lr = round(self.stepsize * (0.2 ** 2), 3)
+        self._print("\tCurrent stepsize: {0:.3f}".format(self.optim.lr))
 
     def extend_classes(self, training_data: CifarDataSet, test_data: CifarDataSet):
         """
@@ -493,23 +508,24 @@ def main():
     """
     file_path = os.path.dirname(os.path.abspath(__file__))
     experiment_parameters = {
-        "stepsize": 0.01,
-        "weight_decay": 0.0001,
+        "stepsize": 0.1,
+        "weight_decay": 0.0005,
         "momentum": 0.9,
         "data_path": os.path.join(file_path, "data"),
-        "num_epochs": 500,
+        "num_epochs": 200,
         "initial_num_classes": 100,
         "fixed_classes": True,
         "reset_head": False,
         "reset_network": False,
         "use_data_augmentation": True,
         "use_cifar100": True,
+        "use_lr_schedule": True,
         "plot": False
     }
 
     print(experiment_parameters)
     relevant_parameters = ["num_epochs", "initial_num_classes", "fixed_classes", "stepsize", "weight_decay", "momentum",
-                           "reset_head", "reset_network", "use_data_augmentation", "use_cifar100"]
+                           "reset_head", "reset_network", "use_data_augmentation", "use_cifar100", "use_lr_schedule"]
     results_dir_name = "{0}-{1}".format(relevant_parameters[0], experiment_parameters[relevant_parameters[0]])
     for relevant_param in relevant_parameters[1:]:
         results_dir_name += "_" + relevant_param + "-" + str(experiment_parameters[relevant_param])
