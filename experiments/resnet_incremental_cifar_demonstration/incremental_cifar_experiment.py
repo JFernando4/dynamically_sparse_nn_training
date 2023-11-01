@@ -365,10 +365,12 @@ class IncrementalCIFARExperiment(Experiment):
                                   image_normalization="max",
                                   label_preprocessing="one-hot",
                                   use_torch=True)
+        mean = (0.5071, 0.4865, 0.4409) if self.use_cifar100 else (0.4914, 0.4822, 0.4465)
+        std = (0.2673, 0.2564, 0.2762) if self.use_cifar100 else (0.2470, 0.2435, 0.2616)
 
         transformations = [
             ToTensor(swap_color_axis=True),  # reshape to (C x H x W)
-            Normalize(mean=(0.491, 0.482, 0.446), std=(0.247, 0.243, 0.261)),  # center by mean and divide by std
+            Normalize(mean=mean, std=std),  # center by mean and divide by std
         ]
         if train and self.use_data_augmentation:
             transformations.append(RandomHorizontalFlip(p=0.5))
