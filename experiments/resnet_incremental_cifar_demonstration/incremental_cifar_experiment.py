@@ -440,11 +440,11 @@ class IncrementalCIFARExperiment(Experiment):
         if (self.current_epoch % self.class_increase_frequency) == 0:
             current_stepsize = self.stepsize
         elif (self.current_epoch % self.class_increase_frequency) == 60:
-            current_stepsize = round(self.stepsize * 0.2, 3)
+            current_stepsize = round(self.stepsize * 0.2, 4)
         elif (self.current_epoch % self.class_increase_frequency) == 120:
-            current_stepsize = round(self.stepsize * (0.2 ** 2), 3)
+            current_stepsize = round(self.stepsize * (0.2 ** 2), 4)
         elif (self.current_epoch % self.class_increase_frequency) == 160:
-            current_stepsize = round(self.stepsize * (0.2 ** 3), 3)
+            current_stepsize = round(self.stepsize * (0.2 ** 3), 4)
 
         if current_stepsize is not None:
             for g in self.optim.param_groups:
