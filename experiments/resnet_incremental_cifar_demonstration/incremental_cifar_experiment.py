@@ -515,8 +515,8 @@ def main():
     """
     file_path = os.path.dirname(os.path.abspath(__file__))
     experiment_parameters = {
-        "stepsize": 0.1,
-        "weight_decay": 0.0005,
+        "stepsize": 0.01,
+        "weight_decay": 0.0001,
         "momentum": 0.9,
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 200,
