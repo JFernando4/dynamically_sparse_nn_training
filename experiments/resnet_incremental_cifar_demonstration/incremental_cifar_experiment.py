@@ -439,12 +439,12 @@ class IncrementalCIFARExperiment(Experiment):
         current_stepsize = None
         if (self.current_epoch % self.class_increase_frequency) == 0:
             current_stepsize = self.stepsize
+        elif (self.current_epoch % self.class_increase_frequency) == 50:
+            current_stepsize = round(self.stepsize * 0.5, 5)
         elif (self.current_epoch % self.class_increase_frequency) == 100:
-            current_stepsize = round(self.stepsize * 0.1, 5)
+            current_stepsize = round(self.stepsize * (0.5 ** 2), 5)
         elif (self.current_epoch % self.class_increase_frequency) == 150:
-            current_stepsize = round(self.stepsize * (0.1 ** 2), 5)
-        # elif (self.current_epoch % self.class_increase_frequency) == 160:
-        #     current_stepsize = round(self.stepsize * (0.4 ** 3), 5)
+            current_stepsize = round(self.stepsize * (0.5 ** 3), 5)
 
         if current_stepsize is not None:
             for g in self.optim.param_groups:
@@ -516,7 +516,7 @@ def main():
     file_path = os.path.dirname(os.path.abspath(__file__))
     experiment_parameters = {
         "stepsize": 0.01,
-        "weight_decay": 0.0001,
+        "weight_decay": 0.0005,
         "momentum": 0.9,
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 200,
