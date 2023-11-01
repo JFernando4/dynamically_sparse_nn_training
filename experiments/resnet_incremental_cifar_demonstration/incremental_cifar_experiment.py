@@ -50,13 +50,14 @@ class IncrementalCIFARExperiment(Experiment):
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
         self.reset_network = access_dict(exp_params, "reset_network", default=False, val_type=bool)
         self.use_data_augmentation = access_dict(exp_params, "use_data_augmentation", default=False, val_type=bool)
+        self.use_cifar100 = access_dict(exp_params, "use_cifar100", default=False, val_type=bool)
         if self.reset_head and self.reset_network:
             print(Warning("Resetting the whole network supersedes resetting the head of the network. There's no need to set both to True."))
         self.plot = access_dict(exp_params, key="plot", default=False)
 
         """ Training constants """
         self.batch_size = 100
-        self.num_classes = 10
+        self.num_classes = 10 if not self.use_cifar100 else 100
         self.image_dims = (32, 32, 3)
         self.flat_image_dims = int(np.prod(self.image_dims))
         self.num_images_per_epoch = 50000
@@ -65,8 +66,8 @@ class IncrementalCIFARExperiment(Experiment):
         """ Network set up """
         # initialize network
         # self.net = resnet18(num_classes=10, norm_layer=torch.nn.Identity)
-        self.net = ResNet9(in_channels=3, num_classes=self.num_classes, norm_function=torch.nn.BatchNorm2d)
-        # self.net = build_resnet18(num_classes=10, norm_layer=torch.nn.BatchNorm2d)
+        # self.net = ResNet9(in_channels=3, num_classes=self.num_classes, norm_function=torch.nn.BatchNorm2d)
+        self.net = build_resnet18(num_classes=self.num_classes, norm_layer=torch.nn.BatchNorm2d)
         self.net.apply(kaiming_init_resnet_module)
 
         # initialize optimizer
@@ -87,7 +88,7 @@ class IncrementalCIFARExperiment(Experiment):
 
         """ For data partitioning """
         self.class_increase_frequency = 500
-        self.all_classes = np.random.permutation(10)
+        self.all_classes = np.random.permutation(self.num_classes)
         self.best_accuracy = torch.tensor(0.0, device=self.device, dtype=torch.float32)
         self.best_accuracy_model_parameters = {}
 
@@ -356,9 +357,10 @@ class IncrementalCIFARExperiment(Experiment):
         :return: data set, (optionally) data loader
         """
         """ Loads MNIST data set """
+        cifar_type = 10 if not self.use_cifar100 else 100
         cifar_data = CifarDataSet(root_dir=self.data_path,
                                   train=train,
-                                  cifar_type=10,
+                                  cifar_type=100,
                                   device=None,
                                   image_normalization="max",
                                   label_preprocessing="one-hot",
@@ -369,6 +371,7 @@ class IncrementalCIFARExperiment(Experiment):
             Normalize(mean=(0.491, 0.482, 0.446), std=(0.247, 0.243, 0.261)),  # center by mean and divide by std
         ]
         if train and self.use_data_augmentation:
+            transformations.append(RandomHorizontalFlip(p=0.5))
             transformations.append(RandomCrop(size=32, padding=4, padding_mode="reflect"))
 
         cifar_data.set_transformation(transforms.Compose(transformations))
@@ -435,7 +438,8 @@ class IncrementalCIFARExperiment(Experiment):
             self.best_accuracy = torch.zeros_like(self.best_accuracy)
             self.best_accuracy_model_parameters = {}
             self._save_model_parameters()
-            self.current_num_classes += 1
+            increase = 1 if not self.use_cifar100 else 10
+            self.current_num_classes += increase
             training_data.select_new_partition(self.all_classes[:self.current_num_classes])
             test_data.select_new_partition(self.all_classes[:self.current_num_classes])
             self._print("\tNew class added...")
@@ -491,18 +495,19 @@ def main():
         "weight_decay": 0.0001,
         "momentum": 0.9,
         "data_path": os.path.join(file_path, "data"),
-        "num_epochs": 350,
-        "initial_num_classes": 10,
+        "num_epochs": 500,
+        "initial_num_classes": 100,
         "fixed_classes": True,
         "reset_head": False,
         "reset_network": False,
-        "use_data_augmentation": False,
+        "use_data_augmentation": True,
+        "use_cifar100": True,
         "plot": False
     }
 
     print(experiment_parameters)
     relevant_parameters = ["num_epochs", "initial_num_classes", "fixed_classes", "stepsize", "weight_decay", "momentum",
-                           "reset_head", "reset_network", "use_data_augmentation"]
+                           "reset_head", "reset_network", "use_data_augmentation", "use_cifar100"]
     results_dir_name = "{0}-{1}".format(relevant_parameters[0], experiment_parameters[relevant_parameters[0]])
     for relevant_param in relevant_parameters[1:]:
         results_dir_name += "_" + relevant_param + "-" + str(experiment_parameters[relevant_param])
@@ -510,7 +515,7 @@ def main():
     initial_time = time.perf_counter()
     exp = IncrementalCIFARExperiment(experiment_parameters,
                                      results_dir=os.path.join(file_path, "results", results_dir_name),
-                                     run_index=1,
+                                     run_index=0,
                                      verbose=True)
     exp.run()
     exp.store_results()
