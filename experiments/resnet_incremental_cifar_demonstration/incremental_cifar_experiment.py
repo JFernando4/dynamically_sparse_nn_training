@@ -436,15 +436,20 @@ class IncrementalCIFARExperiment(Experiment):
         """ Changes the learning rate of the optimizer according to the current epoch of the task """
         if not self.use_lr_schedule: return
 
+        current_stepsize = None
         if (self.current_epoch % self.class_increase_frequency) == 0:
-            self.optim.lr = self.stepsize
+            current_stepsize = self.stepsize
         elif (self.current_epoch % self.class_increase_frequency) == 50:
-            self.optim.lr = round(self.stepsize * 0.5, 3)
-        elif (self.current_epoch % self.class_increase_frequency) == 150:
-            self.optim.lr = round(self.stepsize * (0.5 ** 2), 3)
-        # elif (self.current_epoch % self.class_increase_frequency) == 160:
-        #     self.optim.lr = round(self.stepsize * (0.2 ** 3), 3)
-        self._print("\tCurrent stepsize: {0:.3f}".format(self.optim.lr))
+            current_stepsize = round(self.stepsize * 0.2, 3)
+        elif (self.current_epoch % self.class_increase_frequency) == 120:
+            current_stepsize = round(self.stepsize * (0.2 ** 2), 3)
+        elif (self.current_epoch % self.class_increase_frequency) == 160:
+            current_stepsize = round(self.stepsize * (0.2 ** 3), 3)
+
+        if current_stepsize is not None:
+            for g in self.optim.param_groups:
+                g['lr'] = current_stepsize
+            self._print("\tCurrent stepsize: {0:.3f}".format(current_stepsize))
 
     def extend_classes(self, training_data: CifarDataSet, test_data: CifarDataSet):
         """
@@ -510,7 +515,7 @@ def main():
     """
     file_path = os.path.dirname(os.path.abspath(__file__))
     experiment_parameters = {
-        "stepsize": 0.01,
+        "stepsize": 0.1,
         "weight_decay": 0.0005,
         "momentum": 0.9,
         "data_path": os.path.join(file_path, "data"),
