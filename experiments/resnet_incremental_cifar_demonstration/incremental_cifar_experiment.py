@@ -467,8 +467,8 @@ class IncrementalCIFARExperiment(Experiment):
             test_data.select_new_partition(self.all_classes[:self.current_num_classes])
             self._print("\tNew class added...")
             if self.reset_head:
-                # kaiming_init_resnet_module(self.net.fc)                   # for resnet 10, 18 and 34
-                kaiming_init_resnet_module(self.net.classifier[-1])  # for resnet 9
+                kaiming_init_resnet_module(self.net.fc)                   # for resnet 10, 18 and 34
+                # kaiming_init_resnet_module(self.net.classifier[-1])  # for resnet 9
             if self.reset_network:
                 self.net.apply(kaiming_init_resnet_module)
 
