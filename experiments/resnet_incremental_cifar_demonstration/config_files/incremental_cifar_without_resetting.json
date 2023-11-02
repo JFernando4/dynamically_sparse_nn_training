@@ -31,7 +31,7 @@
 
   "learning_params": {
     "reset_head": false,
-    "reset_network": false,
+    "reset_network": false
   },
 
   "slurm_parameters": {
