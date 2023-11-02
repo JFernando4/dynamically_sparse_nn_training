@@ -80,11 +80,6 @@ class IncrementalCIFARExperiment(Experiment):
         self.net.to(self.device)
         self.current_epoch = 0
 
-        """ For summaries """
-        self.running_avg_window = 25
-        self.current_running_avg_step, self.running_loss, self.running_accuracy = (0, 0.0, 0.0)
-        self._initialize_summaries()
-
         """ For data partitioning """
         self.class_increase_frequency = 200
         self.all_classes = np.random.permutation(self.num_classes)
@@ -96,6 +91,11 @@ class IncrementalCIFARExperiment(Experiment):
         self.checkpoint_identifier_name = "current_epoch"
         self.checkpoint_save_frequency = self.class_increase_frequency  # save every time a new class is added
         self.delete_old_checkpoints = True
+
+        """ For summaries """
+        self.running_avg_window = 25
+        self.current_running_avg_step, self.running_loss, self.running_accuracy = (0, 0.0, 0.0)
+        self._initialize_summaries()
 
     # -------------------- Methods for initializing the experiment --------------------#
     def _initialize_summaries(self):
