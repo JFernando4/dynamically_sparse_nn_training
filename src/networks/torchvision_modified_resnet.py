@@ -15,9 +15,10 @@ from torchvision.models._utils import _ovewrite_named_param, handle_legacy_inter
 This is a modified version of torchvision's code for instantiating resnets. Here's a list of the changes made to the 
 source code:
     - All convolutional layers now have bias set to True, where they were original set to False.
-    -  
-set to True for all the convolutional layers, where they were original set to False. To see the source code, go to:
-    torchvision.models.resnet
+    - Removed the first maxpool layers so that input stays somewhat large.
+    - Layer conv1 in the ResNet class has kernel size set to 3 and stride set to 1, where they were originally 7 and 2,
+      respectively. 
+To see the source code, go to: torchvision.models.resnet (for torchvision==0.15.1)
 """
 
 
@@ -123,15 +124,11 @@ class ResNet(nn.Module):
         self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=3, stride=1, padding=1, bias=True)
         self.bn1 = norm_layer(self.inplanes)
         self.relu = nn.ReLU(inplace=True)
-        # self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0])
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2, dilate=replace_stride_with_dilation[0])
-        # self.maxpool2 = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2, dilate=replace_stride_with_dilation[1])
-        # self.maxpool3 = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2, dilate=replace_stride_with_dilation[2])
         self.output_pool = nn.AdaptiveAvgPool2d((1, 1))
-        # self.output_pool = nn.AdaptiveMaxPool2d((2,2))
         self.fc = nn.Linear(512 * block.expansion, num_classes)
 
         for m in self.modules():
@@ -195,13 +192,10 @@ class ResNet(nn.Module):
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
-        # x = self.maxpool(x)
 
         x = self.layer1(x)
         x = self.layer2(x)
-        # x = self.maxpool2(x)
         x = self.layer3(x)
-        # x = self.maxpool3(x)
         x = self.layer4(x)
 
         x = self.output_pool(x)
