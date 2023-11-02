@@ -81,7 +81,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.current_epoch = 0
 
         """ For summaries """
-        self.running_avg_window = 50
+        self.running_avg_window = 25
         self.current_running_avg_step, self.running_loss, self.running_accuracy = (0, 0.0, 0.0)
         self._initialize_summaries()
 
@@ -462,7 +462,8 @@ class IncrementalCIFARExperiment(Experiment):
             self.best_accuracy = torch.zeros_like(self.best_accuracy)
             self.best_accuracy_model_parameters = {}
             self._save_model_parameters()
-            increase = 1 if not self.use_cifar100 else 10
+            # increase = 1 if not self.use_cifar100 else 10
+            increase = 1 if not self.use_cifar100 else 5
             self.current_num_classes += increase
             training_data.select_new_partition(self.all_classes[:self.current_num_classes])
             test_data.select_new_partition(self.all_classes[:self.current_num_classes])
@@ -519,8 +520,8 @@ def main():
         "weight_decay": 0.0005,
         "momentum": 0.9,
         "data_path": os.path.join(file_path, "data"),
-        "num_epochs": 2000,
-        "initial_num_classes": 10,
+        "num_epochs": 4000,
+        "initial_num_classes": 5,
         "fixed_classes": False,
         "reset_head": False,
         "reset_network": False,
