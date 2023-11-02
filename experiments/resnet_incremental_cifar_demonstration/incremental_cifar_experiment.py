@@ -193,7 +193,7 @@ class IncrementalCIFARExperiment(Experiment):
 
         partial_results = {}
         for k, v in self.results_dict.items():
-            partial_results[k] = v.cpu()
+            partial_results[k] = v if not isinstance(v, torch.Tensor) else v.cpu()
 
         checkpoint = {
             "model_weights": self.net.state_dict(),
