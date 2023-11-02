@@ -97,7 +97,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.experiment_checkpoints_dir_path = os.path.join(self.results_dir, "experiment_checkpoints")
         self.checkpoint_identifier_name = "current_epoch"
         self.checkpoint_save_frequency = self.class_increase_frequency  # save every time a new class is added
-        self.delete_old_checkpoints = False
+        self.delete_old_checkpoints = True
 
     # -------------------- Methods for initializing the experiment --------------------#
     def _initialize_summaries(self):
@@ -519,9 +519,9 @@ def main():
         "weight_decay": 0.0005,
         "momentum": 0.9,
         "data_path": os.path.join(file_path, "data"),
-        "num_epochs": 200,
-        "initial_num_classes": 100,
-        "fixed_classes": True,
+        "num_epochs": 2000,
+        "initial_num_classes": 10,
+        "fixed_classes": False,
         "reset_head": False,
         "reset_network": False,
         "use_data_augmentation": True,
