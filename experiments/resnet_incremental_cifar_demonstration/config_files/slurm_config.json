@@ -1,0 +1,14 @@
+{
+  "job_name": "cifar100",
+  "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
+  "output_filename": "cifar100-%n-%j.out",
+  "time": "9:00:00",
+  "mem": "12G",
+  "mail-type": "BEGIN,END,FAIL",
+  "mail-user":"jfhernan@ualberta.ca",
+  "cpus-per-task": 12,
+  "gpus-per-task": 1,
+  "max_runs_per_job": 1,
+  "main_dir": "/home/jfernan/dynamically_sparse_nn_training",
+  "account": "def-sutton"
+}
