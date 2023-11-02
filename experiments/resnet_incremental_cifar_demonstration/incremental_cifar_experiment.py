@@ -449,7 +449,7 @@ class IncrementalCIFARExperiment(Experiment):
         if current_stepsize is not None:
             for g in self.optim.param_groups:
                 g['lr'] = current_stepsize
-            self._print("\tCurrent stepsize: {0:.3f}".format(current_stepsize))
+            self._print("\tCurrent stepsize: {0:.5f}".format(current_stepsize))
 
     def extend_classes(self, training_data: CifarDataSet, test_data: CifarDataSet):
         """
