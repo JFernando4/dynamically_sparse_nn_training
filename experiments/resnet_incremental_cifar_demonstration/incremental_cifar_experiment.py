@@ -14,7 +14,7 @@ from torchvision import transforms
 # from ml project manager
 from mlproj_manager.problems import CifarDataSet
 from mlproj_manager.experiments import Experiment
-from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict, init_weights_kaiming
+from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict
 from mlproj_manager.util.data_preprocessing_and_transformations import ToTensor, Normalize, RandomCrop, RandomHorizontalFlip, RandomRotator
 
 from src import kaiming_init_resnet_module, build_resnet18
@@ -115,6 +115,7 @@ class IncrementalCIFARExperiment(Experiment):
                                                                         dtype=torch.float32)
         self.results_dict["test_evaluation_runtime"] = torch.zeros(self.num_epochs, device=self.device,
                                                                    dtype=torch.float32)
+        self.results_dict["class_order"] = self.all_classes
 
     def save_experiment_checkpoint(self):
         """
