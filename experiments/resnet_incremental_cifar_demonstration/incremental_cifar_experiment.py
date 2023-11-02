@@ -17,7 +17,7 @@ from mlproj_manager.experiments import Experiment
 from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict, init_weights_kaiming
 from mlproj_manager.util.data_preprocessing_and_transformations import ToTensor, Normalize, RandomCrop, RandomHorizontalFlip, RandomRotator
 
-from src import ResNet9, kaiming_init_resnet_module, build_resnet34, build_resnet18, build_resnet10
+from src import kaiming_init_resnet_module, build_resnet18
 
 
 class IncrementalCIFARExperiment(Experiment):
@@ -66,8 +66,6 @@ class IncrementalCIFARExperiment(Experiment):
 
         """ Network set up """
         # initialize network
-        # self.net = resnet18(num_classes=10, norm_layer=torch.nn.Identity)
-        # self.net = ResNet9(in_channels=3, num_classes=self.num_classes, norm_function=torch.nn.BatchNorm2d)
         self.net = build_resnet18(num_classes=self.num_classes, norm_layer=torch.nn.BatchNorm2d)
         self.net.apply(kaiming_init_resnet_module)
 
@@ -392,6 +390,7 @@ class IncrementalCIFARExperiment(Experiment):
 
         training_data.select_new_partition(self.all_classes[:self.current_num_classes])
         test_data.select_new_partition(self.all_classes[:self.current_num_classes])
+        self._save_model_parameters()
 
         for e in range(self.current_epoch, self.num_epochs):
             self._print("\tEpoch number: {0}".format(e + 1))
