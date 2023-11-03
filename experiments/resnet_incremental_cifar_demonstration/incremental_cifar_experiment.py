@@ -52,6 +52,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.use_data_augmentation = access_dict(exp_params, "use_data_augmentation", default=False, val_type=bool)
         self.use_cifar100 = access_dict(exp_params, "use_cifar100", default=False, val_type=bool)
         self.use_lr_schedule = access_dict(exp_params, "use_lr_schedule", default=False, val_type=bool)
+        self.use_best_network = access_dict(exp_params, "use_best_network", default=False, val_type=bool)
         if self.reset_head and self.reset_network:
             print(Warning("Resetting the whole network supersedes resetting the head of the network. There's no need to set both to True."))
         self.plot = access_dict(exp_params, key="plot", default=False)
@@ -458,7 +459,9 @@ class IncrementalCIFARExperiment(Experiment):
         if self.current_num_classes == self.num_classes: return
 
         if (self.current_epoch % self.class_increase_frequency) == 0 and (not self.fixed_classes):
-            self.net.load_state_dict(self.best_accuracy_model_parameters)
+            self._print("Best accuracy in the task: {0:.4f}".format(self.best_accuracy))
+            if self.use_best_network:
+                self.net.load_state_dict(self.best_accuracy_model_parameters)
             self.best_accuracy = torch.zeros_like(self.best_accuracy)
             self.best_accuracy_model_parameters = {}
             self._save_model_parameters()
@@ -528,12 +531,14 @@ def main():
         "use_data_augmentation": True,
         "use_cifar100": True,
         "use_lr_schedule": True,
+        "use_best_network": False,
         "plot": False
     }
 
     print(experiment_parameters)
     relevant_parameters = ["num_epochs", "initial_num_classes", "fixed_classes", "stepsize", "weight_decay", "momentum",
-                           "reset_head", "reset_network", "use_data_augmentation", "use_cifar100", "use_lr_schedule"]
+                           "reset_head", "reset_network", "use_data_augmentation", "use_cifar100", "use_lr_schedule",
+                           "use_best_network"]
     results_dir_name = "{0}-{1}".format(relevant_parameters[0], experiment_parameters[relevant_parameters[0]])
     for relevant_param in relevant_parameters[1:]:
         results_dir_name += "_" + relevant_param + "-" + str(experiment_parameters[relevant_param])
