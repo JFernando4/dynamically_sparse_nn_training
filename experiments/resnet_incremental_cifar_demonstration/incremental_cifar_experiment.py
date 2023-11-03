@@ -64,6 +64,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.flat_image_dims = int(np.prod(self.image_dims))
         self.num_images_per_epoch = 50000
         self.num_test_samples = 10000
+        self.num_images_per_class = 500
 
         """ Network set up """
         # initialize network
@@ -103,7 +104,11 @@ class IncrementalCIFARExperiment(Experiment):
         """
         Initializes the summaries for the experiment
         """
-        total_checkpoints = self.num_images_per_epoch * self.num_epochs // (self.running_avg_window * self.batch_size)
+        number_of_tasks = np.arange(self.num_epochs // self.class_increase_frequency) + 1
+        class_increase = 5 if self.use_cifar100 else 1
+        number_of_image_per_task = self.num_images_per_class * class_increase
+        bin_size = (self.running_avg_window * self.batch_size)
+        total_checkpoints = np.sum(number_of_tasks * self.class_increase_frequency * number_of_image_per_task // bin_size)
         self.results_dict["train_loss_per_checkpoint"] = torch.zeros(total_checkpoints, device=self.device,
                                                                      dtype=torch.float32)
         self.results_dict["train_accuracy_per_checkpoint"] = torch.zeros(total_checkpoints, device=self.device,
