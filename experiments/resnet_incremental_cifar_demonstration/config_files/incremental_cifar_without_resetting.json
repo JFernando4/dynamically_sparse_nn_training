@@ -13,7 +13,8 @@
       "reset_head",
       "reset_network",
       "use_data_augmentation",
-      "use_lr_schedule"
+      "use_lr_schedule",
+      "use_best_network"
     ]
   },
 
@@ -26,6 +27,7 @@
     "fixed_classes": false,
     "use_data_augmentation": true,
     "use_lr_schedule": true,
+    "use_best_network": false,
     "runs": 1
   },
 
