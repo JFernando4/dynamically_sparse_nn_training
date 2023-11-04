@@ -1,0 +1,44 @@
+{
+  "file_management": {
+    "experiment_name": "resnet_incremental_cifar100",
+    "data_path": "/home/jfernan/dynamically_sparse_nn_training/experiments/resnet_incremental_cifar_demonstration/data/",
+    "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
+    "relevant_parameters": [
+      "stepsize",
+      "weight_decay",
+      "momentum",
+      "num_epochs",
+      "initial_num_classes",
+      "fixed_classes",
+      "reset_head",
+      "reset_network",
+      "use_data_augmentation",
+      "use_lr_schedule",
+      "use_best_network"
+    ]
+  },
+
+  "experiment_params": {
+    "stepsize": 0.1,
+    "weight_decay": 0.0005,
+    "momentum": 0.9,
+    "num_epochs": 4000,
+    "initial_num_classes": 5,
+    "fixed_classes": false,
+    "use_data_augmentation": true,
+    "use_lr_schedule": true,
+    "use_best_network": true,
+    "runs": 3
+  },
+
+  "learning_params": {
+    "reset_head": false,
+    "reset_network": true
+  },
+
+  "slurm_parameters": {
+    "job_name": "icifar100",
+    "time": "15:00:00",
+    "max_runs_per_job": 1
+  }
+}
