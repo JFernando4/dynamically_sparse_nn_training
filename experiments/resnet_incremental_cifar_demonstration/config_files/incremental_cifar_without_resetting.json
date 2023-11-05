@@ -13,6 +13,7 @@
       "reset_head",
       "reset_network",
       "use_data_augmentation",
+      "use_cifar100",
       "use_lr_schedule",
       "use_best_network"
     ]
@@ -26,6 +27,7 @@
     "initial_num_classes": 5,
     "fixed_classes": false,
     "use_data_augmentation": true,
+    "use_cifar100": true,
     "use_lr_schedule": true,
     "use_best_network": true,
     "runs": 3
