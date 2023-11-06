@@ -461,8 +461,6 @@ class IncrementalCIFARExperiment(Experiment):
         """
         Adds one new class to the data set with certain frequency
         """
-        if self.current_num_classes == self.num_classes: return
-
         if (self.current_epoch % self.class_increase_frequency) == 0 and (not self.fixed_classes):
             self._print("Best accuracy in the task: {0:.4f}".format(self.best_accuracy))
             if self.use_best_network:
@@ -470,7 +468,8 @@ class IncrementalCIFARExperiment(Experiment):
             self.best_accuracy = torch.zeros_like(self.best_accuracy)
             self.best_accuracy_model_parameters = {}
             self._save_model_parameters()
-            # increase = 1 if not self.use_cifar100 else 10
+
+            if self.current_num_classes == self.num_classes: return
             increase = 1 if not self.use_cifar100 else 5
             self.current_num_classes += increase
             training_data.select_new_partition(self.all_classes[:self.current_num_classes])
