@@ -53,6 +53,8 @@ class IncrementalCIFARExperiment(Experiment):
         self.use_cifar100 = access_dict(exp_params, "use_cifar100", default=False, val_type=bool)
         self.use_lr_schedule = access_dict(exp_params, "use_lr_schedule", default=False, val_type=bool)
         self.use_best_network = access_dict(exp_params, "use_best_network", default=False, val_type=bool)
+        self.noise_std = access_dict(exp_params, "noise_std", default=0, val_type=float)
+        self.perturb_weights_indicator = self.noise_std > 0.0
         if self.reset_head and self.reset_network:
             print(Warning("Resetting the whole network supersedes resetting the head of the network. There's no need to set both to True."))
         self.plot = access_dict(exp_params, key="plot", default=False)
@@ -420,6 +422,7 @@ class IncrementalCIFARExperiment(Experiment):
                 # backpropagate and update weights
                 current_reg_loss.backward()
                 self.optim.step()
+                self.inject_noise()
 
                 # store summaries
                 current_accuracy = torch.mean((predictions.argmax(axis=1) == label.argmax(axis=1)).to(torch.float32))
@@ -456,6 +459,17 @@ class IncrementalCIFARExperiment(Experiment):
             for g in self.optim.param_groups:
                 g['lr'] = current_stepsize
             self._print("\tCurrent stepsize: {0:.5f}".format(current_stepsize))
+
+    def inject_noise(self):
+        """
+        Adds a small amount of random noise to the parameters of the network
+        """
+        if not self.perturb_weights_indicator:
+            return
+
+        with torch.no_grad():
+            for param in self.net.parameters():
+                param.add_(torch.randn(param.size(), device=param.device) * self.noise_std)
 
     def extend_classes(self, training_data: CifarDataSet, test_data: CifarDataSet):
         """
@@ -526,6 +540,7 @@ def main():
         "stepsize": 0.1,
         "weight_decay": 0.0005,
         "momentum": 0.9,
+        "noise_std": 0.00001,
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 4000,
         "initial_num_classes": 5,
@@ -541,8 +556,8 @@ def main():
 
     print(experiment_parameters)
     relevant_parameters = ["num_epochs", "initial_num_classes", "fixed_classes", "stepsize", "weight_decay", "momentum",
-                           "reset_head", "reset_network", "use_data_augmentation", "use_cifar100", "use_lr_schedule",
-                           "use_best_network"]
+                           "noise_std", "reset_head", "reset_network", "use_data_augmentation", "use_cifar100",
+                           "use_lr_schedule", "use_best_network"]
     results_dir_name = "{0}-{1}".format(relevant_parameters[0], experiment_parameters[relevant_parameters[0]])
     for relevant_param in relevant_parameters[1:]:
         results_dir_name += "_" + relevant_param + "-" + str(experiment_parameters[relevant_param])
