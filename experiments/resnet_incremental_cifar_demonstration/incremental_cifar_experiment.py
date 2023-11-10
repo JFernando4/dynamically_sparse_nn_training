@@ -368,7 +368,7 @@ class IncrementalCIFARExperiment(Experiment):
         :param return_data_loader: (bool) indicates whether to return a data loader object corresponding to the data set
         :return: data set, (optionally) data loader
         """
-        """ Loads MNIST data set """
+        """ Loads CIFAR data set """
         cifar_type = 10 if not self.use_cifar100 else 100
         cifar_data = CifarDataSet(root_dir=self.data_path,
                                   train=train,
@@ -416,7 +416,7 @@ class IncrementalCIFARExperiment(Experiment):
                 label = sample["label"].to(self.device)
 
                 # reset gradients
-                for param in self.net.parameters(): param.grad = None  # apparently faster than optim.zero_grad()
+                for param in self.net.parameters(): param.grad = None   # apparently faster than optim.zero_grad()
 
                 # compute prediction and loss
                 predictions = self.net.forward(image)[:, self.all_classes[:self.current_num_classes]]
