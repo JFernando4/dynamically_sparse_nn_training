@@ -21,7 +21,6 @@
 
   "experiment_params": {
     "stepsize": 0.1,
-    "weight_decay": 0.0005,
     "momentum": 0.9,
     "num_epochs": 4000,
     "initial_num_classes": 5,
@@ -30,10 +29,11 @@
     "use_cifar100": true,
     "use_lr_schedule": true,
     "use_best_network": true,
-    "runs": 10
+    "runs": 5
   },
 
   "learning_params": {
+    "weight_decay": ["fixed", 0.005, 0.0005, 0.00005],
     "reset_head": false,
     "reset_network": false
   },
