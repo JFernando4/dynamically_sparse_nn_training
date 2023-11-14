@@ -89,7 +89,7 @@ class DynamicSparseCIFARExperiment(Experiment):
         # self.regularization_indicators = self._get_regularization_indicators()
 
         # initialize optimizer
-        self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize)
+        self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, weight_decay=0.0001, momentum=0.9)
 
         # define loss function
         self.loss = torch.nn.CrossEntropyLoss(reduction="mean")
@@ -121,30 +121,35 @@ class DynamicSparseCIFARExperiment(Experiment):
     def _initialize_conv_network_architecture(self):
         """ Initializes a convolutional neural network"""
 
-        # h_out, w_out, prev_num_filters = self.image_dims
-        # net = torch.nn.Sequential()
-        # conv_layers_num_filters = [32, 64, 128]
-        # for num_filters in conv_layers_num_filters:
-        #     net.append(torch.nn.Conv2d(in_channels=prev_num_filters, out_channels=num_filters, kernel_size=(3,3),
-        #                                stride=(1,1), padding=(0,0), dilation=(1,1)))
-        #     h_out, w_out = get_conv_layer_output_dims(h_out, w_out, kernel_size=(3, 3), stride=(1, 1), padding=(0,0), dilatation=(1,1))
-        #     net.append(torch.nn.ReLU())
-        #     net.append(torch.nn.MaxPool2d(kernel_size=(3,3), stride=(1,1)))
-        #     h_out, w_out = get_conv_layer_output_dims(h_out, w_out, kernel_size=(3, 3), stride=(1, 1), padding=(0, 0), dilatation=(1, 1))
-        #     prev_num_filters = num_filters
-        #
-        # net.append(torch.nn.Flatten())
-        # in_features = h_out * w_out * prev_num_filters
-        # linear_layers_num_units = [256, 128]
-        # for num_units in linear_layers_num_units:
-        #     net.append(torch.nn.Linear(in_features=in_features, out_features=num_units))
-        #     net.append(torch.nn.ReLU())
-        #     in_features = num_units
-        #
-        # net.append(torch.nn.Linear(in_features, out_features=self.num_classes))
+        h_out, w_out, prev_num_filters = self.image_dims
+        net = torch.nn.Sequential()
+        conv_layers = [32, "dropout", 32, "maxpool", 64, "dropout", 64, "maxpool", 128, "dropout", 128, "maxpool"]
+        for layer in conv_layers:
+            if isinstance(layer, int):
+                net.append(torch.nn.Conv2d(in_channels=prev_num_filters, out_channels=layer, kernel_size=(3,3),
+                                           stride=1, padding=1, dilation=1))
+                h_out, w_out = get_conv_layer_output_dims(h_out, w_out, kernel_size=(3, 3), stride=(1,1), padding=(1,1),
+                                                          dilatation=(1,1))
+                net.append(torch.nn.ReLU())
+                prev_num_filters = layer
+            if layer == "dropout":
+                net.append(torch.nn.Dropout(p=0.3))
+            if layer == "maxpool":
+                net.append(torch.nn.MaxPool2d(kernel_size=(3,3), stride=2, padding=1, dilation=1))
+                h_out, w_out = get_conv_layer_output_dims(h_out, w_out, kernel_size=(3,3), stride=(2,2), padding=(1,1),
+                                                          dilatation=(1,1))
 
-        # return net
-        return resnet18(num_classes=10)
+        net.append(torch.nn.Flatten())
+        in_features = h_out * w_out * prev_num_filters
+        linear_layers_num_units = [512, 128]
+        for num_units in linear_layers_num_units:
+            net.append(torch.nn.Linear(in_features=in_features, out_features=num_units))
+            net.append(torch.nn.ReLU())
+            in_features = num_units
+
+        net.append(torch.nn.Linear(in_features, out_features=self.num_classes))
+
+        return net
 
     def _initialize_dense_network_architecture(self):
         """

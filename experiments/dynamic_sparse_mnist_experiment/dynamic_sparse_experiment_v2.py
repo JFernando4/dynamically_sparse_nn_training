@@ -125,10 +125,8 @@ class DynamicSparseMNISTExperiment(Experiment):
         """ Training constants """
         self.batch_size = 1
         self.num_classes = 10
-        # self.num_inputs = (28, 28)
-        # self.max_num_steps = 60000
-        self.image_dims = (32, 32 * 3)
-        self.num_images_per_epoch = 50000
+        self.num_inputs = (28, 28)
+        self.max_num_steps = 60000
 
         """ Network set up """
         # initialize network architecture
@@ -138,18 +136,11 @@ class DynamicSparseMNISTExperiment(Experiment):
 
         # initialize network
         self.net = torch.nn.Sequential()
-        in_dims = np.prod(self.image_dims)
-        stride = 4
-        kernel_size = 8
+        in_dims = np.prod(self.num_inputs)
         for l in range(self.num_layers):
             self.net.append(SparseLinear(in_dims, self.num_hidden, sparsity=self.sparsity_level))
             self.net.append(torch.nn.ReLU())
-            if l < 3:
-                max_pool_mod = torch.nn.MaxPool1d(kernel_size=kernel_size, stride=stride)
-                self.net.append(max_pool_mod)
-                in_dims = int(np.floor((self.num_hidden + 2 * max_pool_mod.padding - max_pool_mod.dilation * (kernel_size - 1) - 1) / stride + 1))
-            else:
-                in_dims = self.num_hidden
+            in_dims = self.num_hidden
         self.net.append(torch.nn.Linear(self.num_hidden , 10))
         self.last_layer_index = len(self.net) - 1
         self._initialize_network()
@@ -165,8 +156,7 @@ class DynamicSparseMNISTExperiment(Experiment):
 
         """ For summaries """
         self.checkpoint = 100
-        self.current_ckpt, self.running_loss, self.running_accuracy, self.running_regularized_loss, \
-            self.current_topology_update = (0, 0, 0, 0, 0)
+        self.current_ckpt, self.running_loss, self.running_accuracy, self.current_topology_update = (0, 0, 0, 0)
         self._initialize_summaries()
 
         # num_parameters_total = 0
@@ -212,7 +202,7 @@ class DynamicSparseMNISTExperiment(Experiment):
         """
         Initializes the summaries for the experiment
         """
-        total_checkpoints = self.num_images_per_epoch * self.num_epochs // self.checkpoint
+        total_checkpoints = self.max_num_steps * self.num_epochs // self.checkpoint
         self.results_dict["train_loss_per_checkpoint"] = torch.zeros(total_checkpoints, device=self.device,
                                                                      dtype=torch.float32)
         self.results_dict["train_accuracy_per_checkpoint"] = torch.zeros(total_checkpoints, device=self.device,
@@ -222,12 +212,9 @@ class DynamicSparseMNISTExperiment(Experiment):
                                                                         dtype=torch.float32)
             self.results_dict["test_accuracy_per_checkpoint"] = torch.zeros(self.num_epochs, device=self.device,
                                                                             dtype=torch.float32)
-        if self.l1_factor > 0.0:
-            self.results_dict["train_reg_loss_per_checkpoint"] = torch.zeros(total_checkpoints, device=self.device,
-                                                                             dtype=torch.float32)
 
         if self.sparsity_greater_than_zero:
-            total_topology_updates = self.num_images_per_epoch * self.num_epochs // self.topology_update_frequency
+            total_topology_updates = self.max_num_steps * self.num_epochs // self.topology_update_frequency
             num_hidden_layers = len(self.architecture) - 1      # the output layer is never pruned
             self.results_dict["num_units_pruned"] = torch.zeros((num_hidden_layers, total_topology_updates),
                                                                 dtype=torch.float32)
@@ -239,15 +226,9 @@ class DynamicSparseMNISTExperiment(Experiment):
         self.results_dict["train_loss_per_checkpoint"][self.current_ckpt] += self.running_loss / self.checkpoint
         self.results_dict["train_accuracy_per_checkpoint"][self.current_ckpt] += self.running_accuracy / self.checkpoint
 
-
-
-        if self.l1_factor > 0.0:
-            self.results_dict["train_reg_loss_per_checkpoint"][self.current_ckpt] += self.running_regularized_loss / self.checkpoint
-
         self._print("\t\tOnline accuracy: {0:.2f}".format(self.running_accuracy / self.checkpoint))
         self.running_loss *= 0.0
         self.running_accuracy *= 0.0
-        self.running_regularized_loss *= 0.0
         self.current_ckpt += 1
 
     def _store_test_summaries(self, test_data, epoch_number: int):
@@ -264,7 +245,7 @@ class DynamicSparseMNISTExperiment(Experiment):
         :return: (torch.Tensor) test loss, (torch.Tensor) test accuracy
         """
         with torch.no_grad():
-            test_outputs = self.net.forward(test_data[:]["image"].reshape(-1, np.prod(self.image_dims)))
+            test_outputs = self.net.forward(test_data[:]["image"].reshape(-1, np.prod(self.num_inputs)))
             test_labels = test_data[:]["label"]
 
             loss = self.loss(test_outputs, test_labels)
@@ -302,18 +283,11 @@ class DynamicSparseMNISTExperiment(Experiment):
         :return: data set, (optionally) data loader
         """
         """ Loads MNIST data set """
-        # mnist_data = MnistDataSet(root_dir=self.data_path,
-        #                           train=train,
-        #                           device=self.device,
-        #                           image_normalization="max",
-        #                           label_preprocessing="one-hot",
-        #                           use_torch=True)
-        mnist_data = CifarDataSet(root_dir=self.data_path,
+        mnist_data = MnistDataSet(root_dir=self.data_path,
                                   train=train,
                                   device=self.device,
-                                  image_normalization="minus-one-to-one",
+                                  image_normalization="max",
                                   label_preprocessing="one-hot",
-                                  cifar_type=10,
                                   use_torch=True)
         if return_data_loader:
             dataloader = DataLoader(mnist_data, batch_size=self.batch_size, shuffle=True)
@@ -328,7 +302,7 @@ class DynamicSparseMNISTExperiment(Experiment):
 
             for i, sample in enumerate(mnist_data_loader):
                 # sample observationa and target
-                image = sample["image"].reshape(self.batch_size, np.prod(self.image_dims))
+                image = sample["image"].reshape(self.batch_size, np.prod(self.num_inputs))
                 label = sample["label"]
 
                 # reset gradients
@@ -349,8 +323,6 @@ class DynamicSparseMNISTExperiment(Experiment):
                 current_accuracy = torch.mean((predictions.argmax(axis=1) == label.argmax(axis=1)).to(torch.float32))
                 self.running_loss += current_loss
                 self.running_accuracy += current_accuracy.detach()
-                if self.use_l1_regularization:
-                    self.running_regularized_loss += current_reg_loss.detach()
                 if (i + 1) % self.checkpoint == 0:
                     self._print("\t\tStep Number: {0}".format(i + 1))
                     self._store_training_summaries()
@@ -361,7 +333,7 @@ class DynamicSparseMNISTExperiment(Experiment):
             self._store_test_summaries(test_data, epoch_number=e)
 
             if self.permute_inputs:
-                training_data.set_transformation(Permute(np.random.permutation(np.arange(np.prod(self.image_dims)))))
+                training_data.set_transformation(Permute(np.random.permutation(np.arange(np.prod(self.num_inputs)))))
 
     def _inject_noise_and_prune(self, step: int):
         """
@@ -461,7 +433,7 @@ class DynamicSparseMNISTExperiment(Experiment):
         """
 
         # initialize new network
-        new_net = GenericDeepNet(self.net.architecture, self.image_dims)
+        new_net = GenericDeepNet(self.net.architecture, self.num_inputs)
 
         weight_list = []
         mask_list = []
@@ -492,7 +464,7 @@ class DynamicSparseMNISTExperiment(Experiment):
 
         # initialize new weights
         new_weights = torch.zeros_like(flat_weight_list)
-        torch.nn.init.normal_(new_weights, mean=0.0, std=1/np.sqrt(np.prod(self.image_dims) + self.num_classes))
+        torch.nn.init.normal_(new_weights, mean=0.0, std=1/np.sqrt(np.prod(self.num_inputs) + self.num_classes))
 
         # insert old weights into the array of new weights
         negative_mask = 1.0 - flat_mask_list
@@ -566,17 +538,17 @@ def main():
     """
     file_path = os.path.dirname(os.path.abspath(__file__))
     experiment_parameters = {
-        "stepsize": 0.0005,   # 0.01 for mnist, 0.0005 for cifar 10
+        "stepsize": 0.01,   # 0.01 for mnist, 0.0005 for cifar 10
         "l1_factor": 0.0001,    # 0.0001 for mnist
         "topology_update_frequency": 200,
-        "sparsity_level": 0.98,
+        "sparsity_level": 0.0,
         "global_pruning": False,
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 100,
-        "num_layers": 5,
-        "num_hidden": 1000,
+        "num_layers": 3,
+        "num_hidden": 100,
         "activation_function": "relu",
-        "permute_inputs": False,
+        "permute_inputs": True,
         "plot": True
     }
 
