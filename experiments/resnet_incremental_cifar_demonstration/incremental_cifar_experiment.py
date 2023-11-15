@@ -237,7 +237,7 @@ class IncrementalCIFARExperiment(Experiment):
         assert os.path.isfile(file_path)
 
         # load checkpoint information
-        self._load_experiment_checkpoint(file_path)
+        self.load_checkpoint_data_and_update_experiment_variables(file_path)
         print("Experiment checkpoint successfully loaded from:\n\t{0}".format(file_path))
         return True
 
@@ -267,7 +267,7 @@ class IncrementalCIFARExperiment(Experiment):
 
         return latest_checkpoint_file_name
 
-    def _load_experiment_checkpoint(self, file_path):
+    def load_checkpoint_data_and_update_experiment_variables(self, file_path):
         """
         Loads the checkpoint and assigns the experiment variables the recovered values
         :param file_path: path to the experiment checkpoint
