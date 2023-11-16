@@ -61,6 +61,7 @@ def init_weight_mask(layer, sparsity):
     return {'weight': layer.weight, 'mask': mask}
 
 
+@torch.no_grad()
 def apply_weight_masks(masks):
     """Applies the weight masks to the weights.
 
@@ -68,7 +69,8 @@ def apply_weight_masks(masks):
         masks: list of dicts, each dict contains 'weight' and 'mask' keys
     """
     for mask_dict in masks:
-        mask_dict['weight'].data *= mask_dict['mask']
+        mask_dict["weight"].multiply_(mask_dict["mask"])
+        # mask_dict['weight'].data *= mask_dict['mask']
 
 
 def update_weight_masks(masks, drop_fraction):
