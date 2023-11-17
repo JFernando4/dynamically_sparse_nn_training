@@ -590,7 +590,7 @@ def main():
         "stepsize": 0.1,
         "weight_decay": 0.0005,
         "momentum": 0.9,
-        "noise_std": 0.00001,
+        "noise_std": 0.0,
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 4000,
         "initial_num_classes": 5,
@@ -600,7 +600,7 @@ def main():
         "use_data_augmentation": True,
         "use_cifar100": True,
         "use_lr_schedule": True,
-        "use_best_network": False,
+        "use_best_network": True,
         "plot": False
     }
 
