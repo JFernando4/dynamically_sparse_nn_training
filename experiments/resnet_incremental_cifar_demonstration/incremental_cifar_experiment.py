@@ -303,27 +303,32 @@ class IncrementalCIFARExperiment(Experiment):
         self.running_accuracy *= 0.0
         self.current_running_avg_step += 1
 
-    def _store_test_summaries(self, test_data, epoch_number: int, epoch_runtime: float):
+    def _store_test_summaries(self, test_data: DataLoader, val_data: DataLoader, epoch_number: int, epoch_runtime: float):
         """ Computes test summaries and stores them in results dir """
+
         self.results_dict["epoch_runtime"][epoch_number] += torch.tensor(epoch_runtime, dtype=torch.float32)
-        # evaluate on test data
+
         self.net.eval()
-        test_evaluation_start_time = time.perf_counter()
-        test_loss, test_accuracy = self.evaluate_network(test_data)
-        test_evaluation_end_time = time.perf_counter()
+        for data_name, data_loader, compare_to_best in [("test", test_data, False), ("validation", val_data, True)]:
+            # evaluate on data
+            evaluation_start_time = time.perf_counter()
+            loss, accuracy = self.evaluate_network(data_loader)
+            evaluation_time = time.perf_counter() - evaluation_start_time
+
+            if compare_to_best:
+                if accuracy > self.best_accuracy:
+                    self.best_accuracy = accuracy
+                    self.best_accuracy_model_parameters = deepcopy(self.net.state_dict())
+
+            # store summaries
+            self.results_dict[data_name + "_evaluation_runtime"][epoch_number] += torch.tensor(evaluation_time, dtype=torch.float32)
+            self.results_dict[data_name + "_loss_per_epoch"][epoch_number] += loss
+            self.results_dict[data_name + "_accuracy_per_epoch"][epoch_number] += accuracy
+
+            # print progress
+            self._print("\t\t{0} accuracy: {1:.4f}".format(data_name, accuracy))
+
         self.net.train()
-        # store parameters of the best accuracy model
-        if test_accuracy > self.best_accuracy:
-            self.best_accuracy = test_accuracy
-            self.best_accuracy_model_parameters = deepcopy(self.net.state_dict())
-        # store summaries
-        evaluation_run_time = test_evaluation_end_time - test_evaluation_start_time
-        self.results_dict["test_evaluation_runtime"][epoch_number] += torch.tensor(evaluation_run_time, dtype=torch.float32)
-        self.results_dict["test_loss_per_epoch"][epoch_number] += test_loss
-        self.results_dict["test_accuracy_per_epoch"][epoch_number] += test_accuracy
-        # print progress
-        self._print("\t\tTest accuracy: {0:.4f}".format(test_accuracy))
-        self._print("\t\tTest evaluation run time in seconds: {0:.4f}".format(evaluation_run_time))
         self._print("\t\tEpoch run time in seconds: {0:.4f}".format(epoch_runtime))
 
     def evaluate_network(self, test_data: DataLoader):
@@ -352,13 +357,13 @@ class IncrementalCIFARExperiment(Experiment):
     def run(self):
         # load data
         training_data, training_dataloader = self.get_data(train=True, validation=False)
-        validation_data, validation_dataloader = self.get_data(train=True, validation=True)
+        val_data, val_dataloader = self.get_data(train=True, validation=True)
         test_data, test_dataloader = self.get_data(train=False)
 
         self.load_experiment_checkpoint()
         # train network
-        self.train(train_dataloader=training_dataloader, test_dataloader=test_dataloader,
-                   test_data=test_data, training_data=training_data)
+        self.train(train_dataloader=training_dataloader, test_dataloader=test_dataloader, val_dataloader=val_dataloader,
+                   test_data=test_data, training_data=training_data, val_data=val_data)
 
         self._plot_results()
         # summaries stored in memory automatically if using mlproj_manager
@@ -437,11 +442,12 @@ class IncrementalCIFARExperiment(Experiment):
 
         return train_indices, validation_indices
 
-    def train(self, train_dataloader: DataLoader, test_dataloader: DataLoader, test_data: CifarDataSet,
-              training_data: CifarDataSet):
+    def train(self, train_dataloader: DataLoader, test_dataloader: DataLoader, val_dataloader: DataLoader,
+              test_data: CifarDataSet, training_data: CifarDataSet, val_data: CifarDataSet):
 
         training_data.select_new_partition(self.all_classes[:self.current_num_classes])
         test_data.select_new_partition(self.all_classes[:self.current_num_classes])
+        val_data.select_new_partition(self.all_classes[:self.current_num_classes])
         self._save_model_parameters()
 
         for e in range(self.current_epoch, self.num_epochs):
@@ -476,10 +482,11 @@ class IncrementalCIFARExperiment(Experiment):
                     self._store_training_summaries()
 
             epoch_end_time = time.perf_counter()
-            self._store_test_summaries(test_dataloader, epoch_number=e, epoch_runtime=epoch_end_time - epoch_start_time)
+            self._store_test_summaries(test_dataloader, val_dataloader, epoch_number=e,
+                                       epoch_runtime=epoch_end_time - epoch_start_time)
 
             self.current_epoch += 1
-            self.extend_classes(training_data, test_data)
+            self.extend_classes(training_data, test_data, val_data)
 
             if self.current_epoch % self.checkpoint_save_frequency == 0:
                 self.save_experiment_checkpoint()
@@ -514,7 +521,7 @@ class IncrementalCIFARExperiment(Experiment):
             for param in self.net.parameters():
                 param.add_(torch.randn(param.size(), device=param.device) * self.noise_std)
 
-    def extend_classes(self, training_data: CifarDataSet, test_data: CifarDataSet):
+    def extend_classes(self, training_data: CifarDataSet, test_data: CifarDataSet, val_data: CifarDataSet):
         """
         Adds one new class to the data set with certain frequency
         """
@@ -531,10 +538,10 @@ class IncrementalCIFARExperiment(Experiment):
             self.current_num_classes += increase
             training_data.select_new_partition(self.all_classes[:self.current_num_classes])
             test_data.select_new_partition(self.all_classes[:self.current_num_classes])
+            val_data.select_new_partition(self.all_classes[:self.current_num_classes])
             self._print("\tNew class added...")
             if self.reset_head:
                 kaiming_init_resnet_module(self.net.fc)                   # for resnet 10, 18 and 34
-                # kaiming_init_resnet_module(self.net.classifier[-1])  # for resnet 9
             if self.reset_network:
                 self.net.apply(kaiming_init_resnet_module)
 
