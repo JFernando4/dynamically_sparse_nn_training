@@ -60,13 +60,13 @@ class IncrementalCIFARExperiment(Experiment):
         self.plot = access_dict(exp_params, key="plot", default=False)
 
         """ Training constants """
-        self.batch_size = 100
+        self.batch_sizes = {"train": 90, "test": 100, "validation":50}
         self.num_classes = 10 if not self.use_cifar100 else 100
         self.image_dims = (32, 32, 3)
         self.flat_image_dims = int(np.prod(self.image_dims))
         self.num_images_per_epoch = 50000
         self.num_test_samples = 10000
-        self.num_images_per_class = 500
+        self.num_images_per_class = 450
 
         """ Network set up """
         # initialize network
@@ -101,34 +101,35 @@ class IncrementalCIFARExperiment(Experiment):
         self.current_running_avg_step, self.running_loss, self.running_accuracy = (0, 0.0, 0.0)
         self._initialize_summaries()
 
-    # -------------------- Methods for initializing the experiment --------------------#
+    # ------------------------------ Methods for initializing the experiment ------------------------------#
     def _initialize_summaries(self):
         """
         Initializes the summaries for the experiment
         """
         if self.fixed_classes:
             num_images_per_epoch = self.num_images_per_class * self.num_classes
-            total_checkpoints = (num_images_per_epoch * self.num_epochs) // (self.running_avg_window * self.batch_size)
+            total_checkpoints = (num_images_per_epoch * self.num_epochs) // (self.running_avg_window * self.batch_sizes["train"])
         else:
             number_of_tasks = np.arange(self.num_epochs // self.class_increase_frequency) + 1
             class_increase = 5 if self.use_cifar100 else 1
             number_of_image_per_task = self.num_images_per_class * class_increase
-            bin_size = (self.running_avg_window * self.batch_size)
+            bin_size = (self.running_avg_window * self.batch_sizes["train"])
             total_checkpoints = np.sum(number_of_tasks * self.class_increase_frequency * number_of_image_per_task // bin_size)
-        self.results_dict["train_loss_per_checkpoint"] = torch.zeros(total_checkpoints, device=self.device,
-                                                                     dtype=torch.float32)
-        self.results_dict["train_accuracy_per_checkpoint"] = torch.zeros(total_checkpoints, device=self.device,
-                                                                         dtype=torch.float32)
-        self.results_dict["epoch_runtime"] = torch.zeros(self.num_epochs, device=self.device, dtype=torch.float32)
-        # test summaries
-        self.results_dict["test_loss_per_epoch"] = torch.zeros(self.num_epochs, device=self.device,
-                                                                    dtype=torch.float32)
-        self.results_dict["test_accuracy_per_epoch"] = torch.zeros(self.num_epochs, device=self.device,
-                                                                        dtype=torch.float32)
-        self.results_dict["test_evaluation_runtime"] = torch.zeros(self.num_epochs, device=self.device,
-                                                                   dtype=torch.float32)
+
+        train_prototype_array = torch.zeros(total_checkpoints, device=self.device, dtype=torch.float32)
+        self.results_dict["train_loss_per_checkpoint"] = torch.zeros_like(train_prototype_array)
+        self.results_dict["train_accuracy_per_checkpoint"] = torch.zeros_like(train_prototype_array)
+
+        prototype_array = torch.zeros(self.num_epochs, device=self.device, dtype=torch.float32)
+        self.results_dict["epoch_runtime"] = torch.zeros_like(prototype_array)
+        # test and validation summaries
+        for set_type in ["test", "validation"]:
+            self.results_dict[set_type + "_loss_per_epoch"] = torch.zeros_like(prototype_array)
+            self.results_dict[set_type + "_accuracy_per_epoch"] = torch.zeros_like(prototype_array)
+            self.results_dict[set_type + "_evaluation_runtime"] = torch.zeros_like(prototype_array)
         self.results_dict["class_order"] = self.all_classes
 
+    # ----------------------------- For saving and loading experiment checkpoints ----------------------------- #
     def save_experiment_checkpoint(self):
         """
         Saves all the information necessary to resume the experiment with the same index. Specifically, it stores: the
@@ -291,7 +292,7 @@ class IncrementalCIFARExperiment(Experiment):
         for k, v in self.results_dict.items():
             self.results_dict[k] = partial_results[k] if not isinstance(partial_results[k], torch.Tensor) else partial_results[k].to(self.device)
 
-    # ----------------------------- For storing summaries ----------------------------- #
+    # --------------------------------------- For storing summaries --------------------------------------- #
     def _store_training_summaries(self):
         # store train data
         self.results_dict["train_loss_per_checkpoint"][self.current_running_avg_step] += self.running_loss / self.running_avg_window
@@ -347,11 +348,11 @@ class IncrementalCIFARExperiment(Experiment):
 
         return avg_loss / num_test_batches, avg_acc / num_test_batches
 
-    # --------------------------- For running the experiment --------------------------- #
+    # ------------------------------------- For running the experiment ------------------------------------- #
     def run(self):
         # load data
         training_data, training_dataloader = self.get_data(train=True, validation=False)
-        validation_data, validation_data = self.get_data(train=True, validation=True)
+        validation_data, validation_dataloader = self.get_data(train=True, validation=True)
         test_data, test_dataloader = self.get_data(train=False)
 
         self.load_experiment_checkpoint()
@@ -397,7 +398,8 @@ class IncrementalCIFARExperiment(Experiment):
 
         num_workers = 1 if self.device.type == "cpu" else 12
         if not train:
-            dataloader = DataLoader(cifar_data, batch_size=self.batch_size, shuffle=True, num_workers=num_workers)
+            batch_size = self.batch_sizes["test"]
+            dataloader = DataLoader(cifar_data, batch_size=batch_size, shuffle=True, num_workers=num_workers)
             return cifar_data, dataloader
 
         train_indices, validation_indices = self.get_validation_and_train_indices(cifar_data)
@@ -407,7 +409,8 @@ class IncrementalCIFARExperiment(Experiment):
         cifar_data.current_data["data"] = cifar_data.current_data["data"][indices]
         cifar_data.current_data["labels"] = cifar_data.current_data["labels"][indices]
         cifar_data.integer_labels = torch.tensor(cifar_data.integer_labels)[indices].tolist()
-        return cifar_data, DataLoader(cifar_data, batch_size=self.batch_size, shuffle=True, num_workers=num_workers)
+        batch_size = self.batch_sizes["validation"] if validation else self.batch_sizes["train"]
+        return cifar_data, DataLoader(cifar_data, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
     def get_validation_and_train_indices(self, cifar_data: CifarDataSet):
         """
