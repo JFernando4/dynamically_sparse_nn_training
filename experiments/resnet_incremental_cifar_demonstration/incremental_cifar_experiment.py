@@ -350,8 +350,9 @@ class IncrementalCIFARExperiment(Experiment):
     # --------------------------- For running the experiment --------------------------- #
     def run(self):
         # load data
-        training_data, training_dataloader = self.get_data(train=True, return_data_loader=True)
-        test_data, test_dataloader = self.get_data(train=False, return_data_loader=True)
+        training_data, training_dataloader = self.get_data(train=True, validation=False)
+        validation_data, validation_data = self.get_data(train=True, validation=True)
+        test_data, test_dataloader = self.get_data(train=False)
 
         self.load_experiment_checkpoint()
         # train network
@@ -361,15 +362,16 @@ class IncrementalCIFARExperiment(Experiment):
         self._plot_results()
         # summaries stored in memory automatically if using mlproj_manager
 
-    def get_data(self, train: bool = True, return_data_loader: bool = False):
+    def get_data(self, train: bool = True, validation: bool = False):
         """
         Loads the data set
         :param train: (bool) indicates whether to load the train (True) or the test (False) data
-        :param return_data_loader: (bool) indicates whether to return a data loader object corresponding to the data set
-        :return: data set, (optionally) data loader
+        :param validation: (bool) indicates whether to return the validation set. The validation set is made up of
+                           50 examples of each class of whichever set was loaded
+        :return: data set, data loader
         """
+
         """ Loads CIFAR data set """
-        cifar_type = 10 if not self.use_cifar100 else 100
         cifar_data = CifarDataSet(root_dir=self.data_path,
                                   train=train,
                                   cifar_type=100,
@@ -377,6 +379,7 @@ class IncrementalCIFARExperiment(Experiment):
                                   image_normalization="max",
                                   label_preprocessing="one-hot",
                                   use_torch=True)
+
         mean = (0.5071, 0.4865, 0.4409) if self.use_cifar100 else (0.4914, 0.4822, 0.4465)
         std = (0.2673, 0.2564, 0.2762) if self.use_cifar100 else (0.2470, 0.2435, 0.2616)
 
@@ -384,19 +387,52 @@ class IncrementalCIFARExperiment(Experiment):
             ToTensor(swap_color_axis=True),  # reshape to (C x H x W)
             Normalize(mean=mean, std=std),  # center by mean and divide by std
         ]
-        if train and self.use_data_augmentation:
+
+        if train and self.use_data_augmentation and (not validation):
             transformations.append(RandomHorizontalFlip(p=0.5))
             transformations.append(RandomCrop(size=32, padding=4, padding_mode="reflect"))
             transformations.append(RandomRotator(degrees=(0,15)))
 
         cifar_data.set_transformation(transforms.Compose(transformations))
 
-        if return_data_loader:
-            num_workers = 1 if self.device.type == "cpu" else 12
+        num_workers = 1 if self.device.type == "cpu" else 12
+        if not train:
             dataloader = DataLoader(cifar_data, batch_size=self.batch_size, shuffle=True, num_workers=num_workers)
             return cifar_data, dataloader
 
-        return cifar_data
+        train_indices, validation_indices = self.get_validation_and_train_indices(cifar_data)
+        indices = validation_indices if validation else train_indices
+        cifar_data.data["data"] = cifar_data.data["data"][indices]
+        cifar_data.data["labels"] = cifar_data.data["labels"][indices]
+        cifar_data.current_data["data"] = cifar_data.current_data["data"][indices]
+        cifar_data.current_data["labels"] = cifar_data.current_data["labels"][indices]
+        cifar_data.integer_labels = torch.tensor(cifar_data.integer_labels)[indices].tolist()
+        return cifar_data, DataLoader(cifar_data, batch_size=self.batch_size, shuffle=True, num_workers=num_workers)
+
+    def get_validation_and_train_indices(self, cifar_data: CifarDataSet):
+        """
+        Splits the cifar data into validation and train set and returns the indices of each set with respect to the
+        original dataset
+        :param cifar_data: and instance of CifarDataSet
+        :return: train and validation indices
+        """
+        num_val_samples_per_class = 50
+        num_train_samples_per_class = 450
+        validation_set_size = 5000
+        train_set_size = 45000
+
+        validation_indices = torch.zeros(validation_set_size, dtype=torch.int32)
+        train_indices = torch.zeros(train_set_size, dtype=torch.int32)
+        current_val_samples = 0
+        current_train_samples = 0
+        for i in range(self.num_classes):
+            class_indices = torch.argwhere(cifar_data.data["labels"][:, i] == 1).flatten()
+            validation_indices[current_val_samples:(current_val_samples + num_val_samples_per_class)] += class_indices[:num_val_samples_per_class]
+            train_indices[current_train_samples:(current_train_samples + num_train_samples_per_class)] += class_indices[num_val_samples_per_class:]
+            current_val_samples += num_val_samples_per_class
+            current_train_samples += num_train_samples_per_class
+
+        return train_indices, validation_indices
 
     def train(self, train_dataloader: DataLoader, test_dataloader: DataLoader, test_data: CifarDataSet,
               training_data: CifarDataSet):
