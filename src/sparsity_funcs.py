@@ -18,6 +18,21 @@ def update_one_weight_mask_set(mask, weight, refresh_num, reinit='zero'):
     return mask
 
 
+def update_one_weight_mask_rigl(mask, weight, refresh_num, reinit='zero'):
+    """Updates the weight mask of one layer.
+    RigL algorithm: https://arxiv.org/abs/1911.11134
+
+    Args:
+        mask: The weight mask.
+        weight: The weights of one layer, corresponding to the mask.
+        refresh_num: The number of weights to drop and grow.
+        reinit: How to reinitialize the weights that are regrown. Options: 'zero', 'kaiming_normal'
+        """
+    mask = prune_magnitude(mask, weight, refresh_num)
+    mask = grow_rigl(mask, weight, refresh_num, reinit)
+    return mask
+
+
 def prune_magnitude(mask, weight, drop_num):
     """Prunes the weight mask by dropping the smallest magnitude weights."""
     weight = torch.abs(weight) + 1e-3  # if active weights happen to be 0, they will be dropped by this 1e-3 constant
@@ -41,6 +56,24 @@ def grow_random(mask, weight, grow_num, reinit):
         return mask
     shuffle = torch.randperm(non_active)
     indices = indices[shuffle]
+    to_grow = min(grow_num, non_active)
+    indices = indices[:to_grow]
+    mask.view(-1)[indices] = 1.
+    if reinit != 'zero':
+        reinit_grown_weights(weight, indices, reinit)
+    return mask
+
+
+def grow_rigl(mask, weight, grow_num, reinit):
+    """Grows connections in the weight mask by growing where the gradient is largest."""
+    non_active = len(torch.where(mask.flatten() == 0)[0])
+    if non_active == 0:
+        return mask
+
+    grad = torch.abs(weight.grad) + 1e-3  # if weight grads happen to be 0, they will get a small value now
+    grad = grad * (mask == 0).float()  # only consider non-active weights
+    sorted_grads, indices = torch.sort(grad.flatten(), descending=True)
+
     to_grow = min(grow_num, non_active)
     indices = indices[:to_grow]
     mask.view(-1)[indices] = 1.
@@ -86,18 +119,27 @@ def apply_weight_masks(masks):
         # mask_dict['weight'].data *= mask_dict['mask']
 
 
-def update_weight_masks(masks, drop_fraction, reinit='zero'):
+def update_weight_masks(masks, drop_fraction, reinit='zero', grow_method='set'):
     """Updates all the weight masks.
 
     Args:
         masks: list of dicts, each dict contains 'weight' and 'mask' keys
         drop_fraction: The fraction of weights to drop and grow.
         reinit: How to reinitialize the weights that are regrown. Options: 'zero', 'kaiming_normal'
+        grow_method: The method to use for growing weights. Options: 'set', 'rigl'
     """
-    for mask_dict in masks:
-        num_active = mask_dict['mask'].sum().item()
-        num_drop = int(num_active * drop_fraction)
-        mask_dict['mask'] = update_one_weight_mask_set(mask_dict['mask'], mask_dict['weight'], num_drop, reinit)
+    if grow_method == 'set':
+        for mask_dict in masks:
+            num_active = mask_dict['mask'].sum().item()
+            num_drop = int(num_active * drop_fraction)
+            mask_dict['mask'] = update_one_weight_mask_set(mask_dict['mask'], mask_dict['weight'], num_drop, reinit)
+    elif grow_method == 'rigl':
+        for mask_dict in masks:
+            num_active = mask_dict['mask'].sum().item()
+            num_drop = int(num_active * drop_fraction)
+            mask_dict['mask'] = update_one_weight_mask_rigl(mask_dict['mask'], mask_dict['weight'], num_drop, reinit)
+    else:
+        raise ValueError(f'Unknown DST grow method {grow_method}')
 
 
 def maintain_sparsity_target_layer(target_param, mask):

@@ -262,9 +262,10 @@ def parse_args():
     parser.add_argument('--num_epochs', type=int, default=5 )
     parser.add_argument('--num_layers', type=int, default=3)
     parser.add_argument('--num_hidden', type=int, default=100)
-    parser.add_argument('--algorithm', type=str, default='static_sparse')
+    parser.add_argument('--algorithm', type=str, default='static_sparse', help="Algorithm to use for training. Options: set, rigl, static_sparse, ...")
     parser.add_argument('--sparsity', type=int, default=0.8)
     parser.add_argument('--reinit_method', type=str, default='zero', choices=['zero', 'kaiming_normal'], help="How to reinitialize the weights that are regrown.")
+
     parser.add_argument('--wandb_dir', type=str, default=os.path.join(file_path, "results"))
     parser.add_argument('--wandb_mode', type=str, default='offline', choices=['online', 'offline', 'disabled'])
     parser.add_argument('--wandb_tags', type=str, default="test", help="String of comma separated tags.")
