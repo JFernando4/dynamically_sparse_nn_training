@@ -2,17 +2,19 @@ import torch
 import wandb
 
 
-def update_one_weight_mask(mask, weight, refresh_num):
+def update_one_weight_mask_set(mask, weight, refresh_num, reinit='zero'):
     """Updates the weight mask of one layer.
-    SET algorithm.
+    SET algorithm: https://arxiv.org/abs/1707.04780
+    (but with standard magnitude pruning)
 
     Args:
         mask: The weight mask.
         weight: The weights of one layer, corresponding to the mask.
         refresh_num: The number of weights to drop and grow.
+        reinit: How to reinitialize the weights that are regrown. Options: 'zero', 'kaiming_normal'
         """
     mask = prune_magnitude(mask, weight, refresh_num)
-    mask = grow_random(mask, refresh_num)
+    mask = grow_random(mask, weight, refresh_num, reinit)
     return mask
 
 
@@ -31,7 +33,7 @@ def prune_magnitude(mask, weight, drop_num):
     return mask
 
 
-def grow_random(mask, grow_num):
+def grow_random(mask, weight, grow_num, reinit):
     """Grows connections in the weight mask by randomly selecting inactive weights."""
     indices = torch.where(mask.flatten() == 0)[0]
     non_active = len(indices)
@@ -42,7 +44,18 @@ def grow_random(mask, grow_num):
     to_grow = min(grow_num, non_active)
     indices = indices[:to_grow]
     mask.view(-1)[indices] = 1.
+    if reinit != 'zero':
+        reinit_grown_weights(weight, indices, reinit)
     return mask
+
+
+def reinit_grown_weights(weight, indices, reinit):
+    if reinit == 'kaiming_normal':
+        temp_weight = torch.empty_like(weight)
+        torch.nn.init.kaiming_normal_(temp_weight)
+        weight.view(-1)[indices] = temp_weight.view(-1)[indices]
+    else:
+        raise ValueError(f'Unknown reinit option {reinit}')
 
 
 def init_weight_mask(layer, sparsity):
