@@ -299,7 +299,8 @@ def parse_args():
     parser.add_argument('--num_epochs', type=int, default=5 )
     parser.add_argument('--num_layers', type=int, default=3)
     parser.add_argument('--num_hidden', type=int, default=100)
-    parser.add_argument('--algorithm', type=str, default='static_sparse')
+    parser.add_argument('--algorithm', type=str, default='static_sparse',
+                        help="Algorithm to use for training.", choices=["set", "rigl", "static_sparse", "dense"])
     parser.add_argument('--sparsity', type=int, default=0.8)
     parser.add_argument('--reinit_method', type=str, default='zero', choices=['zero', 'kaiming_normal'],
                         help="How to reinitialize the weights that are regrown.")
