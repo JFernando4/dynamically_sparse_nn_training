@@ -107,9 +107,40 @@ class PermutedMNISTExperiment(Experiment):
         slurm_job_id = "0" if "SLURM_JOBID" not in os.environ else os.environ["SLURM_JOBID"]
         exp_params["slurm_job_id"] = slurm_job_id
 
+        run_id = self.get_wandb_id()
         run_name = "{0}_index-{1}".format(os.path.basename(self.results_dir), self.run_index)
         return wandb.init(project="dstlop", entity="dst-lop", mode=wandb_mode, config=exp_params, tags=tag_list,
-                          name=run_name)
+                          name=run_name, id=run_id)
+
+    def get_wandb_id(self):
+        """ Generates and stores a wandb id or loads it if one is already available """
+
+        wandb_id_dir = os.path.join(self.results_dir, "wandb_ids")
+        os.makedirs(wandb_id_dir, exist_ok=True)
+
+        wandb_id_filepath = os.path.join(wandb_id_dir, "index-{0}.p".format(self.run_index))
+
+        # an id was already stored
+        if os.path.isfile(wandb_id_filepath):
+            with open(wandb_id_filepath, mode="rb") as id_file:
+                run_id = pickle.load(id_file)
+            return run_id
+
+        # generate a new id
+        run_id = wandb.util.generate_id()
+        number_of_attempts = 10
+        for i in range(number_of_attempts):
+            try:
+                with open(wandb_id_filepath, mode="wb") as id_file:
+                    pickle.dump(run_id, id_file)
+                with open(wandb_id_filepath, mode="rb") as id_file:
+                    pickle.load(id_file)
+                break
+            except ValueError:
+                print("Something went wrong on attempt {0} when loading the job id.".format(i + 1))
+            print("Couldn't store the run id. Checkpointing won't be enable.")
+
+        return run_id
 
     def initialize_network(self):
         """ Initializes the network used for training and the masks of each layer """
@@ -173,12 +204,18 @@ class PermutedMNISTExperiment(Experiment):
             torch.cuda.set_rng_state(checkpoint["cuda_rng_state"])
 
         partial_results = checkpoint["partial_results"]
+        # log partial results to wandb
         for i in range(self.current_running_avg_step):
             temp_results = {
                 "train_loss_per_checkpoint": partial_results["train_loss_per_checkpoint"][i],
                 "train_accuracy_per_checkpoint":partial_results["train_accuracy_per_checkpoint"][i]
             }
             wandb.log(temp_results, step=(self.current_running_avg_step + 1) * self.running_avg_window)
+
+        # store partial results
+        for k, v in self.results_dict.items():
+            self.results_dict[k] = partial_results[k] if not isinstance(partial_results[k], torch.Tensor) else \
+            partial_results[k].to(self.device)
 
     # ----------------------------- For storing summaries ----------------------------- #
     def _store_training_summaries(self):
@@ -252,7 +289,7 @@ def parse_args():
     file_path = os.path.dirname(os.path.abspath(__file__))
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--index', type=int, default=2,
+    parser.add_argument('--index', type=int, default=0,
                         help="Run index; a unique random seed is assigned to each different index.")
     parser.add_argument('--stepsize', type=float, default=0.001)
     parser.add_argument('--l1_factor', type=float, default=0.0)
@@ -264,7 +301,8 @@ def parse_args():
     parser.add_argument('--num_hidden', type=int, default=100)
     parser.add_argument('--algorithm', type=str, default='static_sparse')
     parser.add_argument('--sparsity', type=int, default=0.8)
-    parser.add_argument('--reinit_method', type=str, default='zero', choices=['zero', 'kaiming_normal'], help="How to reinitialize the weights that are regrown.")
+    parser.add_argument('--reinit_method', type=str, default='zero', choices=['zero', 'kaiming_normal'],
+                        help="How to reinitialize the weights that are regrown.")
     parser.add_argument('--wandb_dir', type=str, default=os.path.join(file_path, "results"))
     parser.add_argument('--wandb_mode', type=str, default='offline', choices=['online', 'offline', 'disabled'])
     parser.add_argument('--wandb_tags', type=str, default="test", help="String of comma separated tags.")
