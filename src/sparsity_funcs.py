@@ -86,17 +86,18 @@ def apply_weight_masks(masks):
         # mask_dict['weight'].data *= mask_dict['mask']
 
 
-def update_weight_masks(masks, drop_fraction):
+def update_weight_masks(masks, drop_fraction, reinit='zero'):
     """Updates all the weight masks.
 
     Args:
         masks: list of dicts, each dict contains 'weight' and 'mask' keys
         drop_fraction: The fraction of weights to drop and grow.
+        reinit: How to reinitialize the weights that are regrown. Options: 'zero', 'kaiming_normal'
     """
     for mask_dict in masks:
         num_active = mask_dict['mask'].sum().item()
         num_drop = int(num_active * drop_fraction)
-        mask_dict['mask'] = update_one_weight_mask(mask_dict['mask'], mask_dict['weight'], num_drop)
+        mask_dict['mask'] = update_one_weight_mask_set(mask_dict['mask'], mask_dict['weight'], num_drop, reinit)
 
 
 def maintain_sparsity_target_layer(target_param, mask):
