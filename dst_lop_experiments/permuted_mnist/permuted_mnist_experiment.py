@@ -50,7 +50,7 @@ class PermutedMNISTExperiment(Experiment):
         self.num_layers = exp_params["num_layers"]      # number of hidden layers
         self.num_hidden = exp_params["num_hidden"]      # number of hidden units per hidden layer
         self.dst_algorithm = access_dict(exp_params, "algorithm", default="set",
-                                         choices=["set", "dense", "static_sparse"])
+                                         choices=["set", "dense", "static_sparse", "rigl"])
         self.sparsity = access_dict(exp_params, "sparsity", default=0.0, val_type=float)
         self.results_dir = results_dir
 
