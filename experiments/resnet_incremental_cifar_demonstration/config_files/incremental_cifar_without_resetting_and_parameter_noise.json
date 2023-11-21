@@ -31,18 +31,18 @@
     "use_cifar100": true,
     "use_lr_schedule": true,
     "use_best_network": true,
-    "runs": 5
+    "runs": 15
   },
 
   "learning_params": {
     "reset_head": false,
     "reset_network": false,
-    "noise_std": ["fixed", 0.0001, 0.00001, 0.000001]
+    "noise_std": ["fixed", 0.00001]
   },
 
   "slurm_parameters": {
     "job_name": "icifar100",
-    "time": "16:00:00",
+    "time": "16:30:00",
     "max_runs_per_job": 1
   }
 }

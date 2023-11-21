@@ -29,11 +29,11 @@
     "use_cifar100": true,
     "use_lr_schedule": true,
     "use_best_network": true,
-    "runs": 5
+    "runs": 15
   },
 
   "learning_params": {
-    "weight_decay": ["fixed", 0.005, 0.0005, 0.00005],
+    "weight_decay": ["fixed", 0.0005],
     "reset_head": false,
     "reset_network": false
   },

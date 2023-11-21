@@ -31,7 +31,7 @@
     "use_cifar100": true,
     "use_lr_schedule": true,
     "use_best_network": true,
-    "runs": 5
+    "runs": 15
   },
 
   "learning_params": {
@@ -42,7 +42,7 @@
 
   "slurm_parameters": {
     "job_name": "icifar100",
-    "time": "16:00:00",
+    "time": "16:30:00",
     "max_runs_per_job": 1
   }
 }
