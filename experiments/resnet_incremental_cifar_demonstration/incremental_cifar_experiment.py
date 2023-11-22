@@ -493,9 +493,7 @@ class IncrementalCIFARExperiment(Experiment):
                 # backpropagate and update weights
                 current_reg_loss.backward()
                 self.optim.step()
-                # if self.use_cbp:
-                #     self.resgnt.gen_and_test(self.current_features)
-                #     for _ in range(len(self.current_features)): self.current_features.pop()
+                if self.use_cbp: self.resgnt.gen_and_test(current_features)
                 self.inject_noise()
 
                 # store summaries

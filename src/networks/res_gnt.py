@@ -113,10 +113,11 @@ class ResGnT(object):
             """
             Update feature stats
             """
-            if features[i].size().__len__() == 2:
-                self.mean_feature_mag[i] += (1 - self.decay_rate) * features[i].abs().mean(dim=0)
-            elif features[i].size().__len__() == 4:
-                self.mean_feature_mag[i] += (1 - self.decay_rate) * features[i].abs().mean(dim=(0, 2, 3))
+            with torch.no_grad():
+                if features[i].size().__len__() == 2:
+                    self.mean_feature_mag[i] += (1 - self.decay_rate) * features[i].abs().mean(dim=0)
+                elif features[i].size().__len__() == 4:
+                    self.mean_feature_mag[i] += (1 - self.decay_rate) * features[i].abs().mean(dim=(0, 2, 3))
             """
             Find the no. of features to replace
             """
