@@ -97,6 +97,7 @@ class IncrementalCIFARExperiment(Experiment):
                                  util_type="weight",
                                  maturity_threshold=100,
                                  device=self.device)
+        self.current_features = [] if self.use_cbp else None
 
         """ For data partitioning """
         self.class_increase_frequency = 200
@@ -484,15 +485,16 @@ class IncrementalCIFARExperiment(Experiment):
                 for param in self.net.parameters(): param.grad = None   # apparently faster than optim.zero_grad()
 
                 # compute prediction and loss
-                current_features = None if not self.use_cbp else []
-                predictions = self.net.forward(image, current_features)[:, self.all_classes[:self.current_num_classes]]
+                predictions = self.net.forward(image, self.current_features)[:, self.all_classes[:self.current_num_classes]]
                 current_reg_loss = self.loss(predictions, label)
                 current_loss = current_reg_loss.detach().clone()
 
                 # backpropagate and update weights
                 current_reg_loss.backward()
                 self.optim.step()
-                if self.use_cbp: self.resgnt.gen_and_test(current_features)
+                if self.use_cbp:
+                    self.resgnt.gen_and_test(self.current_features)
+                    for _ in range(len(self.current_features)): self.current_features.pop()
                 self.inject_noise()
 
                 # store summaries
