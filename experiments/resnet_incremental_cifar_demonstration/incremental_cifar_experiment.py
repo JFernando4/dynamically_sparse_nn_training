@@ -93,13 +93,10 @@ class IncrementalCIFARExperiment(Experiment):
         if self.use_cbp:
             self.resgnt = ResGnT(net=self.net,
                                  hidden_activation="relu",
-                                 opt=self.optim,
                                  replacement_rate=self.replacement_rate,
                                  decay_rate=0.99,
-                                 init="kamining",
                                  util_type="weight",
-                                 maturity_threshold=100,
-                                 device=self.device)
+                                 maturity_threshold=100)
 
         """ For data partitioning """
         self.class_increase_frequency = 200
