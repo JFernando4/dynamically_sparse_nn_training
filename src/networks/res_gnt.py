@@ -55,9 +55,9 @@ class ResGnT(object):
         self.util, self.ages, self.bias_corrected_util = [], [], []
 
         for i in range(self.num_hidden_layers):
-            self.util.append(zeros(self.weight_layers[i].out_channels))
-            self.ages.append(zeros(self.weight_layers[i].out_channels))
-            self.bias_corrected_util.append(zeros(self.weight_layers[i].out_channels))
+            self.util.append(zeros(self.weight_layers[i].out_channels, dtype=torch.float32, device=device))
+            self.ages.append(zeros(self.weight_layers[i].out_channels, dtype=torch.float32, device=device))
+            self.bias_corrected_util.append(zeros(self.weight_layers[i].out_channels, dtype=torch.float32, device=device))
 
         self.accumulated_num_features_to_replace = [0 for i in range(self.num_hidden_layers)]
         self.m = torch.nn.Softmax(dim=1)
@@ -98,6 +98,7 @@ class ResGnT(object):
 
     def update_utility(self, layer_idx=0, features=None):
         with torch.no_grad():
+            print(self.util[layer_idx].device, self.decay_rate.device)
             self.util[layer_idx] *= self.decay_rate
             bias_correction = 1 - self.decay_rate ** self.ages[layer_idx]
 
