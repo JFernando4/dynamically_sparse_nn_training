@@ -173,7 +173,7 @@ class ResGnT(object):
             if isinstance(self.weight_layers[i], Conv2d) and isinstance(self.weight_layers[i+1], Linear):
                 features_to_replace_output_indices[i] = \
                     (new_features_to_replace*self.num_last_filter_outputs).repeat_interleave(self.num_last_filter_outputs) + \
-                    tensor([i for i in range(self.num_last_filter_outputs)]).repeat(new_features_to_replace.size()[0])
+                    tensor([i for i in range(self.num_last_filter_outputs)], device=new_features_to_replace.device).repeat(new_features_to_replace.size()[0])
 
         return features_to_replace_input_indices, features_to_replace_output_indices, num_features_to_replace
 
