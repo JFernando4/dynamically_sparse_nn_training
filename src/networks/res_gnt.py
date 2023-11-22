@@ -177,7 +177,7 @@ class ResGnT(object):
 
                 current_layer.weight.data[features_to_replace[i], :] *= 0.0
                 current_layer.weight.data[features_to_replace[i], :] += \
-                    empty([num_features_to_replace[i]] + list(current_layer.weight.shape[1:])).normal_(std=self.stds[i])
+                    empty([num_features_to_replace[i]] + list(current_layer.weight.shape[1:]), device=self.device).normal_(std=self.stds[i])
 
                 current_layer.bias.data[features_to_replace[i]] *= 0.0
                 """
