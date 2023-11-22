@@ -40,26 +40,41 @@ class IncrementalCIFARExperiment(Experiment):
         np.random.seed(self.random_seed)
 
         """ Experiment parameters """
+        self.data_path = exp_params["data_path"]
+
+        # optimization parameters
         self.stepsize = exp_params["stepsize"]
         self.weight_decay = exp_params["weight_decay"]
         self.momentum = exp_params["momentum"]
-        self.data_path = exp_params["data_path"]
+        self.use_lr_schedule = access_dict(exp_params, "use_lr_schedule", default=False, val_type=bool)
+
+        # network resetting parameters
+        self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
+        self.reset_network = access_dict(exp_params, "reset_network", default=False, val_type=bool)
+        if self.reset_head and self.reset_network:
+            print(Warning("Resetting the whole network supersedes resetting the head of the network. There's no need to set both to True."))
+
+        # problem definition parameters
         self.num_epochs = access_dict(exp_params, "num_epochs", default=1, val_type=int)
         self.current_num_classes = access_dict(exp_params, "initial_num_classes", default=2, val_type=int)
         self.fixed_classes = access_dict(exp_params, "fixed_classes", default=True, val_type=bool)
-        self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
-        self.reset_network = access_dict(exp_params, "reset_network", default=False, val_type=bool)
         self.use_data_augmentation = access_dict(exp_params, "use_data_augmentation", default=False, val_type=bool)
         self.use_cifar100 = access_dict(exp_params, "use_cifar100", default=False, val_type=bool)
-        self.use_lr_schedule = access_dict(exp_params, "use_lr_schedule", default=False, val_type=bool)
         self.use_best_network = access_dict(exp_params, "use_best_network", default=False, val_type=bool)
+
+        # cbp parameters
         self.use_cbp = access_dict(exp_params, "use_cbp", default=False, val_type=bool)
         self.replacement_rate = access_dict(exp_params, "replacement_rate", default=0.0, val_type=float)
         assert (not self.use_cbp) or (self.replacement_rate > 0.0)
+        self.utility_function = access_dict(exp_params, "utility_function", default="weight", val_type=str,
+                                            choices=["weight", "contribution"])
+        self.maturity_threshold = access_dict(exp_params, "maturity_threshold", default=0, val_type=int)
+        assert (not self.use_cbp) or (self.maturity_threshold > 0)
+
+        # shrink and perturb parameters
         self.noise_std = access_dict(exp_params, "noise_std", default=0.0, val_type=float)
         self.perturb_weights_indicator = self.noise_std > 0.0
-        if self.reset_head and self.reset_network:
-            print(Warning("Resetting the whole network supersedes resetting the head of the network. There's no need to set both to True."))
+
         self.plot = access_dict(exp_params, key="plot", default=False)
 
         """ Training constants """
@@ -94,8 +109,8 @@ class IncrementalCIFARExperiment(Experiment):
                                  hidden_activation="relu",
                                  replacement_rate=self.replacement_rate,
                                  decay_rate=0.99,
-                                 util_type="weight",
-                                 maturity_threshold=100,
+                                 util_type=self.utility_function,
+                                 maturity_threshold=self.maturity_threshold,
                                  device=self.device)
         self.current_features = [] if self.use_cbp else None
 
@@ -626,6 +641,8 @@ def main():
         "use_best_network": True,
         "use_cbp": True,
         "replacement_rate": 0.0001,
+        "utility_function": "weight",
+        "maturity_threshold": 1000,
         "plot": False
     }
 
