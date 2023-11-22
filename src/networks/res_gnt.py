@@ -98,7 +98,6 @@ class ResGnT(object):
 
     def update_utility(self, layer_idx=0, features=None):
         with torch.no_grad():
-            print(self.util[layer_idx].device, self.decay_rate.device)
             self.util[layer_idx] *= self.decay_rate
             bias_correction = 1 - self.decay_rate ** self.ages[layer_idx]
 
