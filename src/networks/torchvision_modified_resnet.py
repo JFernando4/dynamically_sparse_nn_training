@@ -24,6 +24,18 @@ To see the source code, go to: torchvision.models.resnet (for torchvision==0.15.
 """
 
 
+class SequentialWithKeywordArguments(torch.nn.Sequential):
+
+    """
+    Sequential module that allows the use of keyword arguments in the forward pass
+    """
+
+    def forward(self, input, **kwargs):
+        for module in self:
+            input = module(input, **kwargs)
+        return input
+
+
 def conv3x3(in_planes: int, out_planes: int, stride: int = 1, groups: int = 1, dilation: int = 1) -> nn.Conv2d:
     """3x3 convolution with padding from torchvision.models.resnet but bias is set to True"""
     return nn.Conv2d(
@@ -165,7 +177,7 @@ class ResNet(nn.Module):
         blocks: int,
         stride: int = 1,
         dilate: bool = False,
-    ) -> nn.Sequential:
+    ) -> SequentialWithKeywordArguments:
         norm_layer = self._norm_layer
         downsample = None
         previous_dilation = self.dilation
@@ -173,7 +185,7 @@ class ResNet(nn.Module):
             self.dilation *= stride
             stride = 1
         if stride != 1 or self.inplanes != planes * block.expansion:
-            downsample = nn.Sequential(
+            downsample = SequentialWithKeywordArguments(
                 conv1x1(self.inplanes, planes * block.expansion, stride),
                 norm_layer(planes * block.expansion),
             )
@@ -197,7 +209,7 @@ class ResNet(nn.Module):
                 )
             )
 
-        return nn.Sequential(*layers)
+        return SequentialWithKeywordArguments(*layers)
 
     def _forward_impl(self, x: Tensor, feature_list: list = None) -> Tensor:
         """
@@ -213,10 +225,10 @@ class ResNet(nn.Module):
 
         if feature_list is not None: feature_list.append(x)
 
-        x = self.layer1(x, feature_list)
-        x = self.layer2(x, feature_list)
-        x = self.layer3(x, feature_list)
-        x = self.layer4(x, feature_list)
+        x = self.layer1(x, feature_list=feature_list)
+        x = self.layer2(x, feature_list=feature_list)
+        x = self.layer3(x, feature_list=feature_list)
+        x = self.layer4(x, feature_list=feature_list)
 
         if feature_list is not None: feature_list.pop(-1)
 
