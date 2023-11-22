@@ -31,7 +31,6 @@ class IncrementalCIFARExperiment(Experiment):
 
         # define torch device
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        if self.device.type == "cuda": torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
         """ For reproducibility """
         random_seeds = get_random_seeds()
