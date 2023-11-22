@@ -17,7 +17,7 @@ from mlproj_manager.experiments import Experiment
 from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict
 from mlproj_manager.util.data_preprocessing_and_transformations import ToTensor, Normalize, RandomCrop, RandomHorizontalFlip, RandomRotator
 
-from src import kaiming_init_resnet_module, build_resnet18
+from src import kaiming_init_resnet_module, build_resnet18, ResGnT
 
 
 class IncrementalCIFARExperiment(Experiment):
@@ -53,6 +53,9 @@ class IncrementalCIFARExperiment(Experiment):
         self.use_cifar100 = access_dict(exp_params, "use_cifar100", default=False, val_type=bool)
         self.use_lr_schedule = access_dict(exp_params, "use_lr_schedule", default=False, val_type=bool)
         self.use_best_network = access_dict(exp_params, "use_best_network", default=False, val_type=bool)
+        self.use_cbp = access_dict(exp_params, "use_cbp", default=False, val_type=bool)
+        self.replacement_rate = access_dict(exp_params, "replacement_rate", default=0.0, val_type=float)
+        assert (not self.use_cbp) or (self.replacement_rate > 0.0)
         self.noise_std = access_dict(exp_params, "noise_std", default=0.0, val_type=float)
         self.perturb_weights_indicator = self.noise_std > 0.0
         if self.reset_head and self.reset_network:
@@ -83,6 +86,19 @@ class IncrementalCIFARExperiment(Experiment):
         # move network to device
         self.net.to(self.device)
         self.current_epoch = 0
+
+        # for cbp
+        self.resgnt = None
+        if self.use_cbp:
+            self.resgnt = ResGnT(net=self.net,
+                                 hidden_activation="relu",
+                                 opt=self.optim,
+                                 replacement_rate=self.replacement_rate,
+                                 decay_rate=0.99,
+                                 init="kamining",
+                                 util_type="weight",
+                                 maturity_threshold=100,
+                                 device=self.device)
 
         """ For data partitioning """
         self.class_increase_frequency = 200
@@ -464,13 +480,15 @@ class IncrementalCIFARExperiment(Experiment):
                 for param in self.net.parameters(): param.grad = None   # apparently faster than optim.zero_grad()
 
                 # compute prediction and loss
-                predictions = self.net.forward(image)[:, self.all_classes[:self.current_num_classes]]
+                current_features = None if not self.use_cbp else []
+                predictions = self.net.forward(image, current_features)[:, self.all_classes[:self.current_num_classes]]
                 current_reg_loss = self.loss(predictions, label)
                 current_loss = current_reg_loss.detach().clone()
 
                 # backpropagate and update weights
                 current_reg_loss.backward()
                 self.optim.step()
+                if self.use_cbp: self.resgnt.gen_and_test(current_features)
                 self.inject_noise()
 
                 # store summaries
@@ -601,6 +619,8 @@ def main():
         "use_cifar100": True,
         "use_lr_schedule": True,
         "use_best_network": True,
+        "use_cbp": True,
+        "replacement_rate": 0.0001,
         "plot": False
     }
 
