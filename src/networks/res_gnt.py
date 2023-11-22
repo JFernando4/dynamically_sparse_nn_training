@@ -34,7 +34,7 @@ class ResGnT(object):
     there is no pooling at the end
     """
     def __init__(self, net, hidden_activation, decay_rate=0.99, replacement_rate=1e-4, util_type='weight',
-                 maturity_threshold=1000):
+                 maturity_threshold=1000, device=torch.device("cpu")):
         super(ResGnT, self).__init__()
 
         self.net = net
@@ -42,6 +42,7 @@ class ResGnT(object):
         self.weight_layers = []
         self.get_weight_layers(nn_module=self.net)
         self.num_hidden_layers = len(self.weight_layers) - 1
+        self.device = device
 
         """
         Define the hyper-parameters of the algorithm
@@ -57,9 +58,9 @@ class ResGnT(object):
         self.util, self.ages, self.mean_feature_mag = [], [], []
 
         for i in range(self.num_hidden_layers):
-            self.util.append(zeros(self.weight_layers[i].out_channels))
-            self.ages.append(zeros(self.weight_layers[i].out_channels))
-            self.mean_feature_mag.append(zeros(self.weight_layers[i].out_channels))
+            self.util.append(zeros(self.weight_layers[i].out_channels, dtype=torch.float32, device=self.device))
+            self.ages.append(zeros(self.weight_layers[i].out_channels, dtype=torch.float32, device=self.device))
+            self.mean_feature_mag.append(zeros(self.weight_layers[i].out_channels, dtype=torch.float32, device=self.device))
 
         self.accumulated_num_features_to_replace = [0 for i in range(self.num_hidden_layers)]
         self.m = torch.nn.Softmax(dim=1)

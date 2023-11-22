@@ -95,7 +95,8 @@ class IncrementalCIFARExperiment(Experiment):
                                  replacement_rate=self.replacement_rate,
                                  decay_rate=0.99,
                                  util_type="weight",
-                                 maturity_threshold=100)
+                                 maturity_threshold=100,
+                                 device=self.device)
 
         """ For data partitioning """
         self.class_increase_frequency = 200
