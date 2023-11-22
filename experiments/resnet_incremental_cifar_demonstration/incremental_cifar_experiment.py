@@ -626,8 +626,7 @@ def main():
 
     print(experiment_parameters)
     relevant_parameters = ["num_epochs", "initial_num_classes", "fixed_classes", "stepsize", "weight_decay", "momentum",
-                           "noise_std", "reset_head", "reset_network", "use_data_augmentation", "use_cifar100",
-                           "use_lr_schedule", "use_best_network", "use_cbp", "replacement_rate"]
+                           "noise_std", "reset_head", "reset_network", "use_best_network", "use_cbp", "replacement_rate"]
     results_dir_name = "{0}-{1}".format(relevant_parameters[0], experiment_parameters[relevant_parameters[0]])
     for relevant_param in relevant_parameters[1:]:
         results_dir_name += "_" + relevant_param + "-" + str(experiment_parameters[relevant_param])
