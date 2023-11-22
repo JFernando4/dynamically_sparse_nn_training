@@ -31,6 +31,7 @@ class IncrementalCIFARExperiment(Experiment):
 
         # define torch device
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        if self.device.type == "cuda": torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
         """ For reproducibility """
         random_seeds = get_random_seeds()
@@ -237,6 +238,9 @@ class IncrementalCIFARExperiment(Experiment):
             "partial_results": partial_results
         }
 
+        if self.use_cbp:
+            checkpoint["resgnt"] = self.resgnt
+
         return checkpoint
 
     def load_experiment_checkpoint(self):
@@ -307,6 +311,9 @@ class IncrementalCIFARExperiment(Experiment):
         partial_results = checkpoint["partial_results"]
         for k, v in self.results_dict.items():
             self.results_dict[k] = partial_results[k] if not isinstance(partial_results[k], torch.Tensor) else partial_results[k].to(self.device)
+
+        if self.use_cbp:
+            self.resgnt = checkpoint["resgnt"]
 
     # --------------------------------------- For storing summaries --------------------------------------- #
     def _store_training_summaries(self):
