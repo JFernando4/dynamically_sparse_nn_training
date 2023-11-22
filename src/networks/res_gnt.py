@@ -194,8 +194,9 @@ class ResGnT(object):
                 current_layer, next_layer = self.weight_layers[i], self.weight_layers[i+1]
 
                 current_layer.weight.data[features_to_replace_input_indices[i], :] *= 0.0
+                current_device = current_layer.weight.device
                 current_layer.weight.data[features_to_replace_input_indices[i], :] += \
-                    empty([num_features_to_replace[i]] + list(current_layer.weight.shape[1:])). \
+                    empty([num_features_to_replace[i]] + list(current_layer.weight.shape[1:]), device=current_device). \
                         uniform_(-self.bounds[i], self.bounds[i])
 
                 current_layer.bias.data[features_to_replace_input_indices[i]] *= 0.0
