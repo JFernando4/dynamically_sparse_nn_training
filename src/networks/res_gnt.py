@@ -44,7 +44,7 @@ class ResGnT(object):
         Define the hyper-parameters of the algorithm
         """
         self.replacement_rate = replacement_rate
-        self.decay_rate = decay_rate
+        self.decay_rate = torch.tensor(decay_rate, dtype=torch.float32, device=device)
         self.num_last_filter_outputs = num_last_filter_outputs
         self.maturity_threshold = maturity_threshold
         self.util_type = util_type
