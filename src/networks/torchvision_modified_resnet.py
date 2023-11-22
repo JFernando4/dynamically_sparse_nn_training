@@ -18,6 +18,8 @@ source code:
     - Removed the first maxpool layers so that input stays somewhat large.
     - Layer conv1 in the ResNet class has kernel size set to 3 and stride set to 1, where they were originally 7 and 2,
       respectively. 
+    - Forward calls have a feature list argument to store the features of the network. This is only used for continual 
+      backprop and doesn't affect the output of the network.
 To see the source code, go to: torchvision.models.resnet (for torchvision==0.15.1)
 """
 
@@ -71,12 +73,20 @@ class BasicBlock(nn.Module):
         self.downsample = downsample
         self.stride = stride
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x: Tensor, feature_list: list = None) -> Tensor:
+        """
+        Forward pass through the block
+        :param x: input to the resnet block
+        :param feature_list: list to store the features of the network
+        :return: output of the block
+        """
         identity = x
 
         out = self.conv1(x)
         out = self.bn1(out)
         out = self.relu(out)
+
+        if feature_list is not None: feature_list.append(out)
 
         out = self.conv2(out)
         out = self.bn2(out)
@@ -86,6 +96,8 @@ class BasicBlock(nn.Module):
 
         out += identity
         out = self.relu(out)
+
+        if feature_list is not None: feature_list.append(out)
 
         return out
 
@@ -187,25 +199,38 @@ class ResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def _forward_impl(self, x: Tensor) -> Tensor:
+    def _forward_impl(self, x: Tensor, feature_list: list = None) -> Tensor:
+        """
+        Forward pass for a resnet
+        :param x: input to the network
+        :param feature_list: optional list for storing the features of the network
+        :return: output of the network
+        """
         # See note [TorchScript super()]
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
 
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        x = self.layer4(x)
+        if feature_list is not None: feature_list.append(x)
+
+        x = self.layer1(x, feature_list)
+        x = self.layer2(x, feature_list)
+        x = self.layer3(x, feature_list)
+        x = self.layer4(x, feature_list)
+
+        if feature_list is not None: feature_list.pop(-1)
 
         x = self.output_pool(x)
         x = torch.flatten(x, 1)
+
+        if feature_list is not None: feature_list.append(x)
+
         x = self.fc(x)
 
         return x
 
-    def forward(self, x: Tensor) -> Tensor:
-        return self._forward_impl(x)
+    def forward(self, x: Tensor, feature_list: list = None) -> Tensor:
+        return self._forward_impl(x, feature_list)
 
 
 def build_resnet18(num_classes: int, norm_layer):
