@@ -99,24 +99,6 @@ def compute_average_weight_magnitude(net: ResNet):
 
 
 @torch.no_grad()
-def compute_features(net: ResNet, cifar_data_loader: DataLoader):
-    """ Computes the activations of the network for all the examples in the data set """
-
-    device = net.fc.weight.device
-    features = []
-    for i, sample in enumerate(cifar_data_loader):
-        image = sample["image"].to(device)
-        temp_features = []
-        net.forward(image, temp_features)
-
-        if len(features) == 0:
-            features = [layer_features.cpu() for layer_features in temp_features]
-        else:
-            for layer_index in range(len(features)):
-                features[layer_index] = torch.vstack((features[layer_index], temp_features[layer_index].cpu()))
-    return features
-
-@torch.no_grad()
 def compute_dormant_units_proportion(net: ResNet, cifar_data_loader: DataLoader, dormant_unit_threshold: float = 0.01):
     """
     Computes the proportion of dormant units in a ResNet. It also returns the features of the last layer for the first
@@ -140,7 +122,7 @@ def compute_dormant_units_proportion(net: ResNet, cifar_data_loader: DataLoader,
             for layer_index in range(len(temp_features)):
                 avg_feature_per_layer[layer_index] += temp_features[layer_index].cpu() / num_samples
             if i < 10:  # this assumes the batch size in the data loader is 100
-                last_layer_activations = torch.stack((last_layer_activations, temp_features[-1].cpu()))
+                last_layer_activations = torch.vstack((last_layer_activations, temp_features[-1].cpu()))
 
     num_dormant_units = 0.0
     num_units = 0.0
