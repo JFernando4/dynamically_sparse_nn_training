@@ -60,7 +60,7 @@ def load_cifar_data(data_path: str) -> (CifarDataSet, DataLoader):
     :return: torch DataLoader object
     """
     cifar_data = CifarDataSet(root_dir=data_path,
-                              train=False,
+                              train=True,
                               cifar_type=100,
                               device=None,
                               image_normalization="max",
