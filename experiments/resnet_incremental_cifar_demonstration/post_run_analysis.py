@@ -89,7 +89,7 @@ def compute_average_weight_magnitude(net: ResNet):
     """ Computes average magnitude of the weights in the network """
 
     num_weights = 0
-    sum_weight_magnitude = torch.tensor(0.0, dtype=net.fc.weight.device)
+    sum_weight_magnitude = torch.tensor(0.0, device=net.fc.weight.device)
 
     for p in net.parameters():
         num_weights += p.numel()
