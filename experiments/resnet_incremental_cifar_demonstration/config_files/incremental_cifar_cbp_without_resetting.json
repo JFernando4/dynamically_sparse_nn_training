@@ -27,21 +27,21 @@
     "use_cifar100": true,
     "use_lr_schedule": true,
     "use_best_network": true,
-    "runs": 3
+    "runs": 5
   },
 
   "learning_params": {
     "reset_head": false,
     "reset_network": false,
     "use_cbp": true,
-    "replacement_rate": ["fixed", 0.0001],
-    "utility_function": ["str", "weight"],
-    "maturity_threshold": ["fixed", 1000]
+    "replacement_rate": ["fixed", 0.0001, 0.00001],
+    "utility_function": ["str", "weight", "contribution"],
+    "maturity_threshold": ["fixed", 300, 1000, 10000]
   },
 
   "slurm_parameters": {
     "job_name": "icifar100",
-    "time": "15:00:00",
+    "time": "9:30:00",
     "max_runs_per_job": 1,
     "output_dir": "/scratch/dohare/dynamically_sparse_nn_training/outputs",
     "output_filename": "cifar100-%n-%j.out",
