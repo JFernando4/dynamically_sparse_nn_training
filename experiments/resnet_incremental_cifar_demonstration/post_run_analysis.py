@@ -112,6 +112,7 @@ def compute_dormant_units_proportion(net: ResNet, cifar_data_loader: DataLoader,
 
     for i, sample in enumerate(cifar_data_loader):
         image = sample["image"].to(device)
+        print(image.shape[0])
         temp_features = []
         net.forward(image, temp_features)
 
