@@ -106,24 +106,26 @@ def compute_dormant_units_proportion(net: ResNet, cifar_data_loader: DataLoader,
     """
 
     device = net.fc.weight.device
-    avg_feature_per_layer = []
+    sum_feature_per_layer = []
     last_layer_activations = None
-    num_samples = 10000     # number of test samples in the cifar100 data set
+    num_samples = 0
 
     for i, sample in enumerate(cifar_data_loader):
         image = sample["image"].to(device)
-        print(image.shape[0])
+        num_samples += image.shape[0]
         temp_features = []
         net.forward(image, temp_features)
 
-        if len(avg_feature_per_layer) == 0:
-            avg_feature_per_layer = [layer_features.cpu() / num_samples for layer_features in temp_features]
+        if len(sum_feature_per_layer) == 0:
+            sum_feature_per_layer = [layer_features.cpu() for layer_features in temp_features]
             last_layer_activations = temp_features[-1].cpu()
         else:
             for layer_index in range(len(temp_features)):
-                avg_feature_per_layer[layer_index] += temp_features[layer_index].cpu() / num_samples
+                sum_feature_per_layer[layer_index] += temp_features[layer_index].cpu()
             if i < 10:  # this assumes the batch size in the data loader is 100
                 last_layer_activations = torch.vstack((last_layer_activations, temp_features[-1].cpu()))
+
+    avg_feature_per_layer = [sum_feats / num_samples for sum_feats in sum_feature_per_layer]
 
     num_dormant_units = 0.0
     num_units = 0.0
