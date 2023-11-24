@@ -67,8 +67,8 @@ def load_cifar_data(data_path: str) -> (CifarDataSet, DataLoader):
                               label_preprocessing="one-hot",
                               use_torch=True)
 
-    mean = (0.5071, 0.4865, 0.4409)
-    std = (0.2673, 0.2564, 0.2762)
+    mean = (0.4914, 0.4822, 0.4465)
+    std = (0.2470, 0.2435, 0.2616)
 
     transformations = [
         ToTensor(swap_color_axis=True),  # reshape to (C x H x W)
@@ -78,7 +78,7 @@ def load_cifar_data(data_path: str) -> (CifarDataSet, DataLoader):
     cifar_data.set_transformation(transforms.Compose(transformations))
 
     num_workers = 12
-    batch_size = 100
+    batch_size = 1000
     dataloader = DataLoader(cifar_data, batch_size=batch_size, shuffle=True, num_workers=num_workers)
     return cifar_data, dataloader
 
@@ -106,35 +106,25 @@ def compute_dormant_units_proportion(net: ResNet, cifar_data_loader: DataLoader,
     """
 
     device = net.fc.weight.device
-    sum_feature_per_layer = []
+    features_per_layer = []
     last_layer_activations = None
-    num_samples = 0
+    num_samples = 1000
 
     for i, sample in enumerate(cifar_data_loader):
         image = sample["image"].to(device)
-        num_samples += image.shape[0]
         temp_features = []
         net.forward(image, temp_features)
 
-        if len(sum_feature_per_layer) == 0:
-            sum_feature_per_layer = [layer_features.cpu() for layer_features in temp_features]
-            last_layer_activations = temp_features[-1].cpu()
-        else:
-            for layer_index in range(len(temp_features)):
-                sum_feature_per_layer[layer_index] += temp_features[layer_index].cpu()
-            if i < 10:  # this assumes the batch size in the data loader is 100
-                last_layer_activations = torch.vstack((last_layer_activations, temp_features[-1].cpu()))
+        features_per_layer = temp_features
+        last_layer_activations = temp_features[-1].cpu()
+        break
 
-    avg_feature_per_layer = [sum_feats / num_samples for sum_feats in sum_feature_per_layer]
-
-    num_dormant_units = 0.0
-    num_units = 0.0
-    for avg_layer_features in avg_feature_per_layer:
-        num_units += avg_layer_features.numel()
-        num_dormant_units += torch.sum((avg_layer_features <= dormant_unit_threshold).to(torch.float32)).item()
-    proportion_of_dormant_units = num_dormant_units / num_units
-
-    return proportion_of_dormant_units, last_layer_activations.numpy()
+    dead_neurons = torch.zeros(len(features_per_layer), dtype=torch.float32)
+    for layer_idx in range(len(features_per_layer) - 1):
+        dead_neurons[layer_idx] = ((features_per_layer[layer_idx] != 0).float().mean(dim=(0, 2, 3)) < dormant_unit_threshold).sum()
+    dead_neurons[-1] = ((features_per_layer[-1] != 0).float().mean(dim=0) < dormant_unit_threshold).sum()
+    number_of_features = torch.sum([layer_feats.shape[1] for layer_feats in features_per_layer]).item()
+    return dead_neurons.sum().item() / number_of_features, last_layer_activations.numpy()
 
 
 def compute_effective_rank(last_layer_features: np.ndarray):
@@ -148,6 +138,14 @@ def compute_effective_rank(last_layer_features: np.ndarray):
             entropy -= p * np.log(p)
 
     return np.e ** entropy
+
+
+def compute_stable_rank(last_layer_features: np.ndarray):
+
+    singular_values = svd(last_layer_features, compute_uv=False, lapack_driver="gesvd")
+    sorted_singular_values = np.flip(np.sort(singular_values))
+    cumsum_sorted_singular_values = np.cumsum(sorted_singular_values) / np.sum(singular_values)
+    return np.sum(cumsum_sorted_singular_values < 0.99) + 1
 
 
 def analyze_results(results_dir: str, data_path: str, dormant_unit_threshold: float = 0.01):
@@ -174,29 +172,49 @@ def analyze_results(results_dir: str, data_path: str, dormant_unit_threshold: fl
 
         ordered_classes = load_classes(class_order_dir_path, index=exp_index)
 
-        average_weight_magnitude_per_epoch = np.zeros(number_of_epochs.size, dtype=np.float32)
-        effective_rank = np.zeros_like(average_weight_magnitude_per_epoch)
-        dormant_units_prop = np.zeros_like(average_weight_magnitude_per_epoch)
+        average_weight_magnitude_per_epoch = np.zeros(number_of_epochs.size - 1, dtype=np.float32)
+        dormant_units_prop_before = np.zeros(average_weight_magnitude_per_epoch)
+        effective_rank_before = np.zeros_like(average_weight_magnitude_per_epoch)
+        stable_rank_before = np.zeros_like(average_weight_magnitude_per_epoch)
+        dormant_units_prop_after = np.zeros_like(average_weight_magnitude_per_epoch)
+        effective_rank_after = np.zeros_like(average_weight_magnitude_per_epoch)
+        stable_rank_after = np.zeros_like(average_weight_magnitude_per_epoch)
 
         for i, epoch_number in enumerate(number_of_epochs):
 
-            # get classes for the corresponding task
-            current_classes = ordered_classes[:((i + 1) * classes_per_task)]
-            cifar_data.select_new_partition(current_classes)
             # get model parameters from before training on the task
             model_parameters = load_model_parameters(parameter_dir_path, index=exp_index, epoch_number=epoch_number)
             net.load_state_dict(model_parameters)
 
-            # compute summaries
+            # compute average weight magnitude
             average_weight_magnitude_per_epoch[i] = compute_average_weight_magnitude(net)
+
+            # compute summaries for next task
+            current_classes = ordered_classes[(i * classes_per_task):((i + 1) * classes_per_task)]
+            cifar_data.select_new_partition(current_classes)
+
             prop_dormant, last_layer_features = compute_dormant_units_proportion(net, cifar_data_loader, dormant_unit_threshold)
-            dormant_units_prop[i] = prop_dormant
-            effective_rank[i] = compute_effective_rank(last_layer_features)
+            dormant_units_prop_after[i] = prop_dormant
+            effective_rank_after[i] = compute_effective_rank(last_layer_features)
+            stable_rank_after[i] = compute_stable_rank(last_layer_features)
+
+            # compute summaries from data from previous tasks
+            current_classes = ordered_classes[:(i * classes_per_task)]
+            cifar_data.select_new_partition(current_classes)
+            prop_dormant, last_layer_features = compute_dormant_units_proportion(net, cifar_data_loader, dormant_unit_threshold)
+
+            dormant_units_prop_before[i] = prop_dormant
+            effective_rank_before[i] = compute_effective_rank(last_layer_features)
+            stable_rank_before[i] = compute_stable_rank(last_layer_features)
 
         print("Experiment index: {0}".format(exp_index))
         print("Average weight magnitude:\n\t{0}".format(average_weight_magnitude_per_epoch))
-        print("Proportion of dead units:\n\t{0}".format(dormant_units_prop))
-        print("Effective Rank:\nt\t{0}".format(effective_rank))
+        print("Proportion of dead units on previous tasks:\n\t{0}".format(dormant_units_prop_before))
+        print("Effective Rank on previous tasks:\nt\t{0}".format(effective_rank_before))
+        print("Stable Rank on previous tasks:\nt\t{0}".format(stable_rank_before))
+        print("Proportion of dead units on next task:\n\t{0}".format(dormant_units_prop_after))
+        print("Effective Rank on next task:\nt\t{0}".format(effective_rank_after))
+        print("Stable Rank on next task:\nt\t{0}".format(stable_rank_after))
 
 
 def parse_arguments() -> dict:
