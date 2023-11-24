@@ -158,6 +158,7 @@ def compute_last_task_accuracy_per_class_in_order(net: torch.nn.Module, ordered_
     :return: numpy array
     """
 
+    ordered_classes = np.int32(ordered_classes)
     device = net.fc.weight.device
     num_classes = 100
     num_examples_per_class = 100
