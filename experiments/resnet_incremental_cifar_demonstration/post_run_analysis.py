@@ -123,7 +123,7 @@ def compute_dormant_units_proportion(net: ResNet, cifar_data_loader: DataLoader,
     for layer_idx in range(len(features_per_layer) - 1):
         dead_neurons[layer_idx] = ((features_per_layer[layer_idx] != 0).float().mean(dim=(0, 2, 3)) < dormant_unit_threshold).sum()
     dead_neurons[-1] = ((features_per_layer[-1] != 0).float().mean(dim=0) < dormant_unit_threshold).sum()
-    number_of_features = torch.sum([layer_feats.shape[1] for layer_feats in features_per_layer]).item()
+    number_of_features = torch.sum(torch.tensor([layer_feats.shape[1] for layer_feats in features_per_layer])).item()
     return dead_neurons.sum().item() / number_of_features, last_layer_activations.numpy()
 
 
