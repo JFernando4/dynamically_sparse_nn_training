@@ -199,6 +199,7 @@ def analyze_results(results_dir: str, data_path: str, dormant_unit_threshold: fl
             stable_rank_after[i] = compute_stable_rank(last_layer_features)
 
             # compute summaries from data from previous tasks
+            if i == 0: continue
             current_classes = ordered_classes[:(i * classes_per_task)]
             cifar_data.select_new_partition(current_classes)
             prop_dormant, last_layer_features = compute_dormant_units_proportion(net, cifar_data_loader, dormant_unit_threshold)
