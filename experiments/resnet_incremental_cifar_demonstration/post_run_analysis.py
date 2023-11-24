@@ -172,8 +172,8 @@ def compute_last_task_accuracy_per_class_in_order(net: torch.nn.Module, ordered_
         _, labels = torch.max(labels, 1)        # Get the class with the highest score
 
         # Update the counts for each class
-        for i in range(ordered_classes):
-            class_correct[i] += (predicted == labels).masked_select(labels == i).sum().item()
+        for i, class_label in enumerate(ordered_classes):
+            class_correct[i] += (predicted == labels).masked_select(labels == class_label).sum().item()
 
     return class_correct.cpu().numpy() / num_examples_per_class
 
