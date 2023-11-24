@@ -34,9 +34,9 @@
     "reset_head": false,
     "reset_network": false,
     "use_cbp": true,
-    "replacement_rate": ["fixed", 0.00001],
-    "utility_function": ["str", "weight"],
-    "maturity_threshold": ["fixed", 1000]
+    "replacement_rate": ["fixed", 0.000001],
+    "utility_function": ["str", "weight", "contribution"],
+    "maturity_threshold": ["fixed", 1000, 10000]
   },
 
   "slurm_parameters": {
