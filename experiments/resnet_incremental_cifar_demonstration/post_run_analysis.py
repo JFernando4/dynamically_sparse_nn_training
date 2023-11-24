@@ -173,7 +173,7 @@ def analyze_results(results_dir: str, data_path: str, dormant_unit_threshold: fl
         ordered_classes = load_classes(class_order_dir_path, index=exp_index)
 
         average_weight_magnitude_per_epoch = np.zeros(number_of_epochs.size - 1, dtype=np.float32)
-        dormant_units_prop_before = np.zeros(average_weight_magnitude_per_epoch)
+        dormant_units_prop_before = np.zeros_like(average_weight_magnitude_per_epoch)
         effective_rank_before = np.zeros_like(average_weight_magnitude_per_epoch)
         stable_rank_before = np.zeros_like(average_weight_magnitude_per_epoch)
         dormant_units_prop_after = np.zeros_like(average_weight_magnitude_per_epoch)
