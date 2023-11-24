@@ -155,7 +155,6 @@ def compute_last_task_accuracy_per_class_in_order(net: torch.nn.Module, ordered_
     :param net: resnet with the parameters stored at the end of the experiment
     :param ordered_classes: numpy array with the cifar 100 classes in the order they were presented
     :param test_data: cifar100 test data
-    :param experiment_index: index of the experiment
     :return: numpy array
     """
 
@@ -172,7 +171,7 @@ def compute_last_task_accuracy_per_class_in_order(net: torch.nn.Module, ordered_
         _, labels = torch.max(labels, 1)        # Get the class with the highest score
 
         # Update the counts for each class
-        for i in range(num_classes):
+        for i in range(ordered_classes):
             class_correct[i] += (predicted == labels).masked_select(labels == i).sum().item()
 
     return class_correct.cpu().numpy() / num_examples_per_class
