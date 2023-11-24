@@ -180,8 +180,7 @@ def analyze_results(results_dir: str, data_path: str, dormant_unit_threshold: fl
         effective_rank_after = np.zeros_like(average_weight_magnitude_per_epoch)
         stable_rank_after = np.zeros_like(average_weight_magnitude_per_epoch)
 
-        for i, epoch_number in enumerate(number_of_epochs):
-
+        for i, epoch_number in enumerate(number_of_epochs[:-1]):
             # get model parameters from before training on the task
             model_parameters = load_model_parameters(parameter_dir_path, index=exp_index, epoch_number=epoch_number)
             net.load_state_dict(model_parameters)
