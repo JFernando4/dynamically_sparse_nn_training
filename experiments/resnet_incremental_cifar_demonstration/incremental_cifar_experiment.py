@@ -160,77 +160,6 @@ class IncrementalCIFARExperiment(Experiment):
         self.results_dict["class_order"] = self.all_classes
 
     # ----------------------------- For saving and loading experiment checkpoints ----------------------------- #
-    def save_experiment_checkpoint(self):
-        """
-        Saves all the information necessary to resume the experiment with the same index. Specifically, it stores: the
-        random states of torch and numpy, the current weights of the model, the current checkpoint, the current number
-        of classes, and the randomized list of classes
-
-        The function creates a file at self.training_checkpoint_path named:
-            "index-$experiment_index_$(checkpoint_identifier_name)-$(checkpoint_identifier_value)
-
-        The name should be an attribute of self defined in __init__ and the value should be an increasing sequence of
-        integers where higher values correspond to latter steps of the experiment
-        """
-
-        os.makedirs(self.experiment_checkpoints_dir_path, exist_ok=True)
-        checkpoint_identifier_value = getattr(self, self.checkpoint_identifier_name)
-
-        if not isinstance(checkpoint_identifier_value, int):
-            warning_message = "The checkpoint identifier should be an integer. Got {0} instead, which result in unexpected behaviour."
-            print(Warning(warning_message.format(checkpoint_identifier_value.__class__)))
-
-        file_name = "index-{0}_{1}-{2}.p".format(self.run_index, self.checkpoint_identifier_name, checkpoint_identifier_value)
-        file_path = os.path.join(self.experiment_checkpoints_dir_path, file_name)
-
-        # retrieve model parameters and random state
-        experiment_checkpoint = self.get_experiment_checkpoint()
-
-        successfully_saved = self.create_checkpoint_file(file_path, experiment_checkpoint)
-
-        if successfully_saved and self.delete_old_checkpoints:
-            self.delete_previous_checkpoint()
-
-    def create_checkpoint_file(self, filepath: str, experiment_checkpoint: dict):
-        """
-        Creates a pickle file that contains the dictionary corresponding to the checkpoint
-        :param filepath: path where the checkpoint is to be stored
-        :param experiment_checkpoint: dictionary with data corresponding ot the current state of the experiment
-        :return: bool, True if checkpoint was successfully saved
-        """
-        attempts = 10
-        successfully_saved = False
-
-        # attempt to save the experiment checkpoint
-        for i in range(attempts):
-            try:
-                with open(filepath, mode="wb") as experiment_checkpoint_file:
-                    pickle.dump(experiment_checkpoint, experiment_checkpoint_file)
-                with open(filepath, mode="rb") as experiment_checkpoint_file:
-                    pickle.load(experiment_checkpoint_file)
-                successfully_saved = True
-                break
-            except ValueError:
-                print("Something went wrong on attempt {0}.".format(i + 1))
-
-        if successfully_saved:
-            self._print("Checkpoint was successfully saved at:\n\t{0}".format(filepath))
-        else:
-            print("Something went wrong when attempting to save the experiment checkpoint.")
-
-        return successfully_saved
-
-    def delete_previous_checkpoint(self):
-        """ Deletes the previous saved checkpoint """
-
-        prev_ckpt_identifier_value = int(getattr(self, self.checkpoint_identifier_name) - self.checkpoint_save_frequency)
-        file_name = "index-{0}_{1}-{2}.p".format(self.run_index, self.checkpoint_identifier_name, prev_ckpt_identifier_value)
-        file_path = os.path.join(self.experiment_checkpoints_dir_path, file_name)
-
-        if os.path.isfile(file_path):
-            os.remove(file_path)
-            print("The following file was deleted: {0}".format(file_path))
-
     def get_experiment_checkpoint(self):
         """ Creates a dictionary with all the necessary information to pause and resume the experiment """
 
@@ -255,51 +184,6 @@ class IncrementalCIFARExperiment(Experiment):
             checkpoint["resgnt"] = self.resgnt
 
         return checkpoint
-
-    def load_experiment_checkpoint(self):
-        """
-        Loads the latest experiment checkpoint
-        """
-
-        # find the file of the latest checkpoint
-        file_name = self.get_latest_checkpoint_filename()
-        if file_name == "":
-            return False
-
-        # get path to the latest checkpoint and check that it's a file
-        file_path = os.path.join(self.experiment_checkpoints_dir_path, file_name)
-        assert os.path.isfile(file_path)
-
-        # load checkpoint information
-        self.load_checkpoint_data_and_update_experiment_variables(file_path)
-        print("Experiment checkpoint successfully loaded from:\n\t{0}".format(file_path))
-        return True
-
-    def get_latest_checkpoint_filename(self):
-        """
-        gets the path to the file of the last saved checkpoint of the experiment
-        """
-        if not os.path.isdir(self.experiment_checkpoints_dir_path):
-            return ""
-
-        latest_checkpoint_id = 0
-        latest_checkpoint_file_name = ""
-        for file_name in os.listdir(self.experiment_checkpoints_dir_path):
-            file_name_without_extension, _ = os.path.splitext(file_name)
-
-            # Use regular expressions to find key-value pairs
-            pairs = re.findall(r'(\w+)-(\d+)', file_name_without_extension)
-            index_int = int(pairs[0][1])
-            ckpt_id_int = int(pairs[1][1])
-
-            if index_int != self.run_index:
-                continue
-
-            if ckpt_id_int > latest_checkpoint_id:
-                latest_checkpoint_id = ckpt_id_int
-                latest_checkpoint_file_name = file_name
-
-        return latest_checkpoint_file_name
 
     def load_checkpoint_data_and_update_experiment_variables(self, file_path):
         """
