@@ -14,6 +14,7 @@ import wandb
 from mlproj_manager.experiments import Experiment
 from mlproj_manager.problems import MnistDataSet
 from mlproj_manager.util import access_dict, Permute, get_random_seeds, turn_off_debugging_processes
+from mlproj_manager.file_management import store_object_with_several_attempts
 from mlproj_manager.util.neural_networks import init_weights_kaiming
 
 # from src
@@ -128,17 +129,7 @@ class PermutedMNISTExperiment(Experiment):
 
         # generate a new id
         run_id = wandb.util.generate_id()
-        number_of_attempts = 10
-        for i in range(number_of_attempts):
-            try:
-                with open(wandb_id_filepath, mode="wb") as id_file:
-                    pickle.dump(run_id, id_file)
-                with open(wandb_id_filepath, mode="rb") as id_file:
-                    pickle.load(id_file)
-                break
-            except ValueError:
-                print("Something went wrong on attempt {0} when loading the job id.".format(i + 1))
-            print("Couldn't store the run id. Checkpointing won't be enable.")
+        store_object_with_several_attempts(run_id, wandb_id_filepath, storing_format="pickle", num_attempts=10)
 
         return run_id
 
@@ -210,7 +201,7 @@ class PermutedMNISTExperiment(Experiment):
                 "train_loss_per_checkpoint": partial_results["train_loss_per_checkpoint"][i],
                 "train_accuracy_per_checkpoint":partial_results["train_accuracy_per_checkpoint"][i]
             }
-            wandb.log(temp_results, step=(self.current_running_avg_step + 1) * self.running_avg_window)
+            wandb.log(temp_results, step=(i + 1) * self.running_avg_window)
 
         # store partial results
         for k, v in self.results_dict.items():
