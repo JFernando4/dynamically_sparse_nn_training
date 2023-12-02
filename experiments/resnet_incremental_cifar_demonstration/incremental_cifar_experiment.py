@@ -17,7 +17,7 @@ from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, 
 from mlproj_manager.util.data_preprocessing_and_transformations import ToTensor, Normalize, RandomCrop, RandomHorizontalFlip, RandomRotator
 
 from src import kaiming_init_resnet_module, build_resnet18, ResGnT
-
+from src.utils import subsample_cifar_data_set
 
 class IncrementalCIFARExperiment(Experiment):
 
@@ -332,11 +332,7 @@ class IncrementalCIFARExperiment(Experiment):
 
         train_indices, validation_indices = self.get_validation_and_train_indices(cifar_data)
         indices = validation_indices if validation else train_indices
-        cifar_data.data["data"] = cifar_data.data["data"][indices]
-        cifar_data.data["labels"] = cifar_data.data["labels"][indices]
-        cifar_data.current_data["data"] = cifar_data.current_data["data"][indices]
-        cifar_data.current_data["labels"] = cifar_data.current_data["labels"][indices]
-        cifar_data.integer_labels = torch.tensor(cifar_data.integer_labels)[indices].tolist()
+        subsample_cifar_data_set(sub_sample_indices=indices, cifar_data=cifar_data)
         batch_size = self.batch_sizes["validation"] if validation else self.batch_sizes["train"]
         return cifar_data, DataLoader(cifar_data, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
@@ -470,8 +466,6 @@ class IncrementalCIFARExperiment(Experiment):
                 class_correct_indices[min_feature_index] = True
                 current_cum_sum_feature += features[min_feature_index, :]
         correct_indices_agg = correct_indices.to(torch.int).sum(dim=1).to(torch.bool)
-        #TODO: continue from here
-
 
     def set_lr(self):
         """ Changes the learning rate of the optimizer according to the current epoch of the task """
