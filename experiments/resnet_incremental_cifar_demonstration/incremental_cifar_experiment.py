@@ -19,6 +19,7 @@ from mlproj_manager.util.data_preprocessing_and_transformations import ToTensor,
 from src import kaiming_init_resnet_module, build_resnet18, ResGnT
 from src.utils import subsample_cifar_data_set
 
+
 class IncrementalCIFARExperiment(Experiment):
 
     def __init__(self, exp_params: dict, results_dir: str, run_index: int, verbose=True):
@@ -77,7 +78,7 @@ class IncrementalCIFARExperiment(Experiment):
         # for sub-sampling
         self.sub_sample_method = access_dict(exp_params, "sub_sample_method", default="none", val_type=str,
                                              choices=["none", "mof", "uniform"])    # mof = mean of features
-        self.sub_sample_size = 4500
+        self.sub_sample_size = 2250
 
         self.plot = access_dict(exp_params, key="plot", default=False)
 
@@ -407,15 +408,16 @@ class IncrementalCIFARExperiment(Experiment):
                                        epoch_runtime=epoch_end_time - epoch_start_time)
 
             self.current_epoch += 1
-            self.extend_classes(training_data, test_data, val_data)
+            self.extend_classes(training_data, test_data, val_data, train_dataloader)
 
             if self.current_epoch % self.checkpoint_save_frequency == 0:
                 self.save_experiment_checkpoint()
 
     @torch.no_grad()
-    def sub_sample_training_set(self, training_set: CifarDataSet):
+    def sub_sample_training_set(self,  training_dataloader: DataLoader, training_set: CifarDataSet):
         """
 
+        :param training_dataloader:
         :param training_set:
         :return:
         """
@@ -428,7 +430,7 @@ class IncrementalCIFARExperiment(Experiment):
         labels = torch.zeros((len(training_set), self.current_num_classes), device=device, dtype=torch.float32)
 
         batch_size = self.batch_sizes["train"]
-        for i, sample in enumerate(training_set):
+        for i, sample in enumerate(training_dataloader):
             image = sample["image"].to(self.device)
             current_labels = sample["label"].to(self.device)
 
@@ -436,17 +438,16 @@ class IncrementalCIFARExperiment(Experiment):
             self.net.forward(image, current_features)
 
             labels[i * batch_size:(i + 1) * batch_size, :] += current_labels
-            features[i * batch_size:(i + 1) * batch_size, :] += current_features
+            features[i * batch_size:(i + 1) * batch_size, :] += current_features[-1]
 
         quotient, remainder = divmod(self.sub_sample_size, self.current_num_classes)
         extra_samples = torch.randperm(self.current_num_classes)[:remainder]
         num_exemplars_per_class = torch.ones(self.current_num_classes, dtype=torch.int) * quotient
         num_exemplars_per_class[extra_samples] += 1
 
-        mof_per_class = features.sum(dim=0) / labels.sum(dim=0)
         correct_indices = torch.zeros((len(training_set), self.current_num_classes), device=device, dtype=torch.bool)
         for class_index in range(self.current_num_classes):
-            mean_feature = mof_per_class[class_index]
+            mean_feature = features[labels[:, class_index] == 1].mean(dim=0)
             class_correct_indices = correct_indices[:, class_index]
             current_cum_sum_feature = torch.zeros_like(mean_feature)
             current_num_exemplars_processed = 0
@@ -455,7 +456,7 @@ class IncrementalCIFARExperiment(Experiment):
                 min_feature_index = 0
                 current_num_exemplars_processed += 1
                 for sample_index in range(len(training_set)):
-                    if labels[sample_index] != 1.0: continue
+                    if labels[sample_index, class_index] != 1: continue
                     if class_correct_indices[sample_index]: continue
 
                     temp_mean_feature = (current_cum_sum_feature + features[sample_index, :]) / current_num_exemplars_processed
@@ -465,7 +466,8 @@ class IncrementalCIFARExperiment(Experiment):
                         min_feature_index = sample_index
                 class_correct_indices[min_feature_index] = True
                 current_cum_sum_feature += features[min_feature_index, :]
-        correct_indices_agg = correct_indices.to(torch.int).sum(dim=1).to(torch.bool)
+        correct_indices_agg = torch.argwhere(correct_indices.sum(dim=1).to(torch.bool)).flatten()
+        subsample_cifar_data_set(sub_sample_indices=correct_indices_agg, cifar_data=training_set)
 
     def set_lr(self):
         """ Changes the learning rate of the optimizer according to the current epoch of the task """
@@ -490,14 +492,14 @@ class IncrementalCIFARExperiment(Experiment):
         """
         Adds a small amount of random noise to the parameters of the network
         """
-        if not self.perturb_weights_indicator:
-            return
+        if not self.perturb_weights_indicator: return
 
         with torch.no_grad():
             for param in self.net.parameters():
                 param.add_(torch.randn(param.size(), device=param.device) * self.noise_std)
 
-    def extend_classes(self, training_data: CifarDataSet, test_data: CifarDataSet, val_data: CifarDataSet):
+    def extend_classes(self, training_data: CifarDataSet, test_data: CifarDataSet, val_data: CifarDataSet,
+                       train_dataloader: DataLoader):
         """
         Adds one new class to the data set with certain frequency
         """
@@ -510,14 +512,18 @@ class IncrementalCIFARExperiment(Experiment):
             self._save_model_parameters()
 
             if self.current_num_classes == self.num_classes: return
+            if self.sub_sample_method in ["mof", "uniform"]:
+                self.sub_sample_training_set(train_dataloader, training_data)
+
             increase = 1 if not self.use_cifar100 else 5
             self.current_num_classes += increase
             training_data.select_new_partition(self.all_classes[:self.current_num_classes])
             test_data.select_new_partition(self.all_classes[:self.current_num_classes])
             val_data.select_new_partition(self.all_classes[:self.current_num_classes])
+
             self._print("\tNew class added...")
             if self.reset_head:
-                kaiming_init_resnet_module(self.net.fc)                   # for resnet 10, 18 and 34
+                kaiming_init_resnet_module(self.net.fc)
             if self.reset_network:
                 self.net.apply(kaiming_init_resnet_module)
 
@@ -565,12 +571,13 @@ def main():
         "replacement_rate": 0.0001,
         "utility_function": "weight",
         "maturity_threshold": 1000,
+        "sub_sample_method": "mof",
         "plot": False
     }
 
     print(experiment_parameters)
-    relevant_parameters = ["num_epochs", "initial_num_classes", "fixed_classes", "stepsize", "weight_decay", "momentum",
-                           "noise_std", "reset_head", "reset_network", "use_best_network", "use_cbp", "replacement_rate"]
+    relevant_parameters = ["stepsize", "weight_decay", "momentum", "noise_std", "reset_head", "reset_network",
+                           "use_best_network", "use_cbp", "replacement_rate", "sub_sample_method"]
     results_dir_name = "{0}-{1}".format(relevant_parameters[0], experiment_parameters[relevant_parameters[0]])
     for relevant_param in relevant_parameters[1:]:
         results_dir_name += "_" + relevant_param + "-" + str(experiment_parameters[relevant_param])
