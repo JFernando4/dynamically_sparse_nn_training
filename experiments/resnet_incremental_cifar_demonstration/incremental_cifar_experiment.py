@@ -78,7 +78,7 @@ class IncrementalCIFARExperiment(Experiment):
         # for sub-sampling
         self.sub_sample_method = access_dict(exp_params, "sub_sample_method", default="none", val_type=str,
                                              choices=["none", "mof", "uniform"])    # mof = mean of features
-        self.sub_sample_size = 1000
+        self.sub_sample_size = 2250
 
         self.plot = access_dict(exp_params, key="plot", default=False)
 
