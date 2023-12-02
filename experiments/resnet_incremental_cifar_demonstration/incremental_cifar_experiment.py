@@ -467,7 +467,7 @@ class IncrementalCIFARExperiment(Experiment):
                 class_correct_indices[min_index] = True
                 current_cum_sum_feature += features[min_index, :]
 
-        correct_indices_agg = torch.argwhere(correct_indices.sum(dim=1).to(torch.bool)).flatten().to(device)
+        correct_indices_agg = torch.argwhere(correct_indices.sum(dim=1).to(torch.bool)).flatten().cpu()
         subsample_cifar_data_set(sub_sample_indices=correct_indices_agg, cifar_data=training_set)
 
     def set_lr(self):
