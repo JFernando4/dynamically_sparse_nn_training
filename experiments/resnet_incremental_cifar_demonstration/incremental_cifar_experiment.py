@@ -78,7 +78,7 @@ class IncrementalCIFARExperiment(Experiment):
         # for sub-sampling
         self.sub_sample_method = access_dict(exp_params, "sub_sample_method", default="none", val_type=str,
                                              choices=["none", "mof", "uniform"])    # mof = mean of features
-        self.sub_sample_size = 1000#2250
+        self.sub_sample_size = 2250
 
         self.plot = access_dict(exp_params, key="plot", default=False)
 
@@ -90,6 +90,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.num_images_per_epoch = 50000
         self.num_test_samples = 10000
         self.num_images_per_class = 450
+        self.num_workers = 1 if self.device.type == "cpu" else 12       # for the data loader
 
         """ Network set up """
         # initialize network
@@ -325,17 +326,16 @@ class IncrementalCIFARExperiment(Experiment):
 
         cifar_data.set_transformation(transforms.Compose(transformations))
 
-        num_workers = 1 if self.device.type == "cpu" else 12
         if not train:
             batch_size = self.batch_sizes["test"]
-            dataloader = DataLoader(cifar_data, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+            dataloader = DataLoader(cifar_data, batch_size=batch_size, shuffle=True, num_workers=self.num_workers)
             return cifar_data, dataloader
 
         train_indices, validation_indices = self.get_validation_and_train_indices(cifar_data)
         indices = validation_indices if validation else train_indices
         subsample_cifar_data_set(sub_sample_indices=indices, cifar_data=cifar_data)
         batch_size = self.batch_sizes["validation"] if validation else self.batch_sizes["train"]
-        return cifar_data, DataLoader(cifar_data, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+        return cifar_data, DataLoader(cifar_data, batch_size=batch_size, shuffle=True, num_workers=self.num_workers)
 
     def get_validation_and_train_indices(self, cifar_data: CifarDataSet):
         """
@@ -374,7 +374,6 @@ class IncrementalCIFARExperiment(Experiment):
             self._print("\tEpoch number: {0}".format(e + 1))
             self.set_lr()
 
-            self.sub_sample_training_set(train_dataloader, training_data)
             epoch_start_time = time.perf_counter()
             for step_number, sample in enumerate(train_dataloader):
                 # sample observationa and target
@@ -409,16 +408,15 @@ class IncrementalCIFARExperiment(Experiment):
                                        epoch_runtime=epoch_end_time - epoch_start_time)
 
             self.current_epoch += 1
-            self.extend_classes(training_data, test_data, val_data, train_dataloader)
+            self.extend_classes(training_data, test_data, val_data)
 
             if self.current_epoch % self.checkpoint_save_frequency == 0:
                 self.save_experiment_checkpoint()
 
     @torch.no_grad()
-    def sub_sample_training_set(self,  training_dataloader: DataLoader, training_set: CifarDataSet):
+    def sub_sample_training_set(self, training_set: CifarDataSet):
         """
 
-        :param training_dataloader:
         :param training_set:
         :return:
         """
@@ -431,6 +429,7 @@ class IncrementalCIFARExperiment(Experiment):
         labels = torch.zeros((len(training_set), self.current_num_classes), device=device, dtype=torch.float32)
 
         batch_size = self.batch_sizes["train"]
+        training_dataloader = DataLoader(training_set, batch_size=batch_size, shuffle=False, num_workers=self.num_workers)
         for i, sample in enumerate(training_dataloader):
             image = sample["image"].to(self.device)
             current_labels = sample["label"].to(self.device)
@@ -467,11 +466,11 @@ class IncrementalCIFARExperiment(Experiment):
                 class_correct_indices[min_index] = True
                 current_cum_sum_feature += features[min_index, :]
 
-        correct_indices = correct_indices.sum(dim=1).to(torch.bool).flatten().cpu().numpy()
+        correct_indices = correct_indices.sum(dim=1).to(torch.bool).cpu().numpy()
         current_rows = np.in1d(training_set.integer_labels, training_set.classes)
         not_current_rows = np.logical_not(current_rows)
         not_current_rows[current_rows] = correct_indices
-        correct_indices_agg = torch.argwhere(torch.tensor(not_current_rows))
+        correct_indices_agg = torch.argwhere(torch.tensor(not_current_rows)).flatten()
 
         subsample_cifar_data_set(sub_sample_indices=correct_indices_agg, cifar_data=training_set)
 
@@ -504,8 +503,7 @@ class IncrementalCIFARExperiment(Experiment):
             for param in self.net.parameters():
                 param.add_(torch.randn(param.size(), device=param.device) * self.noise_std)
 
-    def extend_classes(self, training_data: CifarDataSet, test_data: CifarDataSet, val_data: CifarDataSet,
-                       train_dataloader: DataLoader):
+    def extend_classes(self, training_data: CifarDataSet, test_data: CifarDataSet, val_data: CifarDataSet):
         """
         Adds one new class to the data set with certain frequency
         """
@@ -519,7 +517,7 @@ class IncrementalCIFARExperiment(Experiment):
 
             if self.current_num_classes == self.num_classes: return
             if self.sub_sample_method in ["mof", "uniform"]:
-                self.sub_sample_training_set(train_dataloader, training_data)
+                self.sub_sample_training_set(training_data)
 
             increase = 1 if not self.use_cifar100 else 5
             self.current_num_classes += increase
