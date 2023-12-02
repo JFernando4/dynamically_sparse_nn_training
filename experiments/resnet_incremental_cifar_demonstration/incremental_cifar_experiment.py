@@ -2,7 +2,6 @@
 import time
 import os
 import pickle
-import re
 from copy import deepcopy
 
 # third party libraries
@@ -285,7 +284,6 @@ class IncrementalCIFARExperiment(Experiment):
         self.train(train_dataloader=training_dataloader, test_dataloader=test_dataloader, val_dataloader=val_dataloader,
                    test_data=test_data, training_data=training_data, val_data=val_data)
 
-        self._plot_results()
         # summaries stored in memory automatically if using mlproj_manager
 
     def get_data(self, train: bool = True, validation: bool = False):
@@ -484,22 +482,6 @@ class IncrementalCIFARExperiment(Experiment):
                 break
             except ValueError:
                 print("Something went wrong on attempt {0}! Attempting to store the parameters again...".format(i + 1))
-
-    def _plot_results(self):
-        if self.plot:
-            import matplotlib.pyplot as plt
-
-            for rname, rvals in self.results_dict.items():
-                if "pruned" in rname:
-                    for i in range(rvals.shape[0]):
-                        plt.plot(torch.arange(rvals.shape[1]), rvals[i])
-                else:
-                    plt.plot(torch.arange(rvals.size()[0]), rvals)
-                if "accuracy" in rname:
-                    plt.ylim((0.2,0.7))
-                plt.title(rname)
-                plt.show()
-                plt.close()
 
 
 def main():
