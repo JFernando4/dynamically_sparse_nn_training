@@ -78,7 +78,7 @@ class IncrementalCIFARExperiment(Experiment):
         # for sub-sampling
         self.sub_sample_method = access_dict(exp_params, "sub_sample_method", default="none", val_type=str,
                                              choices=["none", "mof", "uniform"])    # mof = mean of features
-        self.sub_sample_size = 2250
+        self.sub_sample_size = 1000
 
         self.plot = access_dict(exp_params, key="plot", default=False)
 
@@ -374,6 +374,7 @@ class IncrementalCIFARExperiment(Experiment):
             self._print("\tEpoch number: {0}".format(e + 1))
             self.set_lr()
 
+            self.sub_sample_training_set(train_dataloader, training_data)
             epoch_start_time = time.perf_counter()
             for step_number, sample in enumerate(train_dataloader):
                 # sample observationa and target
@@ -452,22 +453,20 @@ class IncrementalCIFARExperiment(Experiment):
             current_cum_sum_feature = torch.zeros_like(mean_feature)
             current_num_exemplars_processed = 0
             for exemplar_num in range(num_exemplars_per_class[class_index]):
-                min_diff = torch.inf
-                min_feature_index = 0
                 current_num_exemplars_processed += 1
 
-                # temp_mean_feature = (current_cum_sum_feature + features[labels[:, class_index]]) / current_num_exemplars_processed
-                for sample_index in range(len(training_set)):
-                    if labels[sample_index, class_index] != 1: continue
-                    if class_correct_indices[sample_index]: continue
+                temp_mean_feature = (current_cum_sum_feature + features[labels[:, class_index] == 1]) / current_num_exemplars_processed
+                class_mean_diff = torch.norm(temp_mean_feature - mean_feature, dim=1)
 
-                    temp_mean_feature = (current_cum_sum_feature + features[sample_index, :]) / current_num_exemplars_processed
-                    temp_mean_diff = torch.norm(mean_feature - temp_mean_feature)
-                    if temp_mean_diff < min_diff:
-                        min_diff = temp_mean_diff
-                        min_feature_index = sample_index
-                class_correct_indices[min_feature_index] = True
-                current_cum_sum_feature += features[min_feature_index, :]
+                temp_mean_diff = torch.zeros(len(training_set), device=device, dtype=torch.float32)
+                temp_mean_diff[labels[:, class_index] == 1] = class_mean_diff
+                temp_mean_diff[labels[:, class_index] != 1] = np.inf
+                temp_mean_diff[class_correct_indices] = np.inf
+
+                min_index = torch.argmin(temp_mean_diff)
+                class_correct_indices[min_index] = True
+                current_cum_sum_feature += features[min_index, :]
+
         correct_indices_agg = torch.argwhere(correct_indices.sum(dim=1).to(torch.bool)).flatten().to(device)
         subsample_cifar_data_set(sub_sample_indices=correct_indices_agg, cifar_data=training_set)
 
