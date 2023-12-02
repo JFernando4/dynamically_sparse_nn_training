@@ -78,7 +78,7 @@ class IncrementalCIFARExperiment(Experiment):
         # for sub-sampling
         self.sub_sample_method = access_dict(exp_params, "sub_sample_method", default="none", val_type=str,
                                              choices=["none", "mof", "uniform"])    # mof = mean of features
-        self.sub_sample_size = 2250
+        self.sub_sample_size = 1000#2250
 
         self.plot = access_dict(exp_params, key="plot", default=False)
 
@@ -374,6 +374,7 @@ class IncrementalCIFARExperiment(Experiment):
             self._print("\tEpoch number: {0}".format(e + 1))
             self.set_lr()
 
+            self.sub_sample_training_set(train_dataloader, training_data)
             epoch_start_time = time.perf_counter()
             for step_number, sample in enumerate(train_dataloader):
                 # sample observationa and target
@@ -466,7 +467,12 @@ class IncrementalCIFARExperiment(Experiment):
                 class_correct_indices[min_index] = True
                 current_cum_sum_feature += features[min_index, :]
 
-        correct_indices_agg = torch.argwhere(correct_indices.sum(dim=1).to(torch.bool)).flatten().cpu()
+        correct_indices = correct_indices.sum(dim=1).to(torch.bool).flatten().cpu().numpy()
+        current_rows = np.in1d(training_set.integer_labels, training_set.classes)
+        not_current_rows = np.logical_not(current_rows)
+        not_current_rows[current_rows] = correct_indices
+        correct_indices_agg = torch.argwhere(torch.tensor(not_current_rows))
+
         subsample_cifar_data_set(sub_sample_indices=correct_indices_agg, cifar_data=training_set)
 
     def set_lr(self):
