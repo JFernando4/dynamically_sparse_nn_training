@@ -455,6 +455,8 @@ class IncrementalCIFARExperiment(Experiment):
                 min_diff = torch.inf
                 min_feature_index = 0
                 current_num_exemplars_processed += 1
+
+                # temp_mean_feature = (current_cum_sum_feature + features[labels[:, class_index]]) / current_num_exemplars_processed
                 for sample_index in range(len(training_set)):
                     if labels[sample_index, class_index] != 1: continue
                     if class_correct_indices[sample_index]: continue
@@ -466,7 +468,7 @@ class IncrementalCIFARExperiment(Experiment):
                         min_feature_index = sample_index
                 class_correct_indices[min_feature_index] = True
                 current_cum_sum_feature += features[min_feature_index, :]
-        correct_indices_agg = torch.argwhere(correct_indices.sum(dim=1).to(torch.bool)).flatten()
+        correct_indices_agg = torch.argwhere(correct_indices.sum(dim=1).to(torch.bool)).flatten().to(device)
         subsample_cifar_data_set(sub_sample_indices=correct_indices_agg, cifar_data=training_set)
 
     def set_lr(self):
