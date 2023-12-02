@@ -374,7 +374,6 @@ class IncrementalCIFARExperiment(Experiment):
             self._print("\tEpoch number: {0}".format(e + 1))
             self.set_lr()
 
-            self.sub_sample_training_set(train_dataloader, training_data)
             epoch_start_time = time.perf_counter()
             for step_number, sample in enumerate(train_dataloader):
                 # sample observationa and target
