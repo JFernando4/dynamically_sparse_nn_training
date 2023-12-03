@@ -78,7 +78,7 @@ class IncrementalCIFARExperiment(Experiment):
         # for sub-sampling
         self.sub_sample_method = access_dict(exp_params, "sub_sample_method", default="none", val_type=str,
                                              choices=["none", "mof", "uniform"])    # mof = mean of features
-        self.sub_sample_size = 2250
+        self.sub_sample_size = 4500 #2250
 
         self.plot = access_dict(exp_params, key="plot", default=False)
 
@@ -459,8 +459,8 @@ class IncrementalCIFARExperiment(Experiment):
 
                 temp_mean_diff = torch.zeros(len(training_set), device=device, dtype=torch.float32)
                 temp_mean_diff[labels[:, class_index] == 1] = class_mean_diff
-                temp_mean_diff[labels[:, class_index] != 1] = np.inf
-                temp_mean_diff[class_correct_indices] = np.inf
+                temp_mean_diff[labels[:, class_index] != 1] = torch.inf
+                temp_mean_diff[class_correct_indices] = torch.inf
 
                 min_index = torch.argmin(temp_mean_diff)
                 class_correct_indices[min_index] = True
