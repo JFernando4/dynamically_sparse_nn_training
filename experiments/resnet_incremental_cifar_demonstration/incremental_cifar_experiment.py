@@ -421,7 +421,7 @@ class IncrementalCIFARExperiment(Experiment):
         :return:
         """
         if self.sub_sample_method == "none": return
-        if len(training_set) == self.sub_sample_size: return
+        if len(training_set) <= self.sub_sample_size: return
 
         num_features = 512
         device = self.net.fc.weight.device
