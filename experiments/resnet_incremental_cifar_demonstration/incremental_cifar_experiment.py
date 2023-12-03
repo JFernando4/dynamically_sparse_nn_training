@@ -572,7 +572,7 @@ def main():
         "use_lr_schedule": True,
         "use_best_network": True,
         "use_cbp": True,
-        "replacement_rate": 0.0001,
+        "replacement_rate": 0.000001,
         "utility_function": "weight",
         "maturity_threshold": 1000,
         "sub_sample_method": "mof",
