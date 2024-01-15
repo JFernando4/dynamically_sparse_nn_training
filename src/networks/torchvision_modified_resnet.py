@@ -1,15 +1,10 @@
-from functools import partial
-from typing import Any, Callable, List, Optional, Type, Union
+from typing import Callable, List, Optional, Type, Union
 
 import torch
 import torch.nn as nn
 from torch import Tensor
 
-from torchvision.transforms._presets import ImageClassification
 from torchvision.utils import _log_api_usage_once
-from torchvision.models._api import register_model, Weights, WeightsEnum
-from torchvision.models._meta import _IMAGENET_CATEGORIES
-from torchvision.models._utils import _ovewrite_named_param, handle_legacy_interface
 
 """ 
 This is a modified version of torchvision's code for instantiating resnets. Here's a list of the changes made to the 
