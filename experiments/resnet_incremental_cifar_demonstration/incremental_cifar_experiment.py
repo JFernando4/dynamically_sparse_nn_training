@@ -75,13 +75,6 @@ class IncrementalCIFARExperiment(Experiment):
         self.noise_std = access_dict(exp_params, "noise_std", default=0.0, val_type=float)
         self.perturb_weights_indicator = self.noise_std > 0.0
 
-        # for sub-sampling
-        self.sub_sample_method = access_dict(exp_params, "sub_sample_method", default="none", val_type=str,
-                                             choices=["none", "mof", "uniform"])    # mof = mean of features
-        self.sub_sample_size = 4500 #2250
-
-        self.plot = access_dict(exp_params, key="plot", default=False)
-
         """ Training constants """
         self.batch_sizes = {"train": 90, "test": 100, "validation":50}
         self.num_classes = 10 if not self.use_cifar100 else 100
@@ -413,67 +406,6 @@ class IncrementalCIFARExperiment(Experiment):
             if self.current_epoch % self.checkpoint_save_frequency == 0:
                 self.save_experiment_checkpoint()
 
-    @torch.no_grad()
-    def sub_sample_training_set(self, training_set: CifarDataSet):
-        """
-
-        :param training_set:
-        :return:
-        """
-        if self.sub_sample_method == "none": return
-        if len(training_set) <= self.sub_sample_size: return
-
-        num_features = 512
-        device = self.net.fc.weight.device
-        features = torch.zeros((len(training_set), num_features), device=device, dtype=torch.float32)
-        labels = torch.zeros((len(training_set), self.current_num_classes), device=device, dtype=torch.float32)
-
-        batch_size = self.batch_sizes["train"]
-        training_dataloader = DataLoader(training_set, batch_size=batch_size, shuffle=False, num_workers=self.num_workers)
-        for i, sample in enumerate(training_dataloader):
-            image = sample["image"].to(self.device)
-            current_labels = sample["label"].to(self.device)
-
-            current_features = []
-            self.net.forward(image, current_features)
-
-            labels[i * batch_size:(i + 1) * batch_size, :] += current_labels
-            features[i * batch_size:(i + 1) * batch_size, :] += current_features[-1]
-
-        quotient, remainder = divmod(self.sub_sample_size, self.current_num_classes)
-        extra_samples = torch.randperm(self.current_num_classes)[:remainder]
-        num_exemplars_per_class = torch.ones(self.current_num_classes, dtype=torch.int) * quotient
-        num_exemplars_per_class[extra_samples] += 1
-
-        correct_indices = torch.zeros((len(training_set), self.current_num_classes), device=device, dtype=torch.bool)
-        for class_index in range(self.current_num_classes):
-            mean_feature = features[labels[:, class_index] == 1].mean(dim=0)
-            class_correct_indices = correct_indices[:, class_index]
-            current_cum_sum_feature = torch.zeros_like(mean_feature)
-            current_num_exemplars_processed = 0
-            for exemplar_num in range(num_exemplars_per_class[class_index]):
-                current_num_exemplars_processed += 1
-
-                temp_mean_feature = (current_cum_sum_feature + features[labels[:, class_index] == 1]) / current_num_exemplars_processed
-                class_mean_diff = torch.norm(temp_mean_feature - mean_feature, dim=1)
-
-                temp_mean_diff = torch.zeros(len(training_set), device=device, dtype=torch.float32)
-                temp_mean_diff[labels[:, class_index] == 1] = class_mean_diff
-                temp_mean_diff[labels[:, class_index] != 1] = torch.inf
-                temp_mean_diff[class_correct_indices] = torch.inf
-
-                min_index = torch.argmin(temp_mean_diff)
-                class_correct_indices[min_index] = True
-                current_cum_sum_feature += features[min_index, :]
-
-        correct_indices = correct_indices.sum(dim=1).to(torch.bool).cpu().numpy()
-        current_rows = np.in1d(training_set.integer_labels, training_set.classes)
-        not_current_rows = np.logical_not(current_rows)
-        not_current_rows[current_rows] = correct_indices
-        correct_indices_agg = torch.argwhere(torch.tensor(not_current_rows)).flatten()
-
-        subsample_cifar_data_set(sub_sample_indices=correct_indices_agg, cifar_data=training_set)
-
     def set_lr(self):
         """ Changes the learning rate of the optimizer according to the current epoch of the task """
         if not self.use_lr_schedule: return
@@ -516,8 +448,6 @@ class IncrementalCIFARExperiment(Experiment):
             self._save_model_parameters()
 
             if self.current_num_classes == self.num_classes: return
-            if self.sub_sample_method in ["mof", "uniform"]:
-                self.sub_sample_training_set(training_data)
 
             increase = 1 if not self.use_cifar100 else 5
             self.current_num_classes += increase
@@ -574,14 +504,12 @@ def main():
         "use_cbp": True,
         "replacement_rate": 0.000001,
         "utility_function": "weight",
-        "maturity_threshold": 1000,
-        "sub_sample_method": "mof",
-        "plot": False
+        "maturity_threshold": 1000
     }
 
     print(experiment_parameters)
     relevant_parameters = ["stepsize", "weight_decay", "momentum", "noise_std", "reset_head", "reset_network",
-                           "use_best_network", "use_cbp", "replacement_rate", "sub_sample_method"]
+                           "use_best_network", "use_cbp", "replacement_rate"]
     results_dir_name = "{0}-{1}".format(relevant_parameters[0], experiment_parameters[relevant_parameters[0]])
     for relevant_param in relevant_parameters[1:]:
         results_dir_name += "_" + relevant_param + "-" + str(experiment_parameters[relevant_param])
