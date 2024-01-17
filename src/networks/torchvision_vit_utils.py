@@ -10,13 +10,7 @@ def initialize_vit(network: VisionTransformer):
     """
 
     network.apply(xavier_normal_vit_initialization)
-
-    torch.nn.init.xavier_normal_(network.heads[0].weight)
-    torch.nn.init.zeros_(network.heads[0].bias)
-
-    if len(network.heads) > 1:
-        torch.nn.init.xavier_normal_(network.heads[2].weight)
-        torch.nn.init.zeros_(network.heads[2].bias)
+    initialize_vit_heads(network.heads)
 
 
 def xavier_normal_vit_initialization(m: torch.nn.Module):
@@ -73,3 +67,16 @@ def initialize_mlp_block(m: MLPBlock):
             torch.nn.init.xavier_normal_(sub_m.weight)
             if sub_m.bias is not None:
                 torch.nn.init.normal_(sub_m.bias, std=1e-6)
+
+
+def initialize_vit_heads(m: torch.nn.Sequential):
+    """
+    Initializes the classification heads of a visual transformer
+    """
+
+    torch.nn.init.xavier_normal_(m[0].weight)
+    torch.nn.init.zeros_(m[0].bias)
+
+    if len(m) > 1:
+        torch.nn.init.xavier_normal_(m[2].weight)
+        torch.nn.init.zeros_(m[2].bias)
