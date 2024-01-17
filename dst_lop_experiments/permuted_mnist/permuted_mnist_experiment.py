@@ -19,7 +19,7 @@ from mlproj_manager.util.neural_networks import init_weights_kaiming
 
 # from src
 from src.sparsity_funcs import *
-from src.utils import apply_regularization_to_sequential_net
+from src.utils import apply_regularization_to_sequential_net, initialize_wandb
 
 
 class PermutedMNISTExperiment(Experiment):
@@ -77,12 +77,11 @@ class PermutedMNISTExperiment(Experiment):
         self.running_avg_window = 100
         self.current_running_avg_step, self.running_loss, self.running_accuracy, self.current_epoch = (0, 0.0, 0.0, 0)
         self.results_dict = {}
-        total_checkpoints = self.num_images_per_epoch * self.num_epochs // (self.running_avg_window * self.batch_size)
-        self.results_dict["train_loss_per_checkpoint"] = torch.zeros(total_checkpoints, device=self.device,
-                                                                     dtype=torch.float32)
-        self.results_dict["train_accuracy_per_checkpoint"] = torch.zeros(total_checkpoints, device=self.device,
-                                                                         dtype=torch.float32)
+        total_ckpts = self.num_images_per_epoch * self.num_epochs // (self.running_avg_window * self.batch_size)
+        self.results_dict["train_loss_per_checkpoint"] = torch.zeros(total_ckpts, device=self.device, dtype=torch.float32)
+        self.results_dict["train_accuracy_per_checkpoint"] = torch.zeros(total_ckpts, device=self.device, dtype=torch.float32)
         """ Wandb set up """
+        self.wandb_run = initialize_wandb(exp_params, self.results_dir, self.run_index, project="dstlop", entity="dst-lop")
         self.wandb_run = self.initialize_wandb(exp_params)
 
         """ For creating experiment checkpoints """
@@ -93,46 +92,6 @@ class PermutedMNISTExperiment(Experiment):
         self.load_experiment_checkpoint()
 
     # ----------------------------- For initializing the experiment ----------------------------- #
-    def initialize_wandb(self, exp_params: dict):
-        """ Initializes the weights and biases session """
-
-        # set wandb directory and mode
-        os.environ["WANDB_DIR"] = access_dict(exp_params, "wandb_dir", default=self.results_dir, val_type=str)
-        wandb_mode = access_dict(exp_params, "wandb_mode", default="offline", val_type=str, choices=["online", "offline", "disabled"])
-
-        # retrieve tags for the current run
-        wandb_tags = access_dict(exp_params, "wandb_tags", default="", val_type=str)  # comma separated string of tags
-        tag_list = None if wandb_tags == "" else wandb_tags.split(",")
-
-        # set console log file
-        slurm_job_id = "0" if "SLURM_JOBID" not in os.environ else os.environ["SLURM_JOBID"]
-        exp_params["slurm_job_id"] = slurm_job_id
-
-        run_id = self.get_wandb_id()
-        run_name = "{0}_index-{1}".format(os.path.basename(self.results_dir), self.run_index)
-        return wandb.init(project="dstlop", entity="dst-lop", mode=wandb_mode, config=exp_params, tags=tag_list,
-                          name=run_name, id=run_id)
-
-    def get_wandb_id(self):
-        """ Generates and stores a wandb id or loads it if one is already available """
-
-        wandb_id_dir = os.path.join(self.results_dir, "wandb_ids")
-        os.makedirs(wandb_id_dir, exist_ok=True)
-
-        wandb_id_filepath = os.path.join(wandb_id_dir, "index-{0}.p".format(self.run_index))
-
-        # an id was already stored
-        if os.path.isfile(wandb_id_filepath):
-            with open(wandb_id_filepath, mode="rb") as id_file:
-                run_id = pickle.load(id_file)
-            return run_id
-
-        # generate a new id
-        run_id = wandb.util.generate_id()
-        store_object_with_several_attempts(run_id, wandb_id_filepath, storing_format="pickle", num_attempts=10)
-
-        return run_id
-
     def initialize_network(self):
         """ Initializes the network used for training and the masks of each layer """
         net = torch.nn.Sequential()
@@ -270,6 +229,8 @@ class PermutedMNISTExperiment(Experiment):
                 if (i + 1) % self.running_avg_window == 0:
                     self._print("\t\tStep Number: {0}".format(i + 1))
                     self._store_training_summaries()
+
+                # todo: topology update
 
             self.current_epoch += 1
             if self.current_epoch % self.checkpoint_save_frequency == 0:    # checkpoint experiment
