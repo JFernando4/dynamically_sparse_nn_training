@@ -503,7 +503,7 @@ def main():
         "fixed_classes": True,
         "reset_head": False,
         "reset_network": False,
-        "use_data_augmentation": False,
+        "use_data_augmentation": True,
         "use_cifar100": True,
         "use_lr_schedule": True,
         "use_best_network": True,
