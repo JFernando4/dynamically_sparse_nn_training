@@ -97,7 +97,7 @@ class IncrementalCIFARExperiment(Experiment):
             hidden_dim=768,
             mlp_dim=3072,
             num_classes=self.num_classes,
-            norm_layer=torch.nn.BatchNorm2d
+            norm_layer=torch.nn.BatchNorm1d
         )
         initialize_vit(self.net)
 
@@ -495,7 +495,7 @@ def main():
     file_path = os.path.dirname(os.path.abspath(__file__))
     experiment_parameters = {
         "stepsize": 0.001,
-        "weight_decay": 0.0001,
+        "weight_decay": 0.001,
         "momentum": 0.9,
         "noise_std": 0.0,
         "data_path": os.path.join(file_path, "data"),
