@@ -295,6 +295,7 @@ class IncrementalCIFARExperiment(Experiment):
         dummy_data = next(iter(training_dataloader))["image"]
         self.net.forward(dummy_data)
         initialize_vit(self.net)
+        self.net.to(self.device)
 
         self.load_experiment_checkpoint()
         # train network
