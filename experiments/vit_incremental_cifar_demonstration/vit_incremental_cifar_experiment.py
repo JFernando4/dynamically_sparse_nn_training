@@ -96,7 +96,8 @@ class IncrementalCIFARExperiment(Experiment):
             num_heads=12,
             hidden_dim=768,
             mlp_dim=3072,
-            num_classes=self.num_classes
+            num_classes=self.num_classes,
+            norm_layer=torch.nn.BatchNorm2d
         )
         initialize_vit(self.net)
 
