@@ -274,7 +274,9 @@ class IncrementalCIFARExperiment(Experiment):
             for _, sample in enumerate(test_data):
                 images = sample["image"].to(self.device)
                 test_labels = sample["label"].to(self.device)
-                test_predictions = self.net.forward(images)[:, self.all_classes[:self.current_num_classes]]
+                test_predictions = self.net.forward(images)
+                if not self.fixed_classes:
+                    test_predictions = test_predictions[:, self.all_classes[:self.current_num_classes]]
 
                 avg_loss += self.loss(test_predictions, test_labels)
                 avg_acc += torch.mean((test_predictions.argmax(axis=1) == test_labels.argmax(axis=1)).to(torch.float32))
