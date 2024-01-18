@@ -292,10 +292,9 @@ class IncrementalCIFARExperiment(Experiment):
         test_data, test_dataloader = self.get_data(train=False)
 
         # for initializing the model when using lazy modules (modules that infer the shape of inputs)
-        dummy_data = next(iter(training_dataloader))["image"]
+        dummy_data = next(iter(training_dataloader))["image"].to(self.device)
         self.net.forward(dummy_data)
         initialize_vit(self.net)
-        self.net.to(self.device)
 
         self.load_experiment_checkpoint()
         # train network
