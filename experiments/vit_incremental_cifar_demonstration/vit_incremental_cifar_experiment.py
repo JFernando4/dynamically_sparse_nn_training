@@ -91,8 +91,8 @@ class IncrementalCIFARExperiment(Experiment):
         # initialize network
         self.net = VisionTransformer(
             image_size=32,
-            patch_size=4,
-            num_layers=12,
+            patch_size=8,
+            num_layers=8,
             num_heads=12,
             hidden_dim=768,
             mlp_dim=3072,
@@ -491,8 +491,8 @@ def main():
     """
     file_path = os.path.dirname(os.path.abspath(__file__))
     experiment_parameters = {
-        "stepsize": 0.1,
-        "weight_decay": 0.0005,
+        "stepsize": 0.001,
+        "weight_decay": 0.0001,
         "momentum": 0.9,
         "noise_std": 0.0,
         "data_path": os.path.join(file_path, "data"),
@@ -501,7 +501,7 @@ def main():
         "fixed_classes": True,
         "reset_head": False,
         "reset_network": False,
-        "use_data_augmentation": True,
+        "use_data_augmentation": False,
         "use_cifar100": True,
         "use_lr_schedule": True,
         "use_best_network": True,
