@@ -93,7 +93,7 @@ class IncrementalCIFARExperiment(Experiment):
             image_size=32,
             patch_size=4,
             num_layers=4,
-            num_heads=12,
+            num_heads=4,
             hidden_dim=768,
             mlp_dim=3072,
             num_classes=self.num_classes,
