@@ -91,9 +91,9 @@ class IncrementalCIFARExperiment(Experiment):
         # initialize network
         self.net = VisionTransformer(
             image_size=32,
-            patch_size=2,
+            patch_size=4,
             num_layers=4,
-            num_heads=4,
+            num_heads=12,
             hidden_dim=768,
             mlp_dim=3072,
             num_classes=self.num_classes,
