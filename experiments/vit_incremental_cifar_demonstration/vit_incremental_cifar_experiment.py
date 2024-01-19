@@ -97,7 +97,9 @@ class IncrementalCIFARExperiment(Experiment):
             hidden_dim=768,
             mlp_dim=3072,
             num_classes=self.num_classes,
-            norm_layer=lambda z: torch.nn.LazyBatchNorm1d(eps=1e-6)
+            dropout=0.1,
+            attention_dropout=0.1
+            # norm_layer=lambda z: torch.nn.LazyBatchNorm1d(eps=1e-6)
         )
 
         # initialize optimizer
@@ -291,10 +293,10 @@ class IncrementalCIFARExperiment(Experiment):
         val_data, val_dataloader = self.get_data(train=True, validation=True)
         test_data, test_dataloader = self.get_data(train=False)
 
-        # for initializing the model when using lazy modules (modules that infer the shape of inputs)
-        dummy_data = next(iter(training_dataloader))["image"].to(self.device)
-        self.net.forward(dummy_data)
-        initialize_vit(self.net)
+        # # for initializing the model when using lazy modules (modules that infer the shape of inputs)
+        # dummy_data = next(iter(training_dataloader))["image"].to(self.device)
+        # self.net.forward(dummy_data)
+        # initialize_vit(self.net)
 
         self.load_experiment_checkpoint()
         # train network
