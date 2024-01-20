@@ -92,7 +92,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.net = VisionTransformer(
             image_size=32,
             patch_size=2,
-            num_layers=4,
+            num_layers=10,
             num_heads=12,
             hidden_dim=384, #768,
             mlp_dim=768,#3072,
@@ -101,6 +101,11 @@ class IncrementalCIFARExperiment(Experiment):
             attention_dropout=0.1
             # norm_layer=lambda z: torch.nn.LazyBatchNorm1d(eps=1e-6)
         )
+        initialize_vit(self.net)
+        num_params = 0
+        for p in self.net.parameters():
+            num_params += p.numel()
+        print("Number of parameters: {0}".format(num_params))
 
         # initialize optimizer
         self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
