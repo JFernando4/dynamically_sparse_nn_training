@@ -91,11 +91,11 @@ class IncrementalCIFARExperiment(Experiment):
         # initialize network
         self.net = VisionTransformer(
             image_size=32,
-            patch_size=2,
-            num_layers=10,
+            patch_size=4,
+            num_layers=8,
             num_heads=12,
             hidden_dim=384, #768,
-            mlp_dim=768,#3072,
+            mlp_dim=1536,#3072,
             num_classes=self.num_classes,
             dropout=0.1,
             attention_dropout=0.1
