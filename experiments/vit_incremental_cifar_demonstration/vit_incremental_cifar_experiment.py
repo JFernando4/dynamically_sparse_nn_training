@@ -92,7 +92,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.net = VisionTransformer(
             image_size=32,
             patch_size=2,
-            num_layers=4,
+            num_layers=2,
             num_heads=4,
             hidden_dim=768,
             mlp_dim=3072,
