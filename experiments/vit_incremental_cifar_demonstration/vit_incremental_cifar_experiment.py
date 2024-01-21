@@ -97,8 +97,8 @@ class IncrementalCIFARExperiment(Experiment):
             hidden_dim=768,
             mlp_dim=3072,
             num_classes=self.num_classes,
-            dropout=0.2,
-            attention_dropout=0.2
+            dropout=0.1,
+            attention_dropout=0.1
             # norm_layer=lambda z: torch.nn.LazyBatchNorm1d(eps=1e-6)
         )
         initialize_vit(self.net)
@@ -505,7 +505,7 @@ def main():
     """
     file_path = os.path.dirname(os.path.abspath(__file__))
     experiment_parameters = {
-        "stepsize": 0.05,
+        "stepsize": 0.01,
         "weight_decay": 0.0001,
         "momentum": 0.9,
         "noise_std": 0.0,
