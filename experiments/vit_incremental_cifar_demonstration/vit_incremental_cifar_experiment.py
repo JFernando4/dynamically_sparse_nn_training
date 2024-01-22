@@ -18,7 +18,7 @@ from mlproj_manager.file_management import store_object_with_several_attempts
 from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict
 from mlproj_manager.util.data_preprocessing_and_transformations import ToTensor, Normalize, RandomCrop, RandomHorizontalFlip, RandomRotator
 
-from src import ResGnT, initialize_vit, initialize_vit_heads
+from src import initialize_vit, initialize_vit_heads
 from src.utils import subsample_cifar_data_set
 
 
@@ -119,18 +119,6 @@ class IncrementalCIFARExperiment(Experiment):
         self.net.to(self.device)
         self.current_epoch = 0
 
-        # for cbp
-        self.resgnt = None
-        if self.use_cbp:
-            self.resgnt = ResGnT(net=self.net,
-                                 hidden_activation="relu",
-                                 replacement_rate=self.replacement_rate,
-                                 decay_rate=0.99,
-                                 util_type=self.utility_function,
-                                 maturity_threshold=self.maturity_threshold,
-                                 device=self.device)
-        self.current_features = [] if self.use_cbp else None
-
         """ For data partitioning """
         self.class_increase_frequency = 200
         self.all_classes = np.random.permutation(self.num_classes)
@@ -197,9 +185,6 @@ class IncrementalCIFARExperiment(Experiment):
             "partial_results": partial_results
         }
 
-        if self.use_cbp:
-            checkpoint["resgnt"] = self.resgnt
-
         return checkpoint
 
     def load_checkpoint_data_and_update_experiment_variables(self, file_path):
@@ -225,9 +210,6 @@ class IncrementalCIFARExperiment(Experiment):
         partial_results = checkpoint["partial_results"]
         for k, v in self.results_dict.items():
             self.results_dict[k] = partial_results[k] if not isinstance(partial_results[k], torch.Tensor) else partial_results[k].to(self.device)
-
-        if self.use_cbp:
-            self.resgnt = checkpoint["resgnt"]
 
     # --------------------------------------- For storing summaries --------------------------------------- #
     def _store_training_summaries(self):
@@ -413,7 +395,6 @@ class IncrementalCIFARExperiment(Experiment):
                 # backpropagate and update weights
                 current_reg_loss.backward()
                 self.optim.step()
-                # if self.use_cbp: self.resgnt.gen_and_test(current_features)
                 self.inject_noise()
 
                 # store summaries
