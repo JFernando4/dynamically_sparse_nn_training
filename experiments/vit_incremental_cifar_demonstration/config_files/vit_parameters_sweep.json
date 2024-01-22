@@ -22,7 +22,6 @@
     "use_cifar100": true,
     "use_lr_schedule": true,
     "use_best_network": true,
-    "use_cbp": false,
     "runs": 1
   },
 
