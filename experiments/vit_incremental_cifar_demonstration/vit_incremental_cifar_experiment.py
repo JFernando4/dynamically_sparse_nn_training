@@ -65,15 +65,6 @@ class IncrementalCIFARExperiment(Experiment):
         self.use_cifar100 = access_dict(exp_params, "use_cifar100", default=False, val_type=bool)
         self.use_best_network = access_dict(exp_params, "use_best_network", default=False, val_type=bool)
 
-        # cbp parameters
-        self.use_cbp = access_dict(exp_params, "use_cbp", default=False, val_type=bool)
-        self.replacement_rate = access_dict(exp_params, "replacement_rate", default=0.0, val_type=float)
-        assert (not self.use_cbp) or (self.replacement_rate > 0.0)
-        self.utility_function = access_dict(exp_params, "utility_function", default="weight", val_type=str,
-                                            choices=["weight", "contribution"])
-        self.maturity_threshold = access_dict(exp_params, "maturity_threshold", default=0, val_type=int)
-        assert (not self.use_cbp) or (self.maturity_threshold > 0)
-
         # shrink and perturb parameters
         self.noise_std = access_dict(exp_params, "noise_std", default=0.0, val_type=float)
         self.perturb_weights_indicator = self.noise_std > 0.0
@@ -503,11 +494,7 @@ def main():
         "use_data_augmentation": True,
         "use_cifar100": True,
         "use_lr_schedule": True,
-        "use_best_network": True,
-        "use_cbp": False,
-        "replacement_rate": 0.000001,
-        "utility_function": "weight",
-        "maturity_threshold": 1000
+        "use_best_network": True
     }
 
     print(experiment_parameters)
