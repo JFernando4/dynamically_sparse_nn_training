@@ -110,7 +110,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.current_epoch = 0
 
         """ For data partitioning """
-        self.class_increase_frequency = 100
+        self.class_increase_frequency = 200
         self.all_classes = np.random.permutation(self.num_classes)
         self.best_accuracy = torch.tensor(0.0, device=self.device, dtype=torch.float32)
         self.best_accuracy_model_parameters = {}
@@ -496,7 +496,7 @@ def main():
         "dropout_prob": 0.1,
         "noise_std": 0.0,
         "data_path": os.path.join(file_path, "data"),
-        "num_epochs": 100,
+        "num_epochs": 200,
         "initial_num_classes": 100,
         "fixed_classes": True,
         "reset_head": False,
