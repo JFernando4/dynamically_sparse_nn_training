@@ -12,7 +12,7 @@
 
   "experiment_params": {
     "momentum": 0.9,
-    "noise_std": 0,
+    "noise_std": 0.0,
     "num_epochs": 200,
     "initial_num_classes": 100,
     "fixed_classes": true,
