@@ -109,9 +109,8 @@ class IncrementalCIFARExperiment(Experiment):
         print("Number of parameters: {0}".format(num_params))
 
         # initialize optimizer
-        # self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
-        #                              weight_decay=self.weight_decay)
-        self.optim = torch.optim.AdamW(self.net.parameters(), lr=self.stepsize, weight_decay=self.weight_decay)
+        self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
+                                     weight_decay=self.weight_decay)
 
         # define loss function
         self.loss = torch.nn.CrossEntropyLoss(reduction="mean")
