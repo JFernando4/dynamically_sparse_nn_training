@@ -49,6 +49,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.weight_decay = exp_params["weight_decay"]
         self.momentum = exp_params["momentum"]
         self.use_lr_schedule = access_dict(exp_params, "use_lr_schedule", default=False, val_type=bool)
+        self.dropout_prob = access_dict(exp_params, "dropout_prob", default=0.1, val_type=float)
 
         # network resetting parameters
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
@@ -97,8 +98,8 @@ class IncrementalCIFARExperiment(Experiment):
             hidden_dim=384, #768,
             mlp_dim=1536, #3072,
             num_classes=self.num_classes,
-            dropout=0.1,
-            attention_dropout=0.1
+            dropout=self.dropout_prob,
+            attention_dropout=self.dropout_prob
             # norm_layer=lambda z: torch.nn.LazyBatchNorm1d(eps=1e-6)
         )
         initialize_vit(self.net)
@@ -505,9 +506,10 @@ def main():
     """
     file_path = os.path.dirname(os.path.abspath(__file__))
     experiment_parameters = {
-        "stepsize": 0.01,
+        "stepsize": 0.05,
         "weight_decay": 0.0001,
         "momentum": 0.9,
+        "dropout_prob": 0.2,
         "noise_std": 0.0,
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 200,
@@ -526,7 +528,8 @@ def main():
     }
 
     print(experiment_parameters)
-    relevant_parameters = ["stepsize", "weight_decay", "momentum", "noise_std", "reset_head", "reset_network"]
+    relevant_parameters = ["stepsize", "weight_decay", "momentum", "dropout_prob", "noise_std",
+                           "reset_head", "reset_network"]
     results_dir_name = "{0}-{1}".format(relevant_parameters[0], experiment_parameters[relevant_parameters[0]])
     for relevant_param in relevant_parameters[1:]:
         results_dir_name += "_" + relevant_param + "-" + str(experiment_parameters[relevant_param])
