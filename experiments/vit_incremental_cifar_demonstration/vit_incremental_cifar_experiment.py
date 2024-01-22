@@ -395,7 +395,7 @@ class IncrementalCIFARExperiment(Experiment):
                 self.running_accuracy += current_accuracy.detach()
                 if (step_number + 1) % self.running_avg_window == 0:
                     self._print("\t\tStep Number: {0}".format(step_number + 1))
-                    self._print("\t\tCurrent Stepsize: {0:4.f}".format(self.lr_scheduler.get_last_lr()[0]))
+                    self._print("\t\tCurrent Stepsize: {0:.4f}".format(self.lr_scheduler.get_last_lr()[0]))
                     self._store_training_summaries()
 
             epoch_end_time = time.perf_counter()
