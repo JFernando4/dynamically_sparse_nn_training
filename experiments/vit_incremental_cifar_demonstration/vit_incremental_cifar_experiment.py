@@ -75,7 +75,6 @@ class IncrementalCIFARExperiment(Experiment):
         self.image_dims = (32, 32, 3)
         self.flat_image_dims = int(np.prod(self.image_dims))
         self.num_images_per_epoch = 50000
-        self.num_test_samples = 10000
         self.num_images_per_class = 450
         self.num_workers = 1 if self.device.type == "cpu" else 12       # for the data loader
 
@@ -102,7 +101,7 @@ class IncrementalCIFARExperiment(Experiment):
         # initialize optimizer
         self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
                                      weight_decay=self.weight_decay)
-
+        self.lr_scheduler = None
         # define loss function
         self.loss = torch.nn.CrossEntropyLoss(reduction="mean")
 
@@ -272,11 +271,6 @@ class IncrementalCIFARExperiment(Experiment):
         val_data, val_dataloader = self.get_data(train=True, validation=True)
         test_data, test_dataloader = self.get_data(train=False)
 
-        # # for initializing the model when using lazy modules (modules that infer the shape of inputs)
-        # dummy_data = next(iter(training_dataloader))["image"].to(self.device)
-        # self.net.forward(dummy_data)
-        # initialize_vit(self.net)
-
         self.load_experiment_checkpoint()
         # train network
         self.train(train_dataloader=training_dataloader, test_dataloader=test_dataloader, val_dataloader=val_dataloader,
@@ -359,11 +353,16 @@ class IncrementalCIFARExperiment(Experiment):
         training_data.select_new_partition(self.all_classes[:self.current_num_classes])
         test_data.select_new_partition(self.all_classes[:self.current_num_classes])
         val_data.select_new_partition(self.all_classes[:self.current_num_classes])
+
+        if self.use_lr_schedule:
+            self.lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(self.optim, max_lr=self.stepsize,
+                                                                    epochs=self.class_increase_frequency,
+                                                                    steps_per_epoch=len(train_dataloader))
         self._save_model_parameters()
 
         for e in range(self.current_epoch, self.num_epochs):
             self._print("\tEpoch number: {0}".format(e + 1))
-            self.set_lr()
+            # self.set_lr()
 
             epoch_start_time = time.perf_counter()
             for step_number, sample in enumerate(train_dataloader):
@@ -387,6 +386,8 @@ class IncrementalCIFARExperiment(Experiment):
                 current_reg_loss.backward()
                 self.optim.step()
                 self.inject_noise()
+                if self.use_lr_schedule:
+                    self.lr_scheduler.step()
 
                 # store summaries
                 current_accuracy = torch.mean((predictions.argmax(axis=1) == label.argmax(axis=1)).to(torch.float32))
@@ -394,6 +395,7 @@ class IncrementalCIFARExperiment(Experiment):
                 self.running_accuracy += current_accuracy.detach()
                 if (step_number + 1) % self.running_avg_window == 0:
                     self._print("\t\tStep Number: {0}".format(step_number + 1))
+                    self._print("\t\tCurrent Stepsize: {0:4.f}".format(self.lr_scheduler.get_last_lr()))
                     self._store_training_summaries()
 
             epoch_end_time = time.perf_counter()
@@ -401,7 +403,7 @@ class IncrementalCIFARExperiment(Experiment):
                                        epoch_runtime=epoch_end_time - epoch_start_time)
 
             self.current_epoch += 1
-            self.extend_classes(training_data, test_data, val_data)
+            self.extend_classes(training_data, test_data, val_data, train_dataloader)
 
             if self.current_epoch % self.checkpoint_save_frequency == 0:
                 self.save_experiment_checkpoint()
@@ -435,7 +437,8 @@ class IncrementalCIFARExperiment(Experiment):
             for param in self.net.parameters():
                 param.add_(torch.randn(param.size(), device=param.device) * self.noise_std)
 
-    def extend_classes(self, training_data: CifarDataSet, test_data: CifarDataSet, val_data: CifarDataSet):
+    def extend_classes(self, training_data: CifarDataSet, test_data: CifarDataSet, val_data: CifarDataSet,
+                       train_dataloader: DataLoader):
         """
         Adds one new class to the data set with certain frequency
         """
@@ -454,6 +457,11 @@ class IncrementalCIFARExperiment(Experiment):
             training_data.select_new_partition(self.all_classes[:self.current_num_classes])
             test_data.select_new_partition(self.all_classes[:self.current_num_classes])
             val_data.select_new_partition(self.all_classes[:self.current_num_classes])
+
+            if self.use_lr_schedule:
+                self.lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(self.optim, max_lr=self.stepsize,
+                                                                        epochs=self.class_increase_frequency,
+                                                                        steps_per_epoch=len(train_dataloader))
 
             self._print("\tNew class added...")
             if self.reset_head:
@@ -486,9 +494,9 @@ def main():
         "dropout_prob": 0.1,
         "noise_std": 0.0,
         "data_path": os.path.join(file_path, "data"),
-        "num_epochs": 4000,
-        "initial_num_classes": 5,
-        "fixed_classes": False,
+        "num_epochs": 200,
+        "initial_num_classes": 100,
+        "fixed_classes": True,
         "reset_head": False,
         "reset_network": False,
         "use_data_augmentation": True,
