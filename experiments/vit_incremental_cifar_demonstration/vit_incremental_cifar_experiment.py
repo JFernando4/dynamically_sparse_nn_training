@@ -405,6 +405,8 @@ class IncrementalCIFARExperiment(Experiment):
                 # current_features = [] if self.use_cbp else None
                 # predictions = self.net.forward(image, current_features)[:, self.all_classes[:self.current_num_classes]]
                 predictions = self.net.forward(image)
+                if not self.fixed_classes:
+                    predictions = predictions[:, self.all_classes[:self.current_num_classes]]
                 current_reg_loss = self.loss(predictions, label)
                 current_loss = current_reg_loss.detach().clone()
 
