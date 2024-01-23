@@ -26,9 +26,9 @@
   },
 
   "learning_params": {
-    "stepsize": ["fixed", 0.1, 0.05, 0.01, 0.005],
-    "weight_decay": ["fixed", 0.001, 0.0001, 0.00001],
-    "dropout_prob": ["fixed", 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]
+    "stepsize": ["fixed", 0.05, 0.01, 0.005, 0.001],
+    "weight_decay": ["fixed", 0.01, 0.001, 0.0001, 0.00001],
+    "dropout_prob": ["fixed", 0.0, 0.05, 0.1, 0.15]
   },
 
   "slurm_parameters": {
