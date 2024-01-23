@@ -90,7 +90,6 @@ class IncrementalCIFARExperiment(Experiment):
             num_classes=self.num_classes,
             dropout=self.dropout_prob,
             attention_dropout=self.dropout_prob
-            # norm_layer=lambda z: torch.nn.LazyBatchNorm1d(eps=1e-6)
         )
         initialize_vit(self.net)
         num_params = 0
