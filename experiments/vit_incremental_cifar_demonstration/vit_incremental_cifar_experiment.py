@@ -490,14 +490,14 @@ def main():
     file_path = os.path.dirname(os.path.abspath(__file__))
     experiment_parameters = {
         "stepsize": 0.01,
-        "weight_decay": 0.0001,
+        "weight_decay": 0.001,
         "momentum": 0.9,
         "dropout_prob": 0.1,
         "noise_std": 0.0,
         "data_path": os.path.join(file_path, "data"),
-        "num_epochs": 200,
-        "initial_num_classes": 100,
-        "fixed_classes": True,
+        "num_epochs": 4000,
+        "initial_num_classes": 5,
+        "fixed_classes": False,
         "reset_head": False,
         "reset_network": False,
         "use_data_augmentation": True,
@@ -507,8 +507,7 @@ def main():
     }
 
     print(experiment_parameters)
-    relevant_parameters = ["stepsize", "weight_decay", "momentum", "dropout_prob", "noise_std",
-                           "reset_head", "reset_network"]
+    relevant_parameters = ["stepsize", "weight_decay", "dropout_prob", "num_epochs"]
     results_dir_name = "{0}-{1}".format(relevant_parameters[0], experiment_parameters[relevant_parameters[0]])
     for relevant_param in relevant_parameters[1:]:
         results_dir_name += "_" + relevant_param + "-" + str(experiment_parameters[relevant_param])
