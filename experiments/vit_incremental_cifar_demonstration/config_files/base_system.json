@@ -22,7 +22,7 @@
     "use_cifar100": true,
     "use_lr_schedule": true,
     "use_best_network": true,
-    "runs": 5
+    "runs": 3
   },
 
   "learning_params": {
