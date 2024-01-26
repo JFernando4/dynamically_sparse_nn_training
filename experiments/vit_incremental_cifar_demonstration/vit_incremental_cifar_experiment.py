@@ -360,7 +360,6 @@ class IncrementalCIFARExperiment(Experiment):
 
         for e in range(self.current_epoch, self.num_epochs):
             self._print("\tEpoch number: {0}".format(e + 1))
-            # self.set_lr()
 
             epoch_start_time = time.perf_counter()
             for step_number, sample in enumerate(train_dataloader):
@@ -402,25 +401,6 @@ class IncrementalCIFARExperiment(Experiment):
 
             if self.current_epoch % self.checkpoint_save_frequency == 0:
                 self.save_experiment_checkpoint()
-
-    def set_lr(self):
-        """ Changes the learning rate of the optimizer according to the current epoch of the task """
-        if not self.use_lr_schedule: return
-
-        current_stepsize = None
-        if (self.current_epoch % self.class_increase_frequency) == 0:
-            current_stepsize = self.stepsize
-        elif (self.current_epoch % self.class_increase_frequency) == 60:
-            current_stepsize = round(self.stepsize * 0.2, 5)
-        elif (self.current_epoch % self.class_increase_frequency) == 120:
-            current_stepsize = round(self.stepsize * (0.2 ** 2), 5)
-        elif (self.current_epoch % self.class_increase_frequency) == 160:
-            current_stepsize = round(self.stepsize * (0.2 ** 3), 5)
-
-        if current_stepsize is not None:
-            for g in self.optim.param_groups:
-                g['lr'] = current_stepsize
-            self._print("\tCurrent stepsize: {0:.5f}".format(current_stepsize))
 
     def inject_noise(self):
         """
