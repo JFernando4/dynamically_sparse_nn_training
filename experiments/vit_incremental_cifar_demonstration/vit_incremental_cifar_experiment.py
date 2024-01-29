@@ -371,8 +371,6 @@ class IncrementalCIFARExperiment(Experiment):
                 for param in self.net.parameters(): param.grad = None   # apparently faster than optim.zero_grad()
 
                 # compute prediction and loss
-                # current_features = [] if self.use_cbp else None
-                # predictions = self.net.forward(image, current_features)[:, self.all_classes[:self.current_num_classes]]
                 predictions = self.net.forward(image)[:, self.all_classes[:self.current_num_classes]]
                 current_reg_loss = self.loss(predictions, label)
                 current_loss = current_reg_loss.detach().clone()
@@ -390,6 +388,8 @@ class IncrementalCIFARExperiment(Experiment):
                 self.running_accuracy += current_accuracy.detach()
                 if (step_number + 1) % self.running_avg_window == 0:
                     self._print("\t\tStep Number: {0}".format(step_number + 1))
+                    if self.use_lr_schedule:
+                        self._print("\t\tLearning Rate: {0:.5f}".format(self.lr_scheduler.get_last_lr()[0]))
                     self._store_training_summaries()
 
             epoch_end_time = time.perf_counter()
