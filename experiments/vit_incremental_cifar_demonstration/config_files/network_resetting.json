@@ -14,7 +14,7 @@
   "experiment_params": {
     "momentum": 0.9,
     "noise_std": 0.0,
-    "num_epochs": 4000,
+    "num_epochs": 2000,
     "initial_num_classes": 5,
     "fixed_classes": false,
     "reset_head": false,
@@ -34,7 +34,7 @@
 
   "slurm_parameters": {
     "job_name": "vit_inc",
-    "time": "24:00:00",
+    "time": "14:00:00",
     "max_runs_per_job": 1,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
     "output_filename": "vit_inc-%n-%j.out",
