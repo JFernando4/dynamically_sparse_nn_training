@@ -444,6 +444,8 @@ class IncrementalCIFARExperiment(Experiment):
                 initialize_vit_heads(self.net.heads)
             if self.reset_network:
                 initialize_vit(self.net)
+                self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
+                                             weight_decay=self.weight_decay)
 
     def _save_model_parameters(self):
         """ Stores the parameters of the model, so it can be evaluated after the experiment is over """
