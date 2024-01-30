@@ -9,6 +9,8 @@ def initialize_vit(network: VisionTransformer):
     :return: None, but initializes the weights of the transformer model
     """
 
+    torch.nn.init.zeros_(network.class_token)
+    torch.nn.init.normal_(network.encoder.pos_embedding, mean=0.0, std=0.02)
     network.apply(xavier_vit_initialization)
     initialize_vit_heads(network.heads)
 
@@ -48,6 +50,8 @@ def initialize_self_multihead_attention_module(m: torch.nn.MultiheadAttention):
         torch.nn.init.xavier_uniform_(m.q_proj_weight)
         torch.nn.init.xavier_uniform_(m.k_proj_weight)
         torch.nn.init.xavier_uniform_(m.v_proj_weight)
+
+    torch.nn.init.xavier_uniform_(m.out_proj.weight)
 
     if m.in_proj_bias is not None:
         torch.nn.init.zeros_(m.in_proj_bias)
