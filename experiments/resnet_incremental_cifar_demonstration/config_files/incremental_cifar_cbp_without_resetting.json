@@ -1,8 +1,8 @@
 {
   "file_management": {
     "experiment_name": "resnet_incremental_cifar100",
-    "data_path": "/home/dohare/projects/def-ashique/dohare/dynamically_sparse_nn_training/experiments/resnet_incremental_cifar_demonstration/data",
-    "results_path": "/scratch/dohare/dynamically_sparse_nn_training/results",
+    "data_path": "/home/jfernan/dynamically_sparse_nn_training/experiments/resnet_incremental_cifar_demonstration/data/",
+    "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
     "relevant_parameters": [
       "stepsize",
       "weight_decay",
@@ -41,16 +41,16 @@
 
   "slurm_parameters": {
     "job_name": "icifar100",
-    "time": "9:30:00",
+    "time": "20:00:00",
     "max_runs_per_job": 1,
-    "output_dir": "/scratch/dohare/dynamically_sparse_nn_training/outputs",
+    "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
     "output_filename": "cifar100-%n-%j.out",
     "mem": "12G",
     "mail-type": "BEGIN,END,FAIL",
     "mail-user":"jfhernan@ualberta.ca",
     "cpus-per-task": 12,
     "gpus-per-node": 1,
-    "main_dir": "/home/dohare/projects/def-ashique/dohare/dynamically_sparse_nn_training",
+    "main_dir": "/home/jfernan/dynamically_sparse_nn_training",
     "account": "rrg-ashique"
   }
 }
