@@ -50,7 +50,6 @@
     "mail-user":"jfhernan@ualberta.ca",
     "cpus-per-task": 12,
     "gpus-per-node": 1,
-    "main_dir": "/home/jfernan/dynamically_sparse_nn_training",
-    "account": "rrg-ashique"
+    "main_dir": "/home/jfernan/dynamically_sparse_nn_training"
   }
 }
