@@ -1,1 +1,1 @@
-from .torchvision_vit_utils import initialize_vit, initialize_vit_heads
+from .vit_init_functions import initialize_vit, initialize_vit_heads
