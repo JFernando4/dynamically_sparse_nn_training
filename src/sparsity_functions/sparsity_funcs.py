@@ -108,7 +108,7 @@ def init_weight_mask(layer, sparsity):
 
 
 @torch.no_grad()
-def apply_weight_masks(masks):
+def apply_weight_masks(masks: list):
     """Applies the weight masks to the weights.
 
     Args:

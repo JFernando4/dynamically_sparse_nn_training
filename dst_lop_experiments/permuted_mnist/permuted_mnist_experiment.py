@@ -5,20 +5,17 @@ import argparse
 import pickle
 
 # third party libraries
-import torch
 from torch.utils.data import DataLoader
 import numpy as np
-import wandb
 
 # from ml project manager
 from mlproj_manager.experiments import Experiment
 from mlproj_manager.problems import MnistDataSet
 from mlproj_manager.util import access_dict, Permute, get_random_seeds, turn_off_debugging_processes
-from mlproj_manager.file_management import store_object_with_several_attempts
 from mlproj_manager.util.neural_networks import init_weights_kaiming
 
 # from src
-from src.sparsity_funcs import *
+from src.sparsity_functions.sparsity_funcs import *
 from src.utils import apply_regularization_to_sequential_net, initialize_wandb
 
 
