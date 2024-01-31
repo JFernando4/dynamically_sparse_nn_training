@@ -3,4 +3,4 @@ from .sparse_network_utilities import get_mask_from_sparse_module, get_dense_wei
     convert_indices, refill_indices
 from .regularization_funcs import apply_regularization_to_sequential_net, apply_regularization_to_net
 from .wandb_setup import initialize_wandb, get_wandb_id
-from .data_management import subsample_cifar_data_set
+from .data_management import get_cifar_data, subsample_cifar_data_set
