@@ -91,6 +91,7 @@ class IncrementalCIFARExperiment(Experiment):
             dropout=self.dropout_prob,
             attention_dropout=self.dropout_prob
         )
+
         initialize_vit(self.net)
         num_params = 0
         for p in self.net.parameters():
@@ -472,11 +473,11 @@ def main():
         "dropout_prob": 0.1,
         "noise_std": 0.0,
         "data_path": os.path.join(file_path, "data"),
-        "num_epochs": 2000,
-        "initial_num_classes": 5,
-        "fixed_classes": False,
+        "num_epochs": 100,
+        "initial_num_classes": 100,
+        "fixed_classes": True,
         "reset_head": False,
-        "reset_network": True,
+        "reset_network": False,
         "use_data_augmentation": True,
         "use_cifar100": True,
         "use_lr_schedule": True,
