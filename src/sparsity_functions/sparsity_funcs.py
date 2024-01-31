@@ -107,6 +107,23 @@ def init_weight_mask(layer, sparsity):
     return {'weight': layer.weight, 'mask': mask}
 
 
+def init_weight_mask_from_tensor(weight_tensor: torch.Tensor, sparsity):
+    """
+    Initializes a weight mask for a tensor of parameters.
+
+    Args:
+        weight_tensor: The tensor of parameters to initialize the mask for.
+        sparsity: The sparsity of the weight mask.
+
+    Returns:
+        A dict containing the mask and the weights of the layer.
+    """
+    num_pruned = int(weight_tensor.numel() * sparsity)
+    mask = torch.ones_like(weight_tensor, dtype=torch.float32, requires_grad=False).to(weight_tensor.device)
+    mask.view(-1)[torch.randperm(weight_tensor.numel())[:num_pruned]] = 0.
+    return {'weight': weight_tensor, 'mask': mask}
+
+
 @torch.no_grad()
 def apply_weight_masks(masks: list):
     """Applies the weight masks to the weights.
