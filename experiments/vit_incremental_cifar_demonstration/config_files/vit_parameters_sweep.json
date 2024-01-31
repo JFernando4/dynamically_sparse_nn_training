@@ -13,7 +13,7 @@
   "experiment_params": {
     "momentum": 0.9,
     "noise_std": 0.0,
-    "num_epochs": 200,
+    "num_epochs": 100,
     "initial_num_classes": 100,
     "fixed_classes": true,
     "reset_head": false,
@@ -33,7 +33,7 @@
 
   "slurm_parameters": {
     "job_name": "vit_psweep",
-    "time": "3:00:00",
+    "time": "1:30:00",
     "max_runs_per_job": 1,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
     "output_filename": "vit_psweep-%n-%j.out",
