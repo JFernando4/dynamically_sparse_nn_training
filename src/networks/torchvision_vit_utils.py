@@ -10,7 +10,7 @@ def initialize_vit(network: VisionTransformer):
     """
 
     torch.nn.init.zeros_(network.class_token)
-    torch.nn.init.normal_(network.encoder.pos_embedding, mean=0.0, std=0.02)
+    torch.nn.init.normal_(network.encoder.pos_embedding, std=0.02)
     network.apply(xavier_vit_initialization)
     initialize_vit_heads(network.heads)
 
@@ -23,10 +23,10 @@ def xavier_vit_initialization(m: torch.nn.Module):
         fan_in = m.in_channels * m.kernel_size[0] * m.kernel_size[1]
         torch.nn.init.trunc_normal_(m.weight, std=torch.math.sqrt(1 / fan_in))
         torch.nn.init.zeros_(m.bias)
+    elif isinstance(m, torch.nn.LayerNorm):
+        initialize_layer_norm_module(m)
     elif isinstance(m, EncoderBlock):
-        initialize_layer_norm_module(m.ln_1)
         initialize_self_multihead_attention_module(m.self_attention)
-        initialize_layer_norm_module(m.ln_2)
         initialize_mlp_block(m.mlp)
     else:
         return
