@@ -28,7 +28,7 @@
   "learning_params": {
     "stepsize": ["fixed", 0.01],
     "weight_decay": ["fixed", 0.001],
-    "dropout_prob": ["fixed", 0.1],
+    "dropout_prob": ["fixed", 0.05],
     "reset_network": true
   },
 
