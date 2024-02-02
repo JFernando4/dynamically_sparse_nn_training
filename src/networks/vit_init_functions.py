@@ -10,7 +10,7 @@ def initialize_vit(network: VisionTransformer):
     """
 
     torch.nn.init.zeros_(network.class_token)
-    torch.nn.init.normal_(network.encoder.pos_embedding, mean=0.0, std=0.02)
+    torch.nn.init.normal_(network.encoder.pos_embedding, std=0.02)
     network.apply(xavier_vit_initialization)
     initialize_vit_heads(network.heads)
 
