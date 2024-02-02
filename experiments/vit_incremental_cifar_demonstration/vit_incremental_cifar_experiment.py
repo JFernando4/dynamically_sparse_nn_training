@@ -92,7 +92,6 @@ class IncrementalCIFARExperiment(Experiment):
             attention_dropout=self.dropout_prob
         )
 
-        initialize_vit(self.net)
         num_params = 0
         for p in self.net.parameters():
             num_params += p.numel()
@@ -444,6 +443,17 @@ class IncrementalCIFARExperiment(Experiment):
             if self.reset_head:
                 initialize_vit_heads(self.net.heads)
             if self.reset_network:
+                self.net = VisionTransformer(
+                    image_size=32,
+                    patch_size=4,
+                    num_layers=8,
+                    num_heads=12,
+                    hidden_dim=384,  # 768,
+                    mlp_dim=1536,  # 3072,
+                    num_classes=self.num_classes,
+                    dropout=self.dropout_prob,
+                    attention_dropout=self.dropout_prob
+                )
                 initialize_vit(self.net)
                 self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
                                              weight_decay=self.weight_decay)
