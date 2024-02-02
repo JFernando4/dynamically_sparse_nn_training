@@ -478,7 +478,7 @@ def main():
         "reset_network": False,
         "use_data_augmentation": True,
         "use_cifar100": True,
-        "use_lr_schedule": False,
+        "use_lr_schedule": True,
         "use_best_network": True
     }
 
