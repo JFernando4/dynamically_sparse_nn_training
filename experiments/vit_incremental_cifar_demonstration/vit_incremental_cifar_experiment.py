@@ -433,30 +433,18 @@ class IncrementalCIFARExperiment(Experiment):
             test_data.select_new_partition(self.all_classes[:self.current_num_classes])
             val_data.select_new_partition(self.all_classes[:self.current_num_classes])
 
+            self._print("\tNew class added...")
+            if self.reset_head:
+                initialize_vit_heads(self.net.heads)
+            if self.reset_network:
+                initialize_vit(self.net)
+                self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
+                                             weight_decay=self.weight_decay)
             if self.use_lr_schedule:
                 self.lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(self.optim, max_lr=self.stepsize,
                                                                         anneal_strategy="linear",
                                                                         epochs=self.class_increase_frequency,
                                                                         steps_per_epoch=len(train_dataloader))
-
-            self._print("\tNew class added...")
-            if self.reset_head:
-                initialize_vit_heads(self.net.heads)
-            if self.reset_network:
-                self.net = VisionTransformer(
-                    image_size=32,
-                    patch_size=4,
-                    num_layers=8,
-                    num_heads=12,
-                    hidden_dim=384,  # 768,
-                    mlp_dim=1536,  # 3072,
-                    num_classes=self.num_classes,
-                    dropout=self.dropout_prob,
-                    attention_dropout=self.dropout_prob
-                )
-                initialize_vit(self.net)
-                self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
-                                             weight_decay=self.weight_decay)
 
     def _save_model_parameters(self):
         """ Stores the parameters of the model, so it can be evaluated after the experiment is over """
@@ -490,7 +478,7 @@ def main():
         "reset_network": False,
         "use_data_augmentation": True,
         "use_cifar100": True,
-        "use_lr_schedule": True,
+        "use_lr_schedule": False,
         "use_best_network": True
     }
 
