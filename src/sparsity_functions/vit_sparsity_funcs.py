@@ -2,7 +2,7 @@
 import torch.nn
 from torchvision.models.vision_transformer import VisionTransformer, EncoderBlock, MLPBlock, Encoder
 # src
-from sparsity_funcs import init_weight_mask_from_tensor
+from src.sparsity_functions.sparsity_funcs import init_weight_mask_from_tensor
 
 
 def init_vit_weight_masks(net: VisionTransformer, sparsity_level: float, include_head: bool = False):
@@ -21,18 +21,24 @@ def init_vit_weight_masks(net: VisionTransformer, sparsity_level: float, include
     masks = []
     # generate mask for convolutional projection
     conv_proj_mask = init_weight_mask_from_tensor(net.conv_proj.weight, sparsity_level)
+    fan_in = net.conv_proj.in_channels * net.conv_proj.kernel_size[0] * net.conv_proj.kernel_size[1]
+    conv_proj_mask["init_func"] = lambda z: torch.nn.init.trunc_normal_(z, fan_in)
     masks.append(conv_proj_mask)
     # generate mask for class_token parameters
     class_token_mask = init_weight_mask_from_tensor(net.class_token, sparsity_level)
+    class_token_mask["init_func"] = torch.nn.init.zeros_
     masks.append(class_token_mask)
     # generate mask for pos_embedding parameters
     pos_embedding_mask = init_weight_mask_from_tensor(net.encoder.pos_embedding, sparsity_level)
+    pos_embedding_mask["init_func"] = torch.nn.init.zeros_
     masks.append(pos_embedding_mask)
     # generate masks for encoder
     masks.extend(init_vit_encoder_masks(net.encoder, sparsity_level))
     # generate masks for head of the network
     if include_head:
-        masks.extend(init_weight_mask_from_tensor(net.heads[0].weight, sparsity_level))
+        head_mask = init_weight_mask_from_tensor(net.heads[0].weight, sparsity_level)
+        head_mask["init_func"] = torch.nn.init.zeros_
+        masks.extend(head_mask)
 
     return masks
 
@@ -72,15 +78,20 @@ def init_encoder_block_masks(mod: EncoderBlock, sparsity_level: float):
     masks = []
 
     # multi-head attention masks
-    masks.append(init_weight_mask_from_tensor(mod.self_attention.in_proj_weight, sparsity_level))
-    masks.append(init_weight_mask_from_tensor(mod.self_attention.out_proj.weight, sparsity_level))
+    in_proj_mask = init_weight_mask_from_tensor(mod.self_attention.in_proj_weight, sparsity_level)
+    in_proj_mask["init_func"] = torch.nn.init.xavier_uniform_
+    masks.append(in_proj_mask)
+
+    out_proj_mask = init_weight_mask_from_tensor(mod.self_attention.in_proj_weight, sparsity_level)
+    out_proj_mask["init_func"] = torch.nn.init.xavier_uniform_
+    masks.append(out_proj_mask)
 
     # mlp block masks
     for sub_m in mod.mlp.modules():
         if isinstance(sub_m, torch.nn.Linear):
-            masks.append(
-                init_weight_mask_from_tensor(sub_m.weight, sparsity_level)
-            )
+            temp_mask = init_weight_mask_from_tensor(sub_m.weight, sparsity_level)
+            temp_mask["init_func"] = torch.nn.init.xavier_uniform_
+            masks.append(temp_mask)
 
     return masks
 
