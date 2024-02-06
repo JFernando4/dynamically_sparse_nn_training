@@ -22,7 +22,7 @@ def init_vit_weight_masks(net: VisionTransformer, sparsity_level: float, include
     # generate mask for convolutional projection
     conv_proj_mask = init_weight_mask_from_tensor(net.conv_proj.weight, sparsity_level)
     fan_in = net.conv_proj.in_channels * net.conv_proj.kernel_size[0] * net.conv_proj.kernel_size[1]
-    conv_proj_mask["init_func"] = lambda z: torch.nn.init.trunc_normal_(z, fan_in)
+    conv_proj_mask["init_func"] = lambda z: torch.nn.init.trunc_normal_(z, torch.math.sqrt(1 / fan_in))
     masks.append(conv_proj_mask)
     # generate mask for class_token parameters
     class_token_mask = init_weight_mask_from_tensor(net.class_token, sparsity_level)
