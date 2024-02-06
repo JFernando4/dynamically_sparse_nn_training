@@ -34,7 +34,7 @@ def update_one_weight_mask_rigl(mask, weight, refresh_num, reinit='zero'):
 
 
 @torch.no_grad()
-def update_one_weight_mask_set_dense_to_sparse(mask, weight: torch.Tensor, init_function, refresh_num):
+def update_one_weight_mask_set_dense_to_sparse(mask, weight: torch.Tensor, init_function):
     """ Updates the weight mask of one layer by first filling in the zeros of the weight tensor with random values
         according to the given init function, and then pruning using weight magnitude
 
@@ -42,20 +42,44 @@ def update_one_weight_mask_set_dense_to_sparse(mask, weight: torch.Tensor, init_
             mask: The weight mask.
             weight: The weights of one layer, corresponding to the mask.
             init_function: Function for initializing the values of masked out weights
-            refresh_num: The number of weights to drop from dense weight matrix
     """
 
     # generate random initial weights
     dummy_weight = torch.zeros_like(weight)
     init_function(dummy_weight)
     # fill zeros in weight matrix with randomn initial weights
-    negative_mask = torch.clip(torch.ones_like(mask) - mask, min=0.0, max=1.0)
-    negative_mask_indices = torch.where(negative_mask.flatten() == 0)[0]
-    weight.view(-1)[negative_mask_indices].add_(dummy_weight.view(-1)[negative_mask_indices])
+    zeros_indices = torch.where(mask.flatten() == 0.0)[0]
+    weight.view(-1)[zeros_indices].add_(dummy_weight.view(-1)[zeros_indices])
     # prune weight matrix down
-    mask = prune_magnitude(mask, weight, refresh_num)
+    mask = prune_magnitude(torch.ones_like(mask), weight, zeros_indices.numel())
     weight.multiply_(mask)
     return mask
+
+
+def set_up_dst_update_function(dst_method_name: str):
+    """
+    Returns a dst update function according to the dst_method name
+
+    Args:
+        dst_method_name: string corresponding to a dst method, choices: "set", "set_r" (set with random init weights),
+                         "rigl", "rigl_r" (rigl with random init weights), "set_ds" (set dense to sparse), or "none"
+    Returns:
+        lambda function with the appropriate parameters
+    """
+    if dst_method_name == "set":
+        return lambda m, w, rn: update_one_weight_mask_set(m, w, refresh_num=rn, reinit="zero")
+    elif dst_method_name == "set_r":
+        return lambda m, w, rn: update_one_weight_mask_set(m, w, refresh_num=rn, reinit="random")
+    elif dst_method_name == "rigl":
+        return lambda m, w, rn: update_one_weight_mask_rigl(m, w, refresh_num=rn, reinit="zero")
+    elif dst_method_name == "rigl_r":
+        return lambda m, w, rn: update_one_weight_mask_rigl(m, w, refresh_num=rn, reinit="random")
+    elif dst_method_name == "set_ds":
+        return update_one_weight_mask_set_dense_to_sparse
+    elif dst_method_name == "none":
+        return None
+    else:
+        raise ValueError("Not a valid dst method: {0}".format(dst_method_name))
 
 
 def prune_magnitude(mask, weight, drop_num):
