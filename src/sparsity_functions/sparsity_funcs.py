@@ -51,7 +51,7 @@ def update_one_weight_mask_set_dense_to_sparse(mask, weight: torch.Tensor, init_
     zeros_indices = torch.where(mask.flatten() == 0.0)[0]
     weight.view(-1)[zeros_indices].add_(dummy_weight.view(-1)[zeros_indices])
     # prune weight matrix down
-    mask = prune_magnitude(torch.ones_like(mask), weight, zeros_indices.numel())
+    mask = prune_magnitude_from_dense_weights(weight, zeros_indices.numel())
     weight.multiply_(mask)
     return mask
 
@@ -95,6 +95,17 @@ def prune_magnitude(mask, weight, drop_num):
     indices = indices[:set_zero]
     mask.view(-1)[indices] = 0.
     return mask
+
+
+def prune_magnitude_from_dense_weights(weight, drop_num):
+    """ Creates a mask by dropping the weights with the smallest magnitude """
+
+    abs_weight = torch.abs(weight).flatten()
+    indices = torch.argsort(abs_weight)
+    mask = torch.ones_like(weight)
+    mask.view(-1)[indices[:drop_num]] = 0.0
+    return mask
+
 
 
 def grow_random(mask, weight, grow_num, reinit):
