@@ -375,7 +375,7 @@ class IncrementalCIFARExperiment(Experiment):
 
         for mask in self.net_masks:
             third_arg = self.refresh_num if not self.use_set_ds else mask["init_func"]
-            self.dst_update_function(mask["mask"], mask["weight"], third_arg)
+            mask["mask"] = self.dst_update_function(mask["mask"], mask["weight"], third_arg)
 
     def extend_classes(self, training_data: CifarDataSet, test_data: CifarDataSet, val_data: CifarDataSet,
                        train_dataloader: DataLoader):
