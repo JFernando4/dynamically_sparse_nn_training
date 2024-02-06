@@ -100,6 +100,7 @@ class IncrementalCIFARExperiment(Experiment):
             attention_dropout=self.dropout_prob
         )
         initialize_vit(self.net)
+        self.net.to(self.device)
 
         # initialize masks
         self.net_masks = None if not self.use_dst else init_vit_weight_masks(self.net, self.sparsity)
@@ -110,10 +111,7 @@ class IncrementalCIFARExperiment(Experiment):
         # define loss function
         self.loss = torch.nn.CrossEntropyLoss(reduction="mean")
 
-        # move network to device
-        self.net.to(self.device)
         self.current_epoch = 0
-
         """ For data partitioning """
         self.class_increase_frequency = 100
         self.all_classes = np.random.permutation(self.num_classes)
