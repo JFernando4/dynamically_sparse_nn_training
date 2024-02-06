@@ -446,7 +446,7 @@ def main():
         "initial_num_classes": 5,
         "fixed_classes": False,
         "reset_head": False,
-        "reset_network": True,
+        "reset_network": False,
         "use_cifar100": True,
         "use_lr_schedule": True,
         "use_best_network": True
