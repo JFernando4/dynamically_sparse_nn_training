@@ -25,9 +25,9 @@ def init_vit_weight_masks(net: VisionTransformer, sparsity_level: float, include
     conv_proj_mask["init_func"] = lambda z: torch.nn.init.trunc_normal_(z, torch.math.sqrt(1 / fan_in))
     masks.append(conv_proj_mask)
     # generate mask for class_token parameters
-    class_token_mask = init_weight_mask_from_tensor(net.class_token, sparsity_level)
-    class_token_mask["init_func"] = torch.nn.init.xavier_uniform_
-    masks.append(class_token_mask)
+    # class_token_mask = init_weight_mask_from_tensor(net.class_token, sparsity_level)
+    # class_token_mask["init_func"] = torch.nn.init.xavier_uniform_
+    # masks.append(class_token_mask)
     # generate mask for pos_embedding parameters
     pos_embedding_mask = init_weight_mask_from_tensor(net.encoder.pos_embedding, sparsity_level)
     pos_embedding_mask["init_func"] = lambda z: torch.nn.init.normal_(z, std=0.02)
