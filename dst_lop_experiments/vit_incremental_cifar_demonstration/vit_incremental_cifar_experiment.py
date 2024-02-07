@@ -458,7 +458,7 @@ def main():
         "dropout_prob": 0.1,
         "noise_std": 0.0,
         "topology_update_freq": 900,
-        "sparsity": 0.1,
+        "sparsity": 0.01,
         "dst_method": "set_ds",
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 2000,
