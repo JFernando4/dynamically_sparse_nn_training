@@ -457,7 +457,7 @@ def main():
         "momentum": 0.9,
         "dropout_prob": 0.1,
         "noise_std": 0.0,
-        "topology_update_freq": 100,
+        "topology_update_freq": 300,
         "sparsity": 0.01,
         "dst_method": "set_ds",
         "data_path": os.path.join(file_path, "data"),
