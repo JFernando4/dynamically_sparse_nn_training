@@ -446,7 +446,7 @@ def main():
     file_path = os.path.dirname(os.path.abspath(__file__))
     experiment_parameters = {
         "stepsize": 0.01,
-        "weight_decay": 0.001,
+        "weight_decay": 0.01,
         "momentum": 0.9,
         "dropout_prob": 0.1,
         "noise_std": 0.0,
