@@ -393,7 +393,7 @@ class IncrementalCIFARExperiment(Experiment):
             new_mask = self.dst_update_function(mask["mask"], mask["weight"], third_arg)
             # num_different = torch.abs(new_mask - old_mask).sum()
             # print("\tnumber of different entries: {0}".format(num_different))
-            # mask["mask"] = new_mask
+            mask["mask"] = new_mask
 
     def extend_classes(self, training_data: CifarDataSet, test_data: CifarDataSet, val_data: CifarDataSet,
                        train_dataloader: DataLoader):
