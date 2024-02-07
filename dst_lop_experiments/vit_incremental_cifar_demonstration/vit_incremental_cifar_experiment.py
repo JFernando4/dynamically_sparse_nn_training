@@ -389,11 +389,11 @@ class IncrementalCIFARExperiment(Experiment):
                 third_arg = mask["init_func"]
             else:
                 third_arg = int(self.drop_fraction * mask["mask"].sum())
-            # old_mask = mask["mask"]
+            # old_mask = deepcopy(mask["mask"])
             new_mask = self.dst_update_function(mask["mask"], mask["weight"], third_arg)
             # num_different = torch.abs(new_mask - old_mask).sum()
             # print("\tnumber of different entries: {0}".format(num_different))
-            mask["mask"] = new_mask
+            # mask["mask"] = new_mask
 
     def extend_classes(self, training_data: CifarDataSet, test_data: CifarDataSet, val_data: CifarDataSet,
                        train_dataloader: DataLoader):
@@ -460,7 +460,7 @@ def main():
         "noise_std": 0.0,
         "topology_update_freq": 100,
         "sparsity": 0.1,
-        "drop_fraction": 0.05,
+        "drop_fraction": 0.1,
         "dst_method": "set_r",
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 2000,
