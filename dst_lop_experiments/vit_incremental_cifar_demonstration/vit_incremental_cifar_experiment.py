@@ -106,6 +106,8 @@ class IncrementalCIFARExperiment(Experiment):
         self.net_masks = None if not self.use_dst else init_vit_weight_masks(self.net, self.sparsity, include_head=True,
                                                                              include_class_token=True,
                                                                              include_pos_embedding=True)
+        for m in self.net_masks:
+            print(m["mask"].sum())
         # initialize optimizer
         self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
                                      weight_decay=self.weight_decay)
@@ -446,7 +448,7 @@ def main():
     file_path = os.path.dirname(os.path.abspath(__file__))
     experiment_parameters = {
         "stepsize": 0.01,
-        "weight_decay": 0.01,
+        "weight_decay": 0.001,
         "momentum": 0.9,
         "dropout_prob": 0.1,
         "noise_std": 0.0,
