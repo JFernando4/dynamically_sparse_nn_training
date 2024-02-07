@@ -58,7 +58,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.use_dst = self.dst_method != "none"
         self.use_set_ds = self.dst_method == "set_ds"
         self.dst_update_function = set_up_dst_update_function(self.dst_method)
-        self.refresh_num = access_dict(exp_params, "refresh_num", default=0, val_type=int)
+        self.drop_fraction = access_dict(exp_params, "drop_fraction", default=0, val_type=int)
 
         # network resetting parameters
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
@@ -380,7 +380,10 @@ class IncrementalCIFARExperiment(Experiment):
         Updates the neural network topology according to the chosen dst algorithm
         """
         for mask in self.net_masks:
-            third_arg = self.refresh_num if not self.use_set_ds else mask["init_func"]
+            if self.use_set_ds:
+                third_arg = mask["init_func"]
+            else:
+                third_arg = int(self.drop_fraction * mask["mask"].sum())
             old_mask = mask["mask"]
             new_mask = self.dst_update_function(mask["mask"], mask["weight"], third_arg)
             num_different = torch.abs(new_mask - old_mask).sum()
