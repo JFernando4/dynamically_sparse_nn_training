@@ -424,12 +424,11 @@ class IncrementalCIFARExperiment(Experiment):
                                                                         epochs=self.class_increase_frequency,
                                                                         steps_per_epoch=len(train_dataloader))
 
-
     def _save_model_parameters(self):
         """ Stores the parameters of the model, so it can be evaluated after the experiment is over """
 
         model_parameters_dir_path = os.path.join(self.results_dir, "model_parameters")
-        masks = [m["mask"] for m in self.net_masks]
+        masks = None if not self.use_dst else [m["mask"] for m in self.net_masks]
         os.makedirs(model_parameters_dir_path, exist_ok=True)
 
         file_name = "index-{0}_epoch-{1}.pt".format(self.run_index, self.current_epoch)
