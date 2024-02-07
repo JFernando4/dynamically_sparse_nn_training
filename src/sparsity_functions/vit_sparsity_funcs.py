@@ -43,7 +43,7 @@ def init_vit_weight_masks(net: VisionTransformer, sparsity_level: float, include
     if include_head:
         head_mask = init_weight_mask_from_tensor(net.heads[0].weight, sparsity_level)
         head_mask["init_func"] = torch.nn.init.zeros_
-        masks.extend(head_mask)
+        masks.append(head_mask)
 
     return masks
 
