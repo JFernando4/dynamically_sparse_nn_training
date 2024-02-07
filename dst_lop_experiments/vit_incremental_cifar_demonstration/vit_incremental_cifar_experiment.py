@@ -124,6 +124,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.all_classes = np.random.permutation(self.num_classes)
         self.best_accuracy = torch.tensor(0.0, device=self.device, dtype=torch.float32)
         self.best_accuracy_model_parameters = {}
+        self.best_accuracy_masks = []
 
         """ For creating experiment checkpoints """
         self.experiment_checkpoints_dir_path = os.path.join(self.results_dir, "experiment_checkpoints")
@@ -247,6 +248,7 @@ class IncrementalCIFARExperiment(Experiment):
                 if accuracy > self.best_accuracy:
                     self.best_accuracy = accuracy
                     self.best_accuracy_model_parameters = deepcopy(self.net.state_dict())
+                    self.best_accuracy_masks = [deepcopy(m["mask"]) for m in self.net_masks]
 
             # store summaries
             self.results_dict[data_name + "_evaluation_runtime"][epoch_number] += torch.tensor(evaluation_time, dtype=torch.float32)
@@ -401,8 +403,11 @@ class IncrementalCIFARExperiment(Experiment):
             self._print("Best accuracy in the task: {0:.4f}".format(self.best_accuracy))
             if self.use_best_network:
                 self.net.load_state_dict(self.best_accuracy_model_parameters)
+                for mask_dict, best_mask in zip(self.net_masks, self.best_accuracy_masks):
+                    mask_dict["mask"] = best_mask
             self.best_accuracy = torch.zeros_like(self.best_accuracy)
             self.best_accuracy_model_parameters = {}
+            self.best_accuracy_masks = []
             self._save_model_parameters()
 
             if self.current_num_classes == self.num_classes: return
