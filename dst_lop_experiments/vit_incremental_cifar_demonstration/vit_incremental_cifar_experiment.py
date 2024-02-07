@@ -108,7 +108,7 @@ class IncrementalCIFARExperiment(Experiment):
                                                                              include_pos_embedding=True)
         # initialize optimizer
         self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
-                                     weight_decay=self.weight_decay)
+                                     weight_decay=0)#self.weight_decay)
         self.lr_scheduler = None
         # define loss function
         self.loss = torch.nn.CrossEntropyLoss(reduction="mean")
@@ -327,7 +327,8 @@ class IncrementalCIFARExperiment(Experiment):
                 predictions = self.net.forward(image)[:, self.all_classes[:self.current_num_classes]]
                 current_loss = self.loss(predictions, label)
                 detached_loss = current_loss.detach().clone()
-
+                for p in self.net.parameters():
+                    current_loss += self.weight_decay * p.abs().sum()
                 # backpropagate and update weights
                 current_loss.backward()
                 self.optim.step()
