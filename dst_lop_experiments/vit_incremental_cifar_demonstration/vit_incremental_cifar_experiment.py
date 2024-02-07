@@ -103,11 +103,12 @@ class IncrementalCIFARExperiment(Experiment):
         self.net.to(self.device)
 
         # initialize masks
-        self.net_masks = None if not self.use_dst else init_vit_weight_masks(self.net, self.sparsity, include_head=True,
-                                                                             include_class_token=True,
-                                                                             include_pos_embedding=True)
-        for m in self.net_masks:
-            print(m["mask"].sum())
+        if self.use_dst:
+            self.net_masks = init_vit_weight_masks(self.net, self.sparsity, include_head=True, include_class_token=True,
+                                                   include_pos_embedding=True)
+            apply_weight_masks(self.net_masks)
+        else:
+            self.net_masks = None
         # initialize optimizer
         self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
                                      weight_decay=self.weight_decay)
