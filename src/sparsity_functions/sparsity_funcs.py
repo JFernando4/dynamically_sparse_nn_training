@@ -111,7 +111,7 @@ def prune_magnitude_from_dense_weights(weight, drop_num):
 
     abs_weight = torch.abs(weight).flatten()
     indices = torch.argsort(abs_weight)
-    mask = torch.ones_like(weight)
+    mask = torch.ones_like(weight, requires_grad=False)
     mask.view(-1)[indices[:drop_num]] = 0.0
     return mask
 
