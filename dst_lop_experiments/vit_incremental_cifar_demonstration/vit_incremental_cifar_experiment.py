@@ -378,7 +378,6 @@ class IncrementalCIFARExperiment(Experiment):
         """
         Updates the neural network topology according to the chosen dst algorithm
         """
-        self._print("Updating topology...")
         for mask in self.net_masks:
             third_arg = self.refresh_num if not self.use_set_ds else mask["init_func"]
             mask["mask"] = self.dst_update_function(mask["mask"], mask["weight"], third_arg)
