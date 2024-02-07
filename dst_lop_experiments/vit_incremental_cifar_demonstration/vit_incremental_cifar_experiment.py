@@ -57,8 +57,9 @@ class IncrementalCIFARExperiment(Experiment):
                                       choices=["none", "set", "set_r", "rigl", "rigl_r", "set_ds"])
         self.use_dst = self.dst_method != "none"
         self.use_set_ds = self.dst_method == "set_ds"
-        self.dst_update_function = set_up_dst_update_function(self.dst_method)
-        self.drop_fraction = access_dict(exp_params, "drop_fraction", default=0, val_type=int)
+        self.dst_update_function = set_up_dst_update_function(self.dst_method, init_type="xavier_uniform")
+        self.drop_fraction = access_dict(exp_params, "drop_fraction", default=0.0, val_type=float)
+        assert 0.0 <= self.drop_fraction < 1.0
 
         # network resetting parameters
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
@@ -458,8 +459,9 @@ def main():
         "dropout_prob": 0.1,
         "noise_std": 0.0,
         "topology_update_freq": 900,
-        "sparsity": 0.01,
-        "dst_method": "set_ds",
+        "sparsity": 0.1,
+        "drop_fraction": 0.01,
+        "dst_method": "set_r",
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 2000,
         "initial_num_classes": 5,
