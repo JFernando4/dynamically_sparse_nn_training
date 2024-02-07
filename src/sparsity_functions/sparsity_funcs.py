@@ -13,7 +13,8 @@ def update_one_weight_mask_set(mask, weight, refresh_num, reinit='zero'):
         refresh_num: The number of weights to drop and grow.
         reinit: How to reinitialize the weights that are regrown. Options: 'zero', 'kaiming_normal'
         """
-    mask = prune_magnitude(mask, weight, refresh_num)
+    # mask = prune_magnitude(mask, weight, refresh_num)
+    mask = prune_magnitude_optimized(mask, weight, refresh_num)
     mask = grow_random(mask, weight, refresh_num, reinit)
     return mask
 
@@ -28,7 +29,8 @@ def update_one_weight_mask_rigl(mask, weight, refresh_num, reinit='zero'):
         refresh_num: The number of weights to drop and grow.
         reinit: How to reinitialize the weights that are regrown. Options: 'zero', 'kaiming_normal'
         """
-    mask = prune_magnitude(mask, weight, refresh_num)
+    # mask = prune_magnitude(mask, weight, refresh_num)
+    mask = prune_magnitude_optimized(mask, weight, refresh_num)
     mask = grow_rigl(mask, weight, refresh_num, reinit)
     return mask
 
@@ -56,24 +58,25 @@ def update_one_weight_mask_set_dense_to_sparse(mask, weight: torch.Tensor, init_
     return mask
 
 
-def set_up_dst_update_function(dst_method_name: str):
+def set_up_dst_update_function(dst_method_name: str, init_type: str = "xavier_uniform"):
     """
     Returns a dst update function according to the dst_method name
 
     Args:
         dst_method_name: string corresponding to a dst method, choices: "set", "set_r" (set with random init weights),
                          "rigl", "rigl_r" (rigl with random init weights), "set_ds" (set dense to sparse), or "none"
+        init_type: string indicating the type of initialization, choices: "xavier_uniform", "kaiming_normal", "zero"
     Returns:
         lambda function with the appropriate parameters
     """
     if dst_method_name == "set":
         return lambda m, w, rn: update_one_weight_mask_set(m, w, refresh_num=rn, reinit="zero")
     elif dst_method_name == "set_r":
-        return lambda m, w, rn: update_one_weight_mask_set(m, w, refresh_num=rn, reinit="random")
+        return lambda m, w, rn: update_one_weight_mask_set(m, w, refresh_num=rn, reinit=init_type)
     elif dst_method_name == "rigl":
         return lambda m, w, rn: update_one_weight_mask_rigl(m, w, refresh_num=rn, reinit="zero")
     elif dst_method_name == "rigl_r":
-        return lambda m, w, rn: update_one_weight_mask_rigl(m, w, refresh_num=rn, reinit="random")
+        return lambda m, w, rn: update_one_weight_mask_rigl(m, w, refresh_num=rn, reinit=init_type)
     elif dst_method_name == "set_ds":
         return update_one_weight_mask_set_dense_to_sparse
     elif dst_method_name == "none":
@@ -149,11 +152,15 @@ def grow_rigl(mask, weight, grow_num, reinit):
         reinit_grown_weights(weight, indices, reinit)
     return mask
 
-
+@torch.no_grad()
 def reinit_grown_weights(weight, indices, reinit):
     if reinit == 'kaiming_normal':
         temp_weight = torch.empty_like(weight)
         torch.nn.init.kaiming_normal_(temp_weight)
+        weight.view(-1)[indices] = temp_weight.view(-1)[indices]
+    elif reinit == "xavier_uniform":
+        temp_weight = torch.empty_like(weight)
+        torch.nn.init.xavier_uniform_(temp_weight)
         weight.view(-1)[indices] = temp_weight.view(-1)[indices]
     else:
         raise ValueError(f'Unknown reinit option {reinit}')
