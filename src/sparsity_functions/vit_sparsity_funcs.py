@@ -6,7 +6,7 @@ from src.sparsity_functions.sparsity_funcs import init_weight_mask_from_tensor
 
 
 def init_vit_weight_masks(net: VisionTransformer, sparsity_level: float, include_head: bool = False,
-                          include_class_token_mask: bool = False, include_pos_embedding_mask: bool = False):
+                          include_class_token: bool = False, include_pos_embedding: bool = False):
     """
     Initializes the weight masks for vision transformers not including layer norm modules
 
@@ -14,8 +14,8 @@ def init_vit_weight_masks(net: VisionTransformer, sparsity_level: float, include
         net: VisionTransformer class instance
         sparsity_level: float between [0,1) indicating the sparsity level
         include_head: bool indicating whether to also generate a mask for the head of the network
-        include_class_token_mask: bool indicating whether to also generate a mask for the class token parameter
-        include_pos_embedding_mask: bool indicating whether to also generate a mask for the pos_embedding parameter
+        include_class_token: bool indicating whether to also generate a mask for the class token parameter
+        include_pos_embedding: bool indicating whether to also generate a mask for the pos_embedding parameter
 
     Returns
         list of dictionaries for each weight matrix in the vision transformer
@@ -28,12 +28,12 @@ def init_vit_weight_masks(net: VisionTransformer, sparsity_level: float, include
     conv_proj_mask["init_func"] = lambda z: torch.nn.init.trunc_normal_(z, torch.math.sqrt(1 / fan_in))
     masks.append(conv_proj_mask)
     # generate mask for class_token parameters
-    if include_class_token_mask:
+    if include_class_token:
         class_token_mask = init_weight_mask_from_tensor(net.class_token, sparsity_level)
         class_token_mask["init_func"] = torch.nn.init.xavier_uniform_
         masks.append(class_token_mask)
     # generate mask for pos_embedding parameters
-    if include_pos_embedding_mask:
+    if include_pos_embedding:
         pos_embedding_mask = init_weight_mask_from_tensor(net.encoder.pos_embedding, sparsity_level)
         pos_embedding_mask["init_func"] = lambda z: torch.nn.init.normal_(z, std=0.02)
         masks.append(pos_embedding_mask)
