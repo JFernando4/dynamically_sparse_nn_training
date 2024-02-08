@@ -385,16 +385,19 @@ class IncrementalCIFARExperiment(Experiment):
         """
         Updates the neural network topology according to the chosen dst algorithm
         """
+        total_num_different = 0
         for mask in self.net_masks:
             if self.use_set_ds:
                 third_arg = mask["init_func"]
             else:
                 third_arg = int(self.drop_fraction * mask["mask"].sum())
-            # old_mask = deepcopy(mask["mask"])
+            old_mask = deepcopy(mask["mask"])
             new_mask = self.dst_update_function(mask["mask"], mask["weight"], third_arg)
-            # num_different = torch.abs(new_mask - old_mask).sum()
+            num_different = torch.abs(new_mask - old_mask).sum()
+            total_num_different += num_different // 2
             # print("\tnumber of different entries: {0}".format(num_different))
             mask["mask"] = new_mask
+        self._print("\t\tTotal num different: {0}".format(int(total_num_different)))
 
     def extend_classes(self, training_data: CifarDataSet, test_data: CifarDataSet, val_data: CifarDataSet,
                        train_dataloader: DataLoader):
