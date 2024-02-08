@@ -49,6 +49,7 @@ def update_one_weight_mask_set_dense_to_sparse(mask, weight: torch.Tensor, init_
     # generate random initial weights
     dummy_weight = torch.zeros_like(weight)
     init_function(dummy_weight)
+    dummy_weight *= 0.9
     # fill zeros in weight matrix with randomn initial weights
     zeros_indices = torch.where(mask.flatten() == 0.0)[0]
     weight.view(-1)[zeros_indices] += dummy_weight.view(-1)[zeros_indices]
