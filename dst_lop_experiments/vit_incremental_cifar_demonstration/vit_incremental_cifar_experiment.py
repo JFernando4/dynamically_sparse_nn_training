@@ -111,7 +111,7 @@ class IncrementalCIFARExperiment(Experiment):
             self.net_masks = None
         # initialize optimizer
         self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
-                                     weight_decay=0)#self.weight_decay)
+                                     weight_decay=self.weight_decay)
         self.lr_scheduler = None
         # define loss function
         self.loss = torch.nn.CrossEntropyLoss(reduction="mean")
@@ -329,8 +329,7 @@ class IncrementalCIFARExperiment(Experiment):
                 predictions = self.net.forward(image)[:, self.all_classes[:self.current_num_classes]]
                 current_loss = self.loss(predictions, label)
                 detached_loss = current_loss.detach().clone()
-                for p in self.net.parameters():
-                    current_loss += self.weight_decay * p.abs().sum()
+
                 # backpropagate and update weights
                 current_loss.backward()
                 self.optim.step()
@@ -423,7 +422,7 @@ class IncrementalCIFARExperiment(Experiment):
             if self.reset_network:
                 initialize_vit(self.net)
                 self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
-                                             weight_decay=0)#self.weight_decay)
+                                             weight_decay=self.weight_decay)
             if self.use_lr_schedule:
                 self.lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(self.optim, max_lr=self.stepsize,
                                                                         anneal_strategy="linear",
