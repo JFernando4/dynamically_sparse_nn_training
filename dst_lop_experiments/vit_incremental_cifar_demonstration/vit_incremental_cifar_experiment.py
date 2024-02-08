@@ -460,7 +460,7 @@ def main():
         "stepsize": 0.01,
         "weight_decay": 0.001,
         "momentum": 0.9,
-        "dropout_prob": 0.1,
+        "dropout_prob": 0.05,
         "noise_std": 0.0,
         "topology_update_freq": 3,
         "sparsity": 0.01,
