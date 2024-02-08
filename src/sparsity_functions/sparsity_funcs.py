@@ -2,7 +2,8 @@ import torch
 import wandb
 
 
-def update_one_weight_mask_set(mask, weight, refresh_num, reinit='zero'):
+@torch.no_grad()
+def update_one_weight_mask_set(mask, weight, refresh_num, reinit='zero',):
     """Updates the weight mask of one layer.
     SET algorithm: https://arxiv.org/abs/1707.04780
     (but with standard magnitude pruning)
@@ -15,10 +16,15 @@ def update_one_weight_mask_set(mask, weight, refresh_num, reinit='zero'):
         """
     # mask = prune_magnitude(mask, weight, refresh_num)
     mask = prune_magnitude_optimized(mask, weight, refresh_num)
-    mask = grow_random(mask, weight, refresh_num, reinit)
+    if reinit == "random_fixed":
+        mask = grow_random_fixed(mask, weight, refresh_num)
+    else:
+        mask = grow_random(mask, weight, refresh_num, reinit)
+    weight.multiply_(mask)
     return mask
 
 
+@torch.no_grad()
 def update_one_weight_mask_rigl(mask, weight, refresh_num, reinit='zero'):
     """Updates the weight mask of one layer.
     RigL algorithm: https://arxiv.org/abs/1911.11134
@@ -31,7 +37,11 @@ def update_one_weight_mask_rigl(mask, weight, refresh_num, reinit='zero'):
         """
     # mask = prune_magnitude(mask, weight, refresh_num)
     mask = prune_magnitude_optimized(mask, weight, refresh_num)
-    mask = grow_rigl(mask, weight, refresh_num, reinit)
+    if reinit == "random_fixed":
+        mask = grow_random_fixed(mask, weight, refresh_num)
+    else:
+        mask = grow_rigl(mask, weight, refresh_num, reinit)
+    weight.multiply_(mask)
     return mask
 
 
@@ -51,7 +61,7 @@ def update_one_weight_mask_set_dense_to_sparse(mask, weight: torch.Tensor, init_
     init_function(dummy_weight)
     # fill zeros in weight matrix with randomn initial weights
     zeros_indices = torch.where(mask.flatten() == 0.0)[0]
-    weight.view(-1)[zeros_indices] += dummy_weight.view(-1)[zeros_indices] * 0.9
+    weight.view(-1)[zeros_indices] += dummy_weight.view(-1)[zeros_indices]
     # prune weight matrix down
     mask = prune_magnitude_from_dense_weights(weight, zeros_indices.numel())
     weight.multiply_(mask)
@@ -73,10 +83,14 @@ def set_up_dst_update_function(dst_method_name: str, init_type: str = "xavier_un
         return lambda m, w, rn: update_one_weight_mask_set(m, w, refresh_num=rn, reinit="zero")
     elif dst_method_name == "set_r":
         return lambda m, w, rn: update_one_weight_mask_set(m, w, refresh_num=rn, reinit=init_type)
+    elif dst_method_name == "set_rf":
+        return lambda m, w, rn: update_one_weight_mask_set(m, w, refresh_num=rn, reinit="random_fixed")
     elif dst_method_name == "rigl":
         return lambda m, w, rn: update_one_weight_mask_rigl(m, w, refresh_num=rn, reinit="zero")
     elif dst_method_name == "rigl_r":
         return lambda m, w, rn: update_one_weight_mask_rigl(m, w, refresh_num=rn, reinit=init_type)
+    elif dst_method_name == "rigl_rf":
+        return lambda m, w, rn: update_one_weight_mask_rigl(m, w, refresh_num=rn, reinit="random_fixed")
     elif dst_method_name == "set_ds":
         return update_one_weight_mask_set_dense_to_sparse
     elif dst_method_name == "none":
@@ -135,6 +149,31 @@ def grow_random(mask, weight, grow_num, reinit):
     return mask
 
 
+@torch.no_grad()
+def grow_random_fixed(mask, weight, grow_num):
+    """
+    Grow connections in thew eight mask by randomly selecting inactive weights.
+    The value of those weights is set to the min of the current active weights.
+    """
+    # get the minimum of the current active indices
+    active_indices = torch.where(mask.flatten() == 1.0)[0]
+    min_abs_weight = weight.abs().flatten()[active_indices].min()
+    # grow weights
+    indices = torch.where(mask.flatten() == 0.0)[0]
+    non_active = len(indices)
+    if non_active == 0:
+        return mask
+    shuffle = torch.randperm(non_active)
+    indices = indices[shuffle]
+    to_grow = min(grow_num, non_active)
+    indices = indices[:to_grow]
+    mask.view(-1)[indices] = 1
+    # assign +/- the min abs value to the new weights
+    weight.view(-1)[indices[:len(indices) // 2]] = min_abs_weight
+    weight.view(-1)[indices[len(indices) // 2:]] = -min_abs_weight
+    return mask
+
+
 def grow_rigl(mask, weight, grow_num, reinit):
     """Grows connections in the weight mask by growing where the gradient is largest."""
     non_active = len(torch.where(mask.flatten() == 0)[0])
@@ -151,6 +190,7 @@ def grow_rigl(mask, weight, grow_num, reinit):
     if reinit != 'zero':
         reinit_grown_weights(weight, indices, reinit)
     return mask
+
 
 @torch.no_grad()
 def reinit_grown_weights(weight, indices, reinit):
