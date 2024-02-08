@@ -118,7 +118,6 @@ class IncrementalCIFARExperiment(Experiment):
 
         # initialize training counters
         self.current_epoch = 0
-        self.current_minibatch = 0
 
         """ For data partitioning """
         self.class_increase_frequency = 100
@@ -182,7 +181,6 @@ class IncrementalCIFARExperiment(Experiment):
             "numpy_rng_state": np.random.get_state(),
             "cuda_rng_state": torch.cuda.get_rng_state(),
             "epoch_number": self.current_epoch,
-            "current_minibatch": self.current_minibatch,
             "current_num_classes": self.current_num_classes,
             "all_classes": self.all_classes,
             "current_running_avg_step": self.current_running_avg_step,
@@ -207,7 +205,6 @@ class IncrementalCIFARExperiment(Experiment):
         torch.cuda.set_rng_state(checkpoint["cuda_rng_state"])
         np.random.set_state(checkpoint["numpy_rng_state"])
         self.current_epoch = checkpoint["epoch_number"]
-        self.current_minibatch = checkpoint["current_minibatch"]
         self.current_num_classes = checkpoint["current_num_classes"]
         self.all_classes = checkpoint["all_classes"]
         self.current_running_avg_step = checkpoint["current_running_avg_step"]
@@ -341,9 +338,6 @@ class IncrementalCIFARExperiment(Experiment):
                     self.lr_scheduler.step()
                 if self.use_dst:
                     apply_weight_masks(self.net_masks)
-                self.current_minibatch += 1
-                if self.time_to_update_topology():
-                    self.update_topology()
 
                 # store summaries
                 current_accuracy = torch.mean((predictions.argmax(axis=1) == label.argmax(axis=1)).to(torch.float32))
@@ -362,6 +356,9 @@ class IncrementalCIFARExperiment(Experiment):
             self.current_epoch += 1
             self.extend_classes(training_data, test_data, val_data, train_dataloader)
 
+            if self.time_to_update_topology():
+                self.update_topology()
+
             if self.current_epoch % self.checkpoint_save_frequency == 0:
                 self.save_experiment_checkpoint()
 
@@ -378,7 +375,7 @@ class IncrementalCIFARExperiment(Experiment):
     def time_to_update_topology(self):
         if not self.use_dst:
             return False
-        return (self.current_minibatch % self.topology_update_freq) == 0
+        return (self.current_epoch % self.topology_update_freq) == 0
 
     def update_topology(self):
         """
@@ -458,10 +455,10 @@ def main():
         "momentum": 0.9,
         "dropout_prob": 0.1,
         "noise_std": 0.0,
-        "topology_update_freq": 100,
+        "topology_update_freq": 5,
         "sparsity": 0.1,
-        "drop_fraction": 0.1,
-        "dst_method": "set_r",
+        # "drop_fraction": 0.1,
+        "dst_method": "set_ds",
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 2000,
         "initial_num_classes": 5,
