@@ -54,7 +54,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
         self.sparsity = access_dict(exp_params, "sparsity", default=0.0, val_type=float)
         self.dst_method = access_dict(exp_params, "dst_method", default="none", val_type=str,
-                                      choices=["none", "set", "set_r", "rigl", "rigl_r", "set_ds"])
+                                      choices=["none", "set", "set_r", "set_rf", "rigl", "rigl_r", "rigl_rf", "set_ds"])
         self.use_dst = self.dst_method != "none"
         self.use_set_ds = self.dst_method == "set_ds"
         self.dst_update_function = set_up_dst_update_function(self.dst_method, init_type="xavier_uniform")
@@ -465,7 +465,7 @@ def main():
         "topology_update_freq": 3,
         "sparsity": 0.01,
         "drop_fraction": 0.01,
-        "dst_method": "set_r",
+        "dst_method": "set_rf",
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 2000,
         "initial_num_classes": 5,
