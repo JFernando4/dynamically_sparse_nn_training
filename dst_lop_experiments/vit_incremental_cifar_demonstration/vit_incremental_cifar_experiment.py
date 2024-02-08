@@ -466,7 +466,7 @@ def main():
         "reset_head": False,
         "reset_network": False,
         "use_cifar100": True,
-        "use_lr_schedule": True,
+        "use_lr_schedule": False,
         "use_best_network": True
     }
 
