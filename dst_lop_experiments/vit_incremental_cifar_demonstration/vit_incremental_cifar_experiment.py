@@ -456,7 +456,7 @@ def main():
         "dropout_prob": 0.1,
         "noise_std": 0.0,
         "topology_update_freq": 5,
-        "sparsity": 0.1,
+        "sparsity": 0.5,
         # "drop_fraction": 0.1,
         "dst_method": "set_ds",
         "data_path": os.path.join(file_path, "data"),
