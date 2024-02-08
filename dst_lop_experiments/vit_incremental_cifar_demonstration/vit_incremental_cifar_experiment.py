@@ -109,15 +109,18 @@ class IncrementalCIFARExperiment(Experiment):
             apply_weight_masks(self.net_masks)
         else:
             self.net_masks = None
+
         # initialize optimizer
         self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
                                      weight_decay=self.weight_decay)
         self.lr_scheduler = None
+
         # define loss function
         self.loss = torch.nn.CrossEntropyLoss(reduction="mean")
 
         # initialize training counters
         self.current_epoch = 0
+        self.current_minibatch = 0
 
         """ For data partitioning """
         self.class_increase_frequency = 100
@@ -349,15 +352,16 @@ class IncrementalCIFARExperiment(Experiment):
                         self._print("\t\tLearning Rate: {0:.5f}".format(self.lr_scheduler.get_last_lr()[0]))
                     self._store_training_summaries()
 
+                self.current_minibatch += 1
+                if self.time_to_update_topology():
+                    self.update_topology()
+
             epoch_end_time = time.perf_counter()
             self._store_test_summaries(test_dataloader, val_dataloader, epoch_number=e,
                                        epoch_runtime=epoch_end_time - epoch_start_time)
 
             self.current_epoch += 1
             self.extend_classes(training_data, test_data, val_data, train_dataloader)
-
-            if self.time_to_update_topology():
-                self.update_topology()
 
             if self.current_epoch % self.checkpoint_save_frequency == 0:
                 self.save_experiment_checkpoint()
@@ -375,7 +379,7 @@ class IncrementalCIFARExperiment(Experiment):
     def time_to_update_topology(self):
         if not self.use_dst:
             return False
-        return (self.current_epoch % self.topology_update_freq) == 0
+        return (self.current_minibatch % self.topology_update_freq) == 0
 
     def update_topology(self):
         """
@@ -455,10 +459,10 @@ def main():
         "momentum": 0.9,
         "dropout_prob": 0.1,
         "noise_std": 0.0,
-        "topology_update_freq": 5,
-        "sparsity": 0.1,
-        "drop_fraction": 0.05,
-        "dst_method": "set_r",
+        "topology_update_freq": 3,
+        "sparsity": 0.01,
+        # "drop_fraction": 0.05,
+        "dst_method": "set_ds",
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 2000,
         "initial_num_classes": 5,
