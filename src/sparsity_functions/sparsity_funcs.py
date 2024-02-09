@@ -15,6 +15,8 @@ def update_one_weight_mask_set(mask, weight, refresh_num, reinit='zero',):
         reinit: How to reinitialize the weights that are regrown. Options: 'zero', 'kaiming_normal'
         """
     # mask = prune_magnitude(mask, weight, refresh_num)
+    if refresh_num == 0.0:
+        return mask
     mask = prune_magnitude_optimized(mask, weight, refresh_num)
     if reinit == "random_fixed":
         mask = grow_random_fixed(mask, weight, refresh_num)
@@ -36,6 +38,8 @@ def update_one_weight_mask_rigl(mask, weight, refresh_num, reinit='zero'):
         reinit: How to reinitialize the weights that are regrown. Options: 'zero', 'kaiming_normal'
         """
     # mask = prune_magnitude(mask, weight, refresh_num)
+    if refresh_num == 0.0:
+        return mask
     mask = prune_magnitude_optimized(mask, weight, refresh_num)
     if reinit == "random_fixed":
         mask = grow_random_fixed(mask, weight, refresh_num)
