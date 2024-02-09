@@ -462,7 +462,7 @@ def main():
         "momentum": 0.9,
         "dropout_prob": 0.05,
         "noise_std": 0.0,
-        "topology_update_freq": 300,
+        "topology_update_freq": 3,
         "sparsity": 0.01,
         "drop_fraction": 0.1,
         "dst_method": "set_rf",
