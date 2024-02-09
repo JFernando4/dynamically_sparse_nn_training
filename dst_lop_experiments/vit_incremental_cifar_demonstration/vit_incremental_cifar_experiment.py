@@ -60,7 +60,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.dst_update_function = set_up_dst_update_function(self.dst_method, init_type="xavier_uniform")
         self.drop_fraction = access_dict(exp_params, "drop_fraction", default=0.0, val_type=float)
         assert 0.0 <= self.drop_fraction < 1.0
-        self.df_decay, self.current_df_decay = (0.99, 1.0)
+        # self.df_decay, self.current_df_decay = (0.99, 1.0)
 
         # network resetting parameters
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
@@ -106,7 +106,8 @@ class IncrementalCIFARExperiment(Experiment):
 
         # initialize masks
         if self.use_dst:
-            self.net_masks = init_vit_weight_masks(self.net, self.sparsity)
+            self.net_masks = init_vit_weight_masks(self.net, self.sparsity, include_head=True, include_class_token=True,
+                                                   include_pos_embedding=True)
             apply_weight_masks(self.net_masks)
         else:
             self.net_masks = None
@@ -391,8 +392,9 @@ class IncrementalCIFARExperiment(Experiment):
             if self.use_set_ds:
                 third_arg = mask["init_func"]
             else:
-                third_arg = int(self.current_df_decay * self.drop_fraction * mask["mask"].sum())
-                self.current_df_decay *= self.df_decay
+                # third_arg = int(self.current_df_decay * self.drop_fraction * mask["mask"].sum())
+                third_arg = int(self.drop_fraction * mask["mask"].sum())
+                # self.current_df_decay *= self.df_decay
             # old_mask = deepcopy(mask["mask"])
             new_mask = self.dst_update_function(mask["mask"], mask["weight"], third_arg)
             # num_different = torch.abs(new_mask - old_mask).sum()
@@ -416,7 +418,7 @@ class IncrementalCIFARExperiment(Experiment):
             self.best_accuracy_model_parameters = {}
             self.best_accuracy_masks = []
             self._save_model_parameters()
-            self.current_df_decay = 1.0
+            # self.current_df_decay = 1.0
 
             if self.current_num_classes == self.num_classes: return
 
@@ -467,7 +469,7 @@ def main():
         "noise_std": 0.0,
         "topology_update_freq": 3,
         "sparsity": 0.01,
-        "drop_fraction": 0.1,
+        "drop_fraction": 0.01,
         "dst_method": "set_rf",
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 2000,
