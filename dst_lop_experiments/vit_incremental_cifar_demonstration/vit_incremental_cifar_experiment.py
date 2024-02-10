@@ -106,7 +106,7 @@ class IncrementalCIFARExperiment(Experiment):
 
         # initialize masks
         if self.use_dst:
-            self.net_masks = init_vit_weight_masks(self.net, self.sparsity, include_class_token=True, include_pos_embedding=True)
+            self.net_masks = init_vit_weight_masks(self.net, self.sparsity, include_pos_embedding=True)
             apply_weight_masks(self.net_masks)
         else:
             self.net_masks = None
