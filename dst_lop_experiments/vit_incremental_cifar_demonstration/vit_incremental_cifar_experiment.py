@@ -350,8 +350,8 @@ class IncrementalCIFARExperiment(Experiment):
                 self.running_accuracy += current_accuracy.detach()
                 if (step_number + 1) % self.running_avg_window == 0:
                     self._print("\t\tStep Number: {0}".format(step_number + 1))
-                    if self.use_lr_schedule:
-                        self._print("\t\tLearning Rate: {0:.5f}".format(self.lr_scheduler.get_last_lr()[0]))
+                    # if self.use_lr_schedule:
+                    #     self._print("\t\tLearning Rate: {0:.5f}".format(self.lr_scheduler.get_last_lr()[0]))
                     self._store_training_summaries()
 
                 self.current_minibatch += 1
