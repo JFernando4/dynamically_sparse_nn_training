@@ -60,7 +60,8 @@ class IncrementalCIFARExperiment(Experiment):
         self.dst_update_function = set_up_dst_update_function(self.dst_method, init_type="xavier_uniform")
         self.drop_fraction = access_dict(exp_params, "drop_fraction", default=0.0, val_type=float)
         assert 0.0 <= self.drop_fraction <= 1.0
-        self.df_decay, self.current_df_decay = (0.95, 1.0)
+        self.df_decay = access_dict(exp_params, "df_decay", default=1.0, val_type=float)
+        self.current_df_decay = 1.0
 
         # network resetting parameters
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
@@ -391,8 +392,8 @@ class IncrementalCIFARExperiment(Experiment):
             if self.use_set_ds:
                 third_arg = mask["init_func"]
             else:
-                # third_arg = int(self.current_df_decay * self.drop_fraction * mask["mask"].sum())
-                third_arg = int(self.drop_fraction * (mask["mask"].numel() - mask["mask"].sum()))
+                third_arg = int(self.current_df_decay * self.drop_fraction * mask["mask"].sum())
+                # third_arg = int(self.drop_fraction * (mask["mask"].numel() - mask["mask"].sum()))
                 self.current_df_decay *= self.df_decay
             # old_mask = deepcopy(mask["mask"])
             new_mask = self.dst_update_function(mask["mask"], mask["weight"], third_arg)
@@ -469,6 +470,7 @@ def main():
         "topology_update_freq": 6,
         "sparsity": 0.1,
         "drop_fraction": 0.3,
+        "df_decay": 0.95,
         "dst_method": "set_rf",
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 2000,
