@@ -60,7 +60,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.dst_update_function = set_up_dst_update_function(self.dst_method, init_type="xavier_uniform")
         self.drop_fraction = access_dict(exp_params, "drop_fraction", default=0.0, val_type=float)
         assert 0.0 <= self.drop_fraction <= 1.0
-        self.df_decay, self.current_df_decay = (0.99, 1.0)
+        self.df_decay, self.current_df_decay = (0.95, 1.0)
 
         # network resetting parameters
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
