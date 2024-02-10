@@ -106,8 +106,7 @@ class IncrementalCIFARExperiment(Experiment):
 
         # initialize masks
         if self.use_dst:
-            self.net_masks = init_vit_weight_masks(self.net, self.sparsity, include_head=True, include_class_token=True,
-                                                   include_pos_embedding=True)
+            self.net_masks = init_vit_weight_masks(self.net, self.sparsity, include_class_token=True, include_pos_embedding=True)
             apply_weight_masks(self.net_masks)
         else:
             self.net_masks = None
@@ -470,7 +469,7 @@ def main():
         "topology_update_freq": 3,
         "sparsity": 0.01,
         "drop_fraction": 0.01,
-        "dst_method": "set_r",
+        "dst_method": "set_rf",
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 2000,
         "initial_num_classes": 5,
