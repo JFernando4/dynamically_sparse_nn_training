@@ -469,7 +469,7 @@ def main():
         "topology_update_freq": 3,
         "sparsity": 0.1,
         "drop_fraction": 0.2,
-        "dst_method": "set_r",
+        "dst_method": "set_ds",
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 2000,
         "initial_num_classes": 5,
