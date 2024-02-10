@@ -392,7 +392,8 @@ class IncrementalCIFARExperiment(Experiment):
                 third_arg = mask["init_func"]
             else:
                 # third_arg = int(self.current_df_decay * self.drop_fraction * mask["mask"].sum())
-                third_arg = int(self.drop_fraction * mask["mask"].sum())
+                third_arg = int(self.drop_fraction * (mask["mask"].numel() - mask["mask"].sum()))
+                print(third_arg)
                 # self.current_df_decay *= self.df_decay
             # old_mask = deepcopy(mask["mask"])
             new_mask = self.dst_update_function(mask["mask"], mask["weight"], third_arg)
@@ -467,8 +468,8 @@ def main():
         "dropout_prob": 0.05,
         "noise_std": 0.0,
         "topology_update_freq": 3,
-        "sparsity": 0.01,
-        "drop_fraction": 0.01,
+        "sparsity": 0.1,
+        "drop_fraction": 0.2,
         "dst_method": "set_rf",
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 2000,
