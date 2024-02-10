@@ -393,7 +393,6 @@ class IncrementalCIFARExperiment(Experiment):
             else:
                 # third_arg = int(self.current_df_decay * self.drop_fraction * mask["mask"].sum())
                 third_arg = int(self.drop_fraction * (mask["mask"].numel() - mask["mask"].sum()))
-                print(third_arg)
                 # self.current_df_decay *= self.df_decay
             # old_mask = deepcopy(mask["mask"])
             new_mask = self.dst_update_function(mask["mask"], mask["weight"], third_arg)
