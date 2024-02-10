@@ -59,8 +59,8 @@ class IncrementalCIFARExperiment(Experiment):
         self.use_set_ds = self.dst_method == "set_ds"
         self.dst_update_function = set_up_dst_update_function(self.dst_method, init_type="xavier_uniform")
         self.drop_fraction = access_dict(exp_params, "drop_fraction", default=0.0, val_type=float)
-        assert 0.0 <= self.drop_fraction < 1.0
-        # self.df_decay, self.current_df_decay = (0.99, 1.0)
+        assert 0.0 <= self.drop_fraction <= 1.0
+        self.df_decay, self.current_df_decay = (0.99, 1.0)
 
         # network resetting parameters
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
@@ -393,7 +393,7 @@ class IncrementalCIFARExperiment(Experiment):
             else:
                 # third_arg = int(self.current_df_decay * self.drop_fraction * mask["mask"].sum())
                 third_arg = int(self.drop_fraction * (mask["mask"].numel() - mask["mask"].sum()))
-                # self.current_df_decay *= self.df_decay
+                self.current_df_decay *= self.df_decay
             # old_mask = deepcopy(mask["mask"])
             new_mask = self.dst_update_function(mask["mask"], mask["weight"], third_arg)
             # num_different = torch.abs(new_mask - old_mask).sum()
@@ -417,7 +417,7 @@ class IncrementalCIFARExperiment(Experiment):
             self.best_accuracy_model_parameters = {}
             self.best_accuracy_masks = []
             self._save_model_parameters()
-            # self.current_df_decay = 1.0
+            self.current_df_decay = 1.0
 
             if self.current_num_classes == self.num_classes: return
 
@@ -468,8 +468,8 @@ def main():
         "noise_std": 0.0,
         "topology_update_freq": 3,
         "sparsity": 0.1,
-        "drop_fraction": 0.2,
-        "dst_method": "set",
+        "drop_fraction": 1.0,
+        "dst_method": "set_r",
         "data_path": os.path.join(file_path, "data"),
         "num_epochs": 2000,
         "initial_num_classes": 5,
