@@ -32,7 +32,7 @@ def init_vit_weight_masks(net: VisionTransformer, sparsity_level: float, include
     # generate mask for convolutional projection
     conv_proj_mask = init_weight_mask_from_tensor(net.conv_proj.weight, sparsity_level)
     fan_in = net.conv_proj.in_channels * net.conv_proj.kernel_size[0] * net.conv_proj.kernel_size[1]
-    conv_proj_mask["init_func"] = lambda z: torch.nn.init.trunc_normal_(z, torch.math.sqrt(1 / fan_in))
+    conv_proj_mask["init_func"] = lambda z: torch.nn.init.trunc_normal_(z, std=torch.math.sqrt(1 / fan_in))
     conv_proj_mask["init_std"] = torch.math.sqrt(1 / fan_in)
     masks.append(conv_proj_mask)
     # generate mask for class_token parameters
@@ -98,7 +98,7 @@ def init_encoder_block_masks(mod: EncoderBlock, sparsity_level: float):
     in_proj_mask["init_std"] = get_xavier_uniform_init_std(mod.self_attention.in_proj_weight)
     masks.append(in_proj_mask)
 
-    out_proj_mask = init_weight_mask_from_tensor(mod.self_attention.in_proj_weight, sparsity_level)
+    out_proj_mask = init_weight_mask_from_tensor(mod.self_attention.out_proj.weight, sparsity_level)
     out_proj_mask["init_func"] = torch.nn.init.xavier_uniform_
     out_proj_mask["init_std"] = get_xavier_uniform_init_std(mod.self_attention.out_proj.weight)
     masks.append(out_proj_mask)
