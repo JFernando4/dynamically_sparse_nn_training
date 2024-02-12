@@ -452,35 +452,34 @@ class IncrementalCIFARExperiment(Experiment):
                                            num_attempts=10)
 
 
+def parse_terminal_arguments():
+    """ Reads experiment arguments """
+    import argparse
+    argument_parser = argparse.ArgumentParser()
+
+    # default values for stepsize, weight_decay, and dropout_prob found in a parameter sweep with lr scheduler
+    argument_parser.add_argument("--config_file", action="store", type=str, required=True,
+                                 help="JSON file with experiment parameters.")
+    argument_parser.add_argument("--run_index", action="store", type=int, default=0,
+                                 help="This determines the random seed for the experiment.")
+    argument_parser.add_argument("--verbose", action="store_true", default=False)
+
+    return argument_parser.parse_args()
+
+
 def main():
     """
     This is a quick demonstration of how to run the experiments. For a more systematic run, use the mlproj_manager
     scheduler.
     """
+    from mlproj_manager.file_management.file_and_directory_management import read_json_file
+    terminal_arguments = parse_terminal_arguments()
+    experiment_parameters = read_json_file(terminal_arguments.config_file)
     file_path = os.path.dirname(os.path.abspath(__file__))
-    experiment_parameters = {
-        "stepsize": 0.01,
-        "weight_decay": 0.001,
-        "momentum": 0.9,
-        "dropout_prob": 0.05,
-        "noise_std": 0.0,
-        "topology_update_freq": 6,
-        "sparsity": 0.1,
-        "drop_fraction": 0.3,
-        "df_decay": 0.95,
-        "dst_method": "set_rf",
-        "data_path": os.path.join(file_path, "data"),
-        "num_epochs": 2000,
-        "initial_num_classes": 5,
-        "fixed_classes": False,
-        "reset_head": False,
-        "reset_network": False,
-        "use_lr_schedule": True,
-        "use_best_network": True
-    }
 
+    experiment_parameters["data_path"] = os.path.join(file_path, "data")
     print(experiment_parameters)
-    relevant_parameters = ["stepsize", "weight_decay", "dropout_prob", "num_epochs"]
+    relevant_parameters = experiment_parameters["relevant_parameters"]
     results_dir_name = "{0}-{1}".format(relevant_parameters[0], experiment_parameters[relevant_parameters[0]])
     for relevant_param in relevant_parameters[1:]:
         results_dir_name += "_" + relevant_param + "-" + str(experiment_parameters[relevant_param])
@@ -488,8 +487,8 @@ def main():
     initial_time = time.perf_counter()
     exp = IncrementalCIFARExperiment(experiment_parameters,
                                      results_dir=os.path.join(file_path, "results", results_dir_name),
-                                     run_index=0,
-                                     verbose=True)
+                                     run_index=terminal_arguments.run_index,
+                                     verbose=terminal_arguments.verbose)
     exp.run()
     exp.store_results()
     final_time = time.perf_counter()
