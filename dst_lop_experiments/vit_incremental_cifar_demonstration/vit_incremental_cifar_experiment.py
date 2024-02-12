@@ -73,7 +73,6 @@ class IncrementalCIFARExperiment(Experiment):
         self.num_epochs = access_dict(exp_params, "num_epochs", default=1, val_type=int)
         self.current_num_classes = access_dict(exp_params, "initial_num_classes", default=2, val_type=int)
         self.fixed_classes = access_dict(exp_params, "fixed_classes", default=True, val_type=bool)
-        self.use_cifar100 = access_dict(exp_params, "use_cifar100", default=False, val_type=bool)
         self.use_best_network = access_dict(exp_params, "use_best_network", default=False, val_type=bool)
 
         # shrink and perturb parameters
@@ -82,7 +81,7 @@ class IncrementalCIFARExperiment(Experiment):
 
         """ Training constants """
         self.batch_sizes = {"train": 90, "test": 100, "validation":50}
-        self.num_classes = 10 if not self.use_cifar100 else 100
+        self.num_classes = 100
         self.image_dims = (32, 32, 3)
         self.flat_image_dims = int(np.prod(self.image_dims))
         self.num_images_per_epoch = 50000
@@ -125,6 +124,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.current_minibatch = 0
 
         """ For data partitioning """
+        self.class_increase = 5
         self.class_increase_frequency = 100
         self.all_classes = np.random.permutation(self.num_classes)
         self.best_accuracy = torch.tensor(0.0, device=self.device, dtype=torch.float32)
@@ -152,8 +152,7 @@ class IncrementalCIFARExperiment(Experiment):
             total_checkpoints = (num_images_per_epoch * self.num_epochs) // (self.running_avg_window * self.batch_sizes["train"])
         else:
             number_of_tasks = np.arange(self.num_epochs // self.class_increase_frequency) + 1
-            class_increase = 5 if self.use_cifar100 else 1
-            number_of_image_per_task = self.num_images_per_class * class_increase
+            number_of_image_per_task = self.num_images_per_class * self.class_increase
             bin_size = (self.running_avg_window * self.batch_sizes["train"])
             total_checkpoints = np.sum(number_of_tasks * self.class_increase_frequency * number_of_image_per_task // bin_size)
 
@@ -405,7 +404,7 @@ class IncrementalCIFARExperiment(Experiment):
     def extend_classes(self, training_data: CifarDataSet, test_data: CifarDataSet, val_data: CifarDataSet,
                        train_dataloader: DataLoader):
         """
-        Adds one new class to the data set with certain frequency
+        Adds 5 new classes to the data set with certain frequency
         """
         if (self.current_epoch % self.class_increase_frequency) == 0 and (not self.fixed_classes):
             self._print("Best accuracy in the task: {0:.4f}".format(self.best_accuracy))
@@ -421,8 +420,7 @@ class IncrementalCIFARExperiment(Experiment):
 
             if self.current_num_classes == self.num_classes: return
 
-            increase = 1 if not self.use_cifar100 else 5
-            self.current_num_classes += increase
+            self.current_num_classes += self.class_increase
             training_data.select_new_partition(self.all_classes[:self.current_num_classes])
             test_data.select_new_partition(self.all_classes[:self.current_num_classes])
             val_data.select_new_partition(self.all_classes[:self.current_num_classes])
@@ -477,7 +475,6 @@ def main():
         "fixed_classes": False,
         "reset_head": False,
         "reset_network": False,
-        "use_cifar100": True,
         "use_lr_schedule": True,
         "use_best_network": True
     }
