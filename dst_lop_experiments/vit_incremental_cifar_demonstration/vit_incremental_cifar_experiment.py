@@ -58,6 +58,8 @@ class IncrementalCIFARExperiment(Experiment):
         self.use_dst = self.dst_method != "none"
         self.dst_update_function = set_up_dst_update_function(self.dst_method, init_type="xavier_uniform")
         self.current_df_decay = 1.0
+        self.previously_added_masks = None
+        self.current_topology_update = 0
 
         # network resetting parameters
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
@@ -157,6 +159,11 @@ class IncrementalCIFARExperiment(Experiment):
             self.results_dict[set_type + "_accuracy_per_epoch"] = torch.zeros_like(prototype_array)
             self.results_dict[set_type + "_evaluation_runtime"] = torch.zeros_like(prototype_array)
         self.results_dict["class_order"] = self.all_classes
+
+        # dst masks summaries
+        if self.use_dst:
+            self.results_dict["prop_added_then_removed"] = torch.zeros(total_checkpoints // self.topology_update_freq,
+                                                                       device=self.device, dtype=torch.float32)
 
     # ----------------------------- For saving and loading experiment checkpoints ----------------------------- #
     def get_experiment_checkpoint(self):
@@ -370,6 +377,8 @@ class IncrementalCIFARExperiment(Experiment):
         """
         Updates the neural network topology according to the chosen dst algorithm
         """
+        removed_masks = []
+        added_masks = []
         for mask in self.net_masks:
             use_alternate = False
             if use_alternate:
@@ -377,8 +386,43 @@ class IncrementalCIFARExperiment(Experiment):
             else:
                 third_arg = int(self.current_df_decay * self.drop_fraction * mask["mask"].sum())
                 self.current_df_decay = self.df_decay * self.current_df_decay if self.df_decay < 1.0 else 1.0
+            old_mask = deepcopy(mask["mask"])
             new_mask = self.dst_update_function(mask["mask"], mask["weight"], third_arg)
+            mask_difference = old_mask - new_mask
+            added_masks.append(torch.clip(mask_difference, min=-1.0, max=0.0).abs())
+            removed_masks.append(torch.clip(mask_difference, min=0.0, max=1.0))
             mask["mask"] = new_mask
+
+        self.store_mask_update_summary(removed_masks, added_masks)
+        self.current_topology_update += 1
+
+    def store_mask_update_summary(self, removed_masks: list, added_masks: list):
+        """
+        Computes and storesthe proportion of weights that were removed in the current topology update that were just
+        added in the previous topology update
+
+        Args:
+            removed_masks: list of masks for weights that were removed in each layer for the current topology update
+            added_masks: list of masks for weights that were added in each layer in the current topology update
+
+        Return:
+            None, but updates self.results_dict and self.previously_added_masks
+        """
+
+        if self.previously_added_masks is not None:
+            total_removed = 0
+            total_added_then_removed = 0
+            for prev_added, recently_removed in zip(self.previously_added_masks, removed_masks):
+                total_removed += recently_removed.sum()
+                total_added_then_removed += ((prev_added + recently_removed) == 2.0).sum()
+            if total_removed == 0:
+                prop_added_then_removed = 0.0
+            else:
+                prop_added_then_removed = total_added_then_removed / total_removed
+            print("Proportion of added then removed: {0:.4f}".format(prop_added_then_removed))
+            self.results_dict["prop_added_then_removed"][self.current_topology_update] += prop_added_then_removed
+
+        self.previously_added_masks = added_masks
 
     def extend_classes(self, training_data: CifarDataSet, test_data: CifarDataSet, val_data: CifarDataSet,
                        train_dataloader: DataLoader):
