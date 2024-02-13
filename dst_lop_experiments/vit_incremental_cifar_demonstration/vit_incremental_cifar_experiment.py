@@ -162,7 +162,7 @@ class IncrementalCIFARExperiment(Experiment):
 
         # dst masks summaries
         if self.use_dst:
-            self.results_dict["prop_added_then_removed"] = torch.zeros(total_checkpoints // self.topology_update_freq,
+            self.results_dict["prop_added_then_removed"] = torch.zeros(total_checkpoints * self.running_avg_window // self.topology_update_freq,
                                                                        device=self.device, dtype=torch.float32)
 
     # ----------------------------- For saving and loading experiment checkpoints ----------------------------- #
