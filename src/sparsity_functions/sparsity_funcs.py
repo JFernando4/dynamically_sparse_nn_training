@@ -82,16 +82,20 @@ def update_one_weight_mask_set_random_with_threshold(mask, weight: torch.Tensor,
             weight: The weights of one layer, corresponding to the mask.
             threshold: Threshold used for pruning and growing
     """
+    inactive_indices = torch.where(mask.flatten() == 0.0)[0]
+    drop_num = inactive_indices.numel()
+    weight.view(-1)[inactive_indices[:len(inactive_indices) // 2]] = threshold
+    weight.view(-1)[inactive_indices[len(inactive_indices) // 2:]] = -threshold
 
-    # prune weights whose absolute values are below the threshold
-    active_weights_indices = torch.where(mask.flatten() == 1.0)[0]
-    abs_active_weights = weight.flatten().abs()[active_weights_indices]
-    to_prune = torch.where(abs_active_weights < threshold)[0]
-    grown_num = to_prune.numel()
-    mask.view(-1)[active_weights_indices[to_prune]] = 0.0
-
-    # randomly add more weights
-    mask = grow_random_fixed(mask, weight, grown_num, reinit_val=threshold)
+    mask = prune_magnitude_from_dense_weights(weight, drop_num)
+    # active_weights_indices = torch.where(mask.flatten() == 1.0)[0]
+    # abs_active_weights = weight.flatten().abs()[active_weights_indices]
+    # to_prune = torch.where(abs_active_weights < threshold)[0]
+    # grown_num = to_prune.numel()
+    # mask.view(-1)[active_weights_indices[to_prune]] = 0.0
+    #
+    # # randomly add more weights
+    # mask = grow_random_fixed(mask, weight, grown_num, reinit_val=threshold)
     weight.multiply_(mask)
     return mask
 
