@@ -119,6 +119,8 @@ def set_up_dst_update_function(dst_method_name: str, init_type: str = "xavier_un
         return lambda m, w, rn: update_one_weight_mask_rigl(m, w, refresh_num=rn, reinit=init_type)
     elif dst_method_name == "rigl_rf":
         return lambda m, w, rn: update_one_weight_mask_rigl(m, w, refresh_num=rn, reinit="random_fixed")
+    elif dst_method_name == "set_rth":
+        return lambda m, w, thr: update_one_weight_mask_set_random_with_threshold(m, w, threshold=thr)
     elif dst_method_name == "set_ds":
         return update_one_weight_mask_set_dense_to_sparse
     elif dst_method_name == "none":
