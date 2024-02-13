@@ -29,13 +29,11 @@ class IncrementalCIFARExperiment(Experiment):
         # set debugging options for pytorch
         debug = access_dict(exp_params, key="debug", default=True, val_type=bool)
         turn_off_debugging_processes(debug)
-
         # define torch device
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         """ For reproducibility """
-        random_seeds = get_random_seeds()
-        self.random_seed = random_seeds[self.run_index]
+        self.random_seed = get_random_seeds()[self.run_index]
         torch.random.manual_seed(self.random_seed)
         torch.cuda.manual_seed(self.random_seed)
         np.random.seed(self.random_seed)
@@ -47,27 +45,23 @@ class IncrementalCIFARExperiment(Experiment):
         self.stepsize = exp_params["stepsize"]
         self.weight_decay = exp_params["weight_decay"]
         self.momentum = exp_params["momentum"]
-        self.use_lr_schedule = access_dict(exp_params, "use_lr_schedule", default=False, val_type=bool)
-        self.dropout_prob = access_dict(exp_params, "dropout_prob", default=0.1, val_type=float)
+        self.use_lr_schedule = access_dict(exp_params, "use_lr_schedule", default=True, val_type=bool)
+        self.dropout_prob = access_dict(exp_params, "dropout_prob", default=0.05, val_type=float)
 
         # dynamic sparse learning parameters
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
         self.sparsity = access_dict(exp_params, "sparsity", default=0.0, val_type=float)
-        self.dst_method = access_dict(exp_params, "dst_method", default="none", val_type=str,
-                                      choices=["none", "set", "set_r", "set_rf", "rigl", "rigl_r", "rigl_rf", "set_ds"])
+        dst_methods_names = ["none", "set", "set_r", "set_rf", "rigl", "rigl_r", "rigl_rf"]
+        self.dst_method = access_dict(exp_params, "dst_method", default="none", val_type=str, choices=dst_methods_names)
         self.use_dst = self.dst_method != "none"
-        self.use_set_ds = self.dst_method == "set_ds"
         self.dst_update_function = set_up_dst_update_function(self.dst_method, init_type="xavier_uniform")
         self.drop_fraction = access_dict(exp_params, "drop_fraction", default=0.0, val_type=float)
-        assert 0.0 <= self.drop_fraction <= 1.0
         self.df_decay = access_dict(exp_params, "df_decay", default=1.0, val_type=float)
         self.current_df_decay = 1.0
 
         # network resetting parameters
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
         self.reset_network = access_dict(exp_params, "reset_network", default=False, val_type=bool)
-        if self.reset_head and self.reset_network:
-            print(Warning("Resetting the whole network supersedes resetting the head of the network. There's no need to set both to True."))
 
         # problem definition parameters
         self.num_epochs = access_dict(exp_params, "num_epochs", default=1, val_type=int)
@@ -83,7 +77,6 @@ class IncrementalCIFARExperiment(Experiment):
         self.batch_sizes = {"train": 90, "test": 100, "validation":50}
         self.num_classes = 100
         self.image_dims = (32, 32, 3)
-        self.flat_image_dims = int(np.prod(self.image_dims))
         self.num_images_per_epoch = 50000
         self.num_images_per_class = 450
         self.num_workers = 1 if self.device.type == "cpu" else 12       # for the data loader
@@ -95,28 +88,24 @@ class IncrementalCIFARExperiment(Experiment):
             patch_size=4,
             num_layers=8,
             num_heads=12,
-            hidden_dim=384, #768,
-            mlp_dim=1536, #3072,
+            hidden_dim=384,
+            mlp_dim=1536,
             num_classes=self.num_classes,
             dropout=self.dropout_prob,
-            attention_dropout=self.dropout_prob
-        )
+            attention_dropout=self.dropout_prob)
         initialize_vit(self.net)
         self.net.to(self.device)
 
         # initialize masks
+        self.net_masks = None
         if self.use_dst:
             self.net_masks = init_vit_weight_masks(self.net, self.sparsity, include_pos_embedding=True)
             apply_weight_masks(self.net_masks)
-        else:
-            self.net_masks = None
 
-        # initialize optimizer
+        # initialize optimizer and loss function
         self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
                                      weight_decay=self.weight_decay)
         self.lr_scheduler = None
-
-        # define loss function
         self.loss = torch.nn.CrossEntropyLoss(reduction="mean")
 
         # initialize training counters
@@ -126,7 +115,7 @@ class IncrementalCIFARExperiment(Experiment):
         """ For data partitioning """
         self.class_increase = 5
         self.class_increase_frequency = 100
-        self.all_classes = np.random.permutation(self.num_classes)
+        self.all_classes = np.random.permutation(self.num_classes)  # define order classes
         self.best_accuracy = torch.tensor(0.0, device=self.device, dtype=torch.float32)
         self.best_accuracy_model_parameters = {}
         self.best_accuracy_masks = []
@@ -349,8 +338,6 @@ class IncrementalCIFARExperiment(Experiment):
                 self.running_accuracy += current_accuracy.detach()
                 if (step_number + 1) % self.running_avg_window == 0:
                     self._print("\t\tStep Number: {0}".format(step_number + 1))
-                    # if self.use_lr_schedule:
-                    #     self._print("\t\tLearning Rate: {0:.5f}".format(self.lr_scheduler.get_last_lr()[0]))
                     self._store_training_summaries()
 
                 self.current_minibatch += 1
@@ -388,7 +375,8 @@ class IncrementalCIFARExperiment(Experiment):
         """
         # total_num_different = 0
         for mask in self.net_masks:
-            if self.use_set_ds:
+            use_alternate = False
+            if use_alternate:
                 third_arg = mask["init_func"]
             else:
                 third_arg = int(self.current_df_decay * self.drop_fraction * mask["mask"].sum())
