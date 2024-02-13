@@ -419,7 +419,7 @@ class IncrementalCIFARExperiment(Experiment):
                 prop_added_then_removed = 0.0
             else:
                 prop_added_then_removed = total_added_then_removed / total_removed
-            print("Total removed: {0}".format(total_removed))
+            print("Total removed: {0}, decay factor: {1}".format(total_removed, self.current_df_decay))
             print("Proportion of added then removed: {0:.4f}".format(prop_added_then_removed))
             self.results_dict["prop_added_then_removed"][self.current_topology_update] += prop_added_then_removed
 
