@@ -72,6 +72,27 @@ def update_one_weight_mask_set_dense_to_sparse(mask, weight: torch.Tensor, init_
     return mask
 
 
+@torch.no_grad()
+def update_one_weight_mask_set_random_with_threshold(mask, weight: torch.Tensor, threshold: float):
+    """
+    Updates the weight mask of one layer based on a given threshold
+
+        Args:
+            mask: The weight mask.
+            weight: The weights of one layer, corresponding to the mask.
+            threshold: Threshold used for pruning and growing
+    """
+
+    # prune weights whose absolute values are below the threshold
+    active_weights_indices = torch.where(mask.flatten() == 1.0)[0]
+    abs_active_weights = weight.flatten().abs()[active_weights_indices]
+    to_prune = torch.where(abs_active_weights < threshold)[0]
+    num_pruned = to_prune.numel()
+    mask.view(-1)[active_weights_indices[to_prune]] = 0.0
+
+    # randomly add more weights
+
+
 def set_up_dst_update_function(dst_method_name: str, init_type: str = "xavier_uniform"):
     """
     Returns a dst update function according to the dst_method name
