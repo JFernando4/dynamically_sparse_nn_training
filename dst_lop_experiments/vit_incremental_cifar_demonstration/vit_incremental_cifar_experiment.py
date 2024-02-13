@@ -51,11 +51,12 @@ class IncrementalCIFARExperiment(Experiment):
         # dynamic sparse learning parameters
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
         self.sparsity = access_dict(exp_params, "sparsity", default=0.0, val_type=float)
-        dst_methods_names = ["none", "set", "set_r", "set_rf", "rigl", "rigl_r", "rigl_rf"]
+        dst_methods_names = ["none", "set", "set_r", "set_rf", "rigl", "rigl_r", "rigl_rf", "set_rth"]
         self.dst_method = access_dict(exp_params, "dst_method", default="none", val_type=str, choices=dst_methods_names)
         self.drop_fraction = access_dict(exp_params, "drop_fraction", default=0.0, val_type=float)
         self.df_decay = access_dict(exp_params, "df_decay", default=1.0, val_type=float)
         self.use_dst = self.dst_method != "none"
+        self.use_set_rth = self.dst_method == "set_rth"
         self.dst_update_function = set_up_dst_update_function(self.dst_method, init_type="xavier_uniform")
         self.current_df_decay = 1.0
         self.previously_added_masks = None
@@ -380,9 +381,8 @@ class IncrementalCIFARExperiment(Experiment):
         removed_masks = []
         added_masks = []
         for mask in self.net_masks:
-            use_alternate = False
-            if use_alternate:
-                third_arg = mask["init_func"]
+            if self.use_set_rth:
+                third_arg = self.df_decay * mask["init_std"]
             else:
                 third_arg = int(self.current_df_decay * self.drop_fraction * mask["mask"].sum())
 
