@@ -53,10 +53,10 @@ class IncrementalCIFARExperiment(Experiment):
         self.sparsity = access_dict(exp_params, "sparsity", default=0.0, val_type=float)
         dst_methods_names = ["none", "set", "set_r", "set_rf", "rigl", "rigl_r", "rigl_rf"]
         self.dst_method = access_dict(exp_params, "dst_method", default="none", val_type=str, choices=dst_methods_names)
-        self.use_dst = self.dst_method != "none"
-        self.dst_update_function = set_up_dst_update_function(self.dst_method, init_type="xavier_uniform")
         self.drop_fraction = access_dict(exp_params, "drop_fraction", default=0.0, val_type=float)
         self.df_decay = access_dict(exp_params, "df_decay", default=1.0, val_type=float)
+        self.use_dst = self.dst_method != "none"
+        self.dst_update_function = set_up_dst_update_function(self.dst_method, init_type="xavier_uniform")
         self.current_df_decay = 1.0
 
         # network resetting parameters
@@ -214,7 +214,6 @@ class IncrementalCIFARExperiment(Experiment):
 
     # --------------------------------------- For storing summaries --------------------------------------- #
     def _store_training_summaries(self):
-        # store train data
         self.results_dict["train_loss_per_checkpoint"][self.current_running_avg_step] += self.running_loss / self.running_avg_window
         self.results_dict["train_accuracy_per_checkpoint"][self.current_running_avg_step] += self.running_accuracy / self.running_avg_window
 
@@ -277,39 +276,35 @@ class IncrementalCIFARExperiment(Experiment):
     # ------------------------------------- For running the experiment ------------------------------------- #
     def run(self):
         # load data
-        training_data, training_dataloader = get_cifar_data(self.data_path, train=True, validation=False,
-                                                            batch_size=self.batch_sizes["train"], num_workers=self.num_workers)
-        val_data, val_dataloader = get_cifar_data(self.data_path, train=True, validation=True,
-                                                  batch_size=self.batch_sizes["validation"],
-                                                  num_workers=self.num_workers)
-        test_data, test_dataloader = get_cifar_data(self.data_path, train=False, batch_size=self.batch_sizes["test"],
-                                                    num_workers=self.num_workers)
-
+        training_data, training_dl = get_cifar_data(self.data_path, train=True, validation=False,
+                                                    batch_size=self.batch_sizes["train"], num_workers=self.num_workers)
+        val_data, val_dl = get_cifar_data(self.data_path, train=True, validation=True,
+                                          batch_size=self.batch_sizes["validation"], num_workers=self.num_workers)
+        test_data, test_dl = get_cifar_data(self.data_path, train=False, batch_size=self.batch_sizes["test"],
+                                            num_workers=self.num_workers)
+        # load checkpoint if available
         self.load_experiment_checkpoint()
         # train network
-        self.train(train_dataloader=training_dataloader, test_dataloader=test_dataloader, val_dataloader=val_dataloader,
+        self.train(train_dataloader=training_dl, test_dataloader=test_dl, val_dataloader=val_dl,
                    test_data=test_data, training_data=training_data, val_data=val_data)
-
         # if using mlproj_manager, summaries are stored in memory by calling exp.store_results()
 
     def train(self, train_dataloader: DataLoader, test_dataloader: DataLoader, val_dataloader: DataLoader,
               test_data: CifarDataSet, training_data: CifarDataSet, val_data: CifarDataSet):
-
+        # partition data
         training_data.select_new_partition(self.all_classes[:self.current_num_classes])
         test_data.select_new_partition(self.all_classes[:self.current_num_classes])
         val_data.select_new_partition(self.all_classes[:self.current_num_classes])
-
+        # get lr scheduler and save model parameters
         if self.use_lr_schedule:
-            self.lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(self.optim, max_lr=self.stepsize,
-                                                                    anneal_strategy="linear",
-                                                                    epochs=self.class_increase_frequency,
-                                                                    steps_per_epoch=len(train_dataloader))
+            self.lr_scheduler = self.get_lr_scheduler(steps_per_epoch=len(train_dataloader))
         self._save_model_parameters()
 
+        # start training
         for e in range(self.current_epoch, self.num_epochs):
             self._print("\tEpoch number: {0}".format(e + 1))
 
-            epoch_start_time = time.perf_counter()
+            epoch_start = time.perf_counter()
             for step_number, sample in enumerate(train_dataloader):
                 # sample observationa and target
                 image = sample["image"].to(self.device)
@@ -343,21 +338,23 @@ class IncrementalCIFARExperiment(Experiment):
                 self.current_minibatch += 1
                 if self.time_to_update_topology():
                     self.update_topology()
+            epoch_end = time.perf_counter()
 
-            epoch_end_time = time.perf_counter()
-            self._store_test_summaries(test_dataloader, val_dataloader, epoch_number=e,
-                                       epoch_runtime=epoch_end_time - epoch_start_time)
-
+            self._store_test_summaries(test_dataloader, val_dataloader, epoch_number=e, epoch_runtime=epoch_end - epoch_start)
             self.current_epoch += 1
             self.extend_classes(training_data, test_data, val_data, train_dataloader)
 
             if self.current_epoch % self.checkpoint_save_frequency == 0:
                 self.save_experiment_checkpoint()
 
+    def get_lr_scheduler(self, steps_per_epoch: int):
+        scheduler = torch.optim.lr_scheduler.OneCycleLR(self.optim, max_lr=self.stepsize, anneal_strategy="linear",
+                                                        epochs=self.class_increase_frequency,
+                                                        steps_per_epoch=steps_per_epoch)
+        return scheduler
+
     def inject_noise(self):
-        """
-        Adds a small amount of random noise to the parameters of the network
-        """
+        """ Adds a small amount of random noise to the parameters of the network """
         if not self.perturb_weights_indicator: return
 
         with torch.no_grad():
@@ -373,7 +370,6 @@ class IncrementalCIFARExperiment(Experiment):
         """
         Updates the neural network topology according to the chosen dst algorithm
         """
-        # total_num_different = 0
         for mask in self.net_masks:
             use_alternate = False
             if use_alternate:
@@ -381,13 +377,8 @@ class IncrementalCIFARExperiment(Experiment):
             else:
                 third_arg = int(self.current_df_decay * self.drop_fraction * mask["mask"].sum())
                 self.current_df_decay = self.df_decay * self.current_df_decay if self.df_decay < 1.0 else 1.0
-            # old_mask = deepcopy(mask["mask"])
             new_mask = self.dst_update_function(mask["mask"], mask["weight"], third_arg)
-            # num_different = torch.abs(new_mask - old_mask).sum()
-            # total_num_different += num_different // 2
-            # print("\tnumber of different entries: {0}".format(num_different))
             mask["mask"] = new_mask
-        # self._print("\t\tTotal num different: {0}".format(int(total_num_different)))
 
     def extend_classes(self, training_data: CifarDataSet, test_data: CifarDataSet, val_data: CifarDataSet,
                        train_dataloader: DataLoader):
@@ -421,10 +412,7 @@ class IncrementalCIFARExperiment(Experiment):
                 self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
                                              weight_decay=self.weight_decay)
             if self.use_lr_schedule:
-                self.lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(self.optim, max_lr=self.stepsize,
-                                                                        anneal_strategy="linear",
-                                                                        epochs=self.class_increase_frequency,
-                                                                        steps_per_epoch=len(train_dataloader))
+                self.lr_scheduler = self.get_lr_scheduler(steps_per_epoch=len(train_dataloader))
 
     def _save_model_parameters(self):
         """ Stores the parameters of the model, so it can be evaluated after the experiment is over """
