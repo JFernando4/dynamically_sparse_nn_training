@@ -385,7 +385,7 @@ class IncrementalCIFARExperiment(Experiment):
                 third_arg = mask["init_func"]
             else:
                 third_arg = int(self.current_df_decay * self.drop_fraction * mask["mask"].sum())
-                self.current_df_decay = self.df_decay * self.current_df_decay if self.df_decay < 1.0 else 1.0
+
             old_mask = deepcopy(mask["mask"])
             new_mask = self.dst_update_function(mask["mask"], mask["weight"], third_arg)
             mask_difference = old_mask - new_mask
@@ -393,6 +393,7 @@ class IncrementalCIFARExperiment(Experiment):
             removed_masks.append(torch.clip(mask_difference, min=0.0, max=1.0))
             mask["mask"] = new_mask
 
+        self.current_df_decay = self.df_decay * self.current_df_decay if self.df_decay < 1.0 else 1.0
         self.store_mask_update_summary(removed_masks, added_masks)
         self.current_topology_update += 1
 
