@@ -175,14 +175,15 @@ def grow_random(mask, weight, grow_num, reinit):
 
 
 @torch.no_grad()
-def grow_random_fixed(mask, weight, grow_num):
+def grow_random_fixed(mask, weight, grow_num, reinit_val: float = None):
     """
     Grow connections in thew eight mask by randomly selecting inactive weights.
-    The value of those weights is set to the min of the current active weights.
+    The value of those weights is set to the provided reinitialization value or the min of the current active weights.
     """
     # get the minimum of the current active indices
     active_indices = torch.where(mask.flatten() == 1.0)[0]
-    min_abs_weight = weight.abs().flatten()[active_indices].min()
+    if reinit_val is None:
+        reinit_val = weight.abs().flatten()[active_indices].min()
     # grow weights
     indices = torch.where(mask.flatten() == 0.0)[0]
     non_active = len(indices)
@@ -194,8 +195,8 @@ def grow_random_fixed(mask, weight, grow_num):
     indices = indices[:to_grow]
     mask.view(-1)[indices] = 1
     # assign +/- the min abs value to the new weights
-    weight.view(-1)[indices[:len(indices) // 2]] = min_abs_weight
-    weight.view(-1)[indices[len(indices) // 2:]] = -min_abs_weight
+    weight.view(-1)[indices[:len(indices) // 2]] = reinit_val
+    weight.view(-1)[indices[len(indices) // 2:]] = -reinit_val
     return mask
 
 
