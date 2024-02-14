@@ -14,8 +14,8 @@
   "__comment_4__": "Dynamics sparse training parameters.",
   "topology_update_freq": 6,
   "sparsity": 0.1,
-  "drop_fraction": 0.3,
-  "df_decay": 0.95,
+  "drop_fraction": 0.01,
+  "df_decay": 1.0,
   "dst_method": "set_rf",
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": ["num_epochs", "dst_method", "sparsity", "drop_fraction", "df_decay", "topology_update_freq"]
