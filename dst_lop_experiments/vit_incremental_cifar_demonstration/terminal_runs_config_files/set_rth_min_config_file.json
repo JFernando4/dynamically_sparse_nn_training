@@ -1,0 +1,21 @@
+{
+  "__comment_1__": "Parameters found in a parameter sweep on the whole CIFAR-100 data set with lr scheduler.",
+  "stepsize": 0.01,
+  "weight_decay": 0.001,
+  "dropout_prob": 0.05,
+  "use_lr_schedule": true,
+  "__comment_2__": "Parameter value used in the original vit paper section B.1.1.",
+  "momentum": 0.9,
+  "__comment_3__": "Incremental experiment parameters. Classes increase by 5 every 100 epochs.",
+  "num_epochs": 700,
+  "initial_num_classes": 5,
+  "fixed_classes": false,
+  "use_best_network": true,
+  "__comment_4__": "Dynamics sparse training parameters.",
+  "topology_update_freq": 6,
+  "sparsity": 0.1,
+  "df_decay": 0.01,
+  "dst_method": "set_rth_min",
+  "__comment_5__": "For creating the results directory.",
+  "relevant_parameters": ["num_epochs", "dst_method", "sparsity", "df_decay", "topology_update_freq"]
+}
