@@ -84,8 +84,8 @@ def update_one_weight_mask_set_random_with_threshold(mask, weight: torch.Tensor,
     """
     inactive_indices = torch.where(mask.flatten() == 0.0)[0]
     drop_num = inactive_indices.numel()
-    weight.view(-1)[inactive_indices[:len(inactive_indices) // 2]] = threshold
-    weight.view(-1)[inactive_indices[len(inactive_indices) // 2:]] = -threshold
+    weight.view(-1)[inactive_indices[:len(inactive_indices) // 2]] += threshold
+    weight.view(-1)[inactive_indices[len(inactive_indices) // 2:]] -= threshold
 
     mask = prune_magnitude_from_dense_weights(weight, drop_num)
     # active_weights_indices = torch.where(mask.flatten() == 1.0)[0]
