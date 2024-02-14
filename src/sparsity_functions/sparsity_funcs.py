@@ -73,7 +73,8 @@ def update_one_weight_mask_set_dense_to_sparse(mask, weight: torch.Tensor, init_
 
 
 @torch.no_grad()
-def update_one_weight_mask_set_random_with_threshold(mask, weight: torch.Tensor, threshold: float):
+def update_one_weight_mask_set_random_with_threshold(mask, weight: torch.Tensor, threshold: float,
+                                                     reinit_type: str = "thr"):
     """
     Updates the weight mask of one layer based on a given threshold
 
@@ -81,21 +82,23 @@ def update_one_weight_mask_set_random_with_threshold(mask, weight: torch.Tensor,
             mask: The weight mask.
             weight: The weights of one layer, corresponding to the mask.
             threshold: Threshold used for pruning and growing
+            reinit_type: str indicating how to reinitialize weights "thr" = +/-threshold, "min" = +/-min active weight
     """
-    inactive_indices = torch.where(mask.flatten() == 0.0)[0]
-    drop_num = inactive_indices.numel()
-    weight.view(-1)[inactive_indices[:len(inactive_indices) // 2]] += threshold
-    weight.view(-1)[inactive_indices[len(inactive_indices) // 2:]] -= threshold
-
-    mask = prune_magnitude_from_dense_weights(weight, drop_num)
-    # active_weights_indices = torch.where(mask.flatten() == 1.0)[0]
-    # abs_active_weights = weight.flatten().abs()[active_weights_indices]
-    # to_prune = torch.where(abs_active_weights < threshold)[0]
-    # grown_num = to_prune.numel()
-    # mask.view(-1)[active_weights_indices[to_prune]] = 0.0
+    # inactive_indices = torch.where(mask.flatten() == 0.0)[0]
+    # drop_num = inactive_indices.numel()
+    # weight.view(-1)[inactive_indices[:len(inactive_indices) // 2]] += threshold
+    # weight.view(-1)[inactive_indices[len(inactive_indices) // 2:]] -= threshold
     #
-    # # randomly add more weights
-    # mask = grow_random_fixed(mask, weight, grown_num, reinit_val=threshold)
+    # mask = prune_magnitude_from_dense_weights(weight, drop_num)
+    active_weights_indices = torch.where(mask.flatten() == 1.0)[0]
+    abs_active_weights = weight.flatten().abs()[active_weights_indices]
+    to_prune = torch.where(abs_active_weights < threshold)[0]
+    grown_num = to_prune.numel()
+    mask.view(-1)[active_weights_indices[to_prune]] = 0.0
+
+    # randomly add more weights
+    reinit_val = threshold if reinit_type == "thr" else None
+    mask = grow_random_fixed(mask, weight, grown_num, reinit_val=reinit_val)
     weight.multiply_(mask)
     return mask
 
@@ -124,7 +127,9 @@ def set_up_dst_update_function(dst_method_name: str, init_type: str = "xavier_un
     elif dst_method_name == "rigl_rf":
         return lambda m, w, rn: update_one_weight_mask_rigl(m, w, refresh_num=rn, reinit="random_fixed")
     elif dst_method_name == "set_rth":
-        return lambda m, w, thr: update_one_weight_mask_set_random_with_threshold(m, w, threshold=thr)
+        return lambda m, w, thr: update_one_weight_mask_set_random_with_threshold(m,w, threshold=thr, reinit_type="thr")
+    elif dst_method_name == "set_rth_min":
+        return lambda m, w, thr: update_one_weight_mask_set_random_with_threshold(m,w, threshold=thr, reinit_type="min")
     elif dst_method_name == "set_ds":
         return update_one_weight_mask_set_dense_to_sparse
     elif dst_method_name == "none":

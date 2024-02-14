@@ -51,12 +51,12 @@ class IncrementalCIFARExperiment(Experiment):
         # dynamic sparse learning parameters
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
         self.sparsity = access_dict(exp_params, "sparsity", default=0.0, val_type=float)
-        dst_methods_names = ["none", "set", "set_r", "set_rf", "rigl", "rigl_r", "rigl_rf", "set_rth"]
+        dst_methods_names = ["none", "set", "set_r", "set_rf", "rigl", "rigl_r", "rigl_rf", "set_rth", "set_rth_min"]
         self.dst_method = access_dict(exp_params, "dst_method", default="none", val_type=str, choices=dst_methods_names)
         self.drop_fraction = access_dict(exp_params, "drop_fraction", default=0.0, val_type=float)
         self.df_decay = access_dict(exp_params, "df_decay", default=1.0, val_type=float)
         self.use_dst = self.dst_method != "none"
-        self.use_set_rth = self.dst_method == "set_rth"
+        self.use_set_rth = "rth" in self.dst_method
         self.dst_update_function = set_up_dst_update_function(self.dst_method, init_type="xavier_uniform")
         self.current_df_decay = 1.0
         self.previously_added_masks = None
@@ -133,6 +133,9 @@ class IncrementalCIFARExperiment(Experiment):
         self.running_avg_window = 25
         self.current_running_avg_step, self.running_loss, self.running_accuracy = (0, 0.0, 0.0)
         self._initialize_summaries()
+
+        for i in range(500):
+            self.update_topology()
 
     # ------------------------------ Methods for initializing the experiment ------------------------------
     def _initialize_summaries(self):
@@ -422,8 +425,8 @@ class IncrementalCIFARExperiment(Experiment):
                 prop_added_then_removed = 0.0
             else:
                 prop_added_then_removed = total_added_then_removed / total_removed
-            # print("Total removed: {0}, decay factor: {1}".format(total_removed, self.current_df_decay))
-            # print("Proportion of added then removed: {0:.4f}".format(prop_added_then_removed))
+            print("Total removed: {0}, decay factor: {1}".format(total_removed, self.current_df_decay))
+            print("Proportion of added then removed: {0:.4f}".format(prop_added_then_removed))
             self.results_dict["prop_added_then_removed"][self.current_topology_update] += prop_added_then_removed
             if self.dst_method == "set_rth":
                 self.results_dict["total_removed_per_update"][self.current_topology_update] += total_removed
