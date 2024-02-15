@@ -32,7 +32,7 @@
   "learning_params": {
     "topology_update_freq": ["fixed", 6],
     "sparsity": ["fixed", 0.1],
-    "df_decay": ["fixed", 0.95],
+    "df_decay": ["fixed", 0.95, 0.99],
     "drop_fraction": ["fixed", 0.3],
     "dst_method": ["str", "set_rf"]
   },
