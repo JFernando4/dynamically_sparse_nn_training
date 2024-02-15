@@ -50,6 +50,7 @@ class IncrementalCIFARExperiment(Experiment):
 
         # dynamic sparse learning parameters
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
+        self.epoch_freq = access_dict(exp_params, "epoch_freq", default=False, val_type=bool)
         self.sparsity = access_dict(exp_params, "sparsity", default=0.0, val_type=float)
         dst_methods_names = ["none", "set", "set_r", "set_rf", "rigl", "rigl_r", "rigl_rf", "set_rth", "set_rth_min", "set_ds"]
         self.dst_method = access_dict(exp_params, "dst_method", default="none", val_type=str, choices=dst_methods_names)
@@ -164,7 +165,10 @@ class IncrementalCIFARExperiment(Experiment):
 
         # dst masks summaries
         if self.use_dst:
-            tensor_size = total_checkpoints * self.running_avg_window // self.topology_update_freq
+            if self.epoch_freq:
+                tensor_size = self.num_epochs // self.topology_update_freq
+            else:
+                tensor_size = total_checkpoints * self.running_avg_window // self.topology_update_freq
             self.results_dict["prop_added_then_removed"] = torch.zeros(tensor_size, device=self.device, dtype=torch.float32)
             if self.dst_method == "set_rth" or self.dst_method == "set_ds":
                 self.results_dict["total_removed_per_update"] = torch.zeros(tensor_size, device=self.device, dtype=torch.float32)
@@ -185,6 +189,7 @@ class IncrementalCIFARExperiment(Experiment):
             "numpy_rng_state": np.random.get_state(),
             "cuda_rng_state": torch.cuda.get_rng_state(),
             "epoch_number": self.current_epoch,
+            "minibatch_number": self.current_minibatch,
             "current_num_classes": self.current_num_classes,
             "all_classes": self.all_classes,
             "current_running_avg_step": self.current_running_avg_step,
@@ -209,6 +214,7 @@ class IncrementalCIFARExperiment(Experiment):
         torch.cuda.set_rng_state(checkpoint["cuda_rng_state"])
         np.random.set_state(checkpoint["numpy_rng_state"])
         self.current_epoch = checkpoint["epoch_number"]
+        self.current_minibatch = checkpoint["minibatch_number"]
         self.current_num_classes = checkpoint["current_num_classes"]
         self.all_classes = checkpoint["all_classes"]
         self.current_running_avg_step = checkpoint["current_running_avg_step"]
@@ -347,12 +353,14 @@ class IncrementalCIFARExperiment(Experiment):
                     self._store_training_summaries()
 
                 self.current_minibatch += 1
-                if self.time_to_update_topology():
+                if self.time_to_update_topology(minibatch_loop=True):
                     self.update_topology()
             epoch_end = time.perf_counter()
 
             self._store_test_summaries(test_dataloader, val_dataloader, epoch_number=e, epoch_runtime=epoch_end - epoch_start)
             self.current_epoch += 1
+            if self.time_to_update_topology(minibatch_loop=False):
+                self.update_topology()
             self.extend_classes(training_data, test_data, val_data, train_dataloader)
 
             if self.current_epoch % self.checkpoint_save_frequency == 0:
@@ -372,10 +380,16 @@ class IncrementalCIFARExperiment(Experiment):
             for param in self.net.parameters():
                 param.add_(torch.randn(param.size(), device=param.device) * self.noise_std)
 
-    def time_to_update_topology(self):
+    def time_to_update_topology(self, minibatch_loop: bool = True):
         if not self.use_dst:
             return False
-        return (self.current_minibatch % self.topology_update_freq) == 0
+        if minibatch_loop and self.epoch_freq:
+            return False
+        if not minibatch_loop and not self.epoch_freq:
+            return False
+        if minibatch_loop:
+            return (self.current_minibatch % self.topology_update_freq) == 0
+        return (self.current_epoch % self.topology_update_freq) == 0
 
     def update_topology(self):
         """
