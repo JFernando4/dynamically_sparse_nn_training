@@ -385,14 +385,14 @@ class IncrementalCIFARExperiment(Experiment):
         added_masks = []
         for mask in self.net_masks:
             if self.use_set_rth:
-                third_arg = self.df_decay * mask["init_std"]
+                third_arg = (self.df_decay * mask["init_std"], )
             elif self.use_set_ds:
-                third_arg = mask["init_func"]
+                third_arg = (mask["init_func"], self.df_decay)
             else:
-                third_arg = int(self.current_df_decay * self.drop_fraction * mask["mask"].sum())
+                third_arg = (int(self.current_df_decay * self.drop_fraction * mask["mask"].sum()), )
 
             old_mask = deepcopy(mask["mask"])
-            new_mask = self.dst_update_function(mask["mask"], mask["weight"], third_arg)
+            new_mask = self.dst_update_function(mask["mask"], mask["weight"], *third_arg)
             mask_difference = old_mask - new_mask
             added_masks.append(torch.clip(mask_difference, min=-1.0, max=0.0).abs())
             removed_masks.append(torch.clip(mask_difference, min=0.0, max=1.0))
