@@ -134,9 +134,6 @@ class IncrementalCIFARExperiment(Experiment):
         self.current_running_avg_step, self.running_loss, self.running_accuracy = (0, 0.0, 0.0)
         self._initialize_summaries()
 
-        for i in range(500):
-            self.update_topology()
-
     # ------------------------------ Methods for initializing the experiment ------------------------------
     def _initialize_summaries(self):
         """
