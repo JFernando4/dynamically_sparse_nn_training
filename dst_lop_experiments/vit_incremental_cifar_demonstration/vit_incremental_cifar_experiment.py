@@ -166,7 +166,7 @@ class IncrementalCIFARExperiment(Experiment):
         if self.use_dst:
             tensor_size = total_checkpoints * self.running_avg_window // self.topology_update_freq
             self.results_dict["prop_added_then_removed"] = torch.zeros(tensor_size, device=self.device, dtype=torch.float32)
-            if self.dst_method == "set_rth":
+            if self.dst_method == "set_rth" or self.dst_method == "set_ds":
                 self.results_dict["total_removed_per_update"] = torch.zeros(tensor_size, device=self.device, dtype=torch.float32)
 
     # ----------------------------- For saving and loading experiment checkpoints ----------------------------- #
@@ -428,7 +428,7 @@ class IncrementalCIFARExperiment(Experiment):
             # print("Total removed: {0}, decay factor: {1}".format(total_removed, self.current_df_decay))
             # print("Proportion of added then removed: {0:.4f}".format(prop_added_then_removed))
             self.results_dict["prop_added_then_removed"][self.current_topology_update] += prop_added_then_removed
-            if self.dst_method == "set_rth":
+            if self.dst_method == "set_rth" or self.dst_method == "set_ds":
                 self.results_dict["total_removed_per_update"][self.current_topology_update] += total_removed
 
         self.previously_added_masks = added_masks
