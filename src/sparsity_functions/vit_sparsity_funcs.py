@@ -6,7 +6,7 @@ from torchvision.models.vision_transformer import VisionTransformer, EncoderBloc
 from src.sparsity_functions.sparsity_funcs import init_weight_mask_from_tensor
 
 
-def get_xavier_uniform_init_std(tensor: torch.Tensor()):
+def get_xavier_init_std(tensor: torch.Tensor()):
     """ Returns the standard deviation used by xavier initialization on a given tensor """
     fan_in, fan_out = _calculate_fan_in_and_fan_out(tensor)
     return torch.math.sqrt(2.0 / (fan_in + fan_out))
@@ -38,8 +38,8 @@ def init_vit_weight_masks(net: VisionTransformer, sparsity_level: float, include
     # generate mask for class_token parameters
     if include_class_token:
         class_token_mask = init_weight_mask_from_tensor(net.class_token, sparsity_level)
-        class_token_mask["init_func"] = torch.nn.init.xavier_uniform_
-        class_token_mask["init_std"] = get_xavier_uniform_init_std(net.class_token)
+        class_token_mask["init_func"] = torch.nn.init.xavier_normal_
+        class_token_mask["init_std"] = get_xavier_init_std(net.class_token)
         masks.append(class_token_mask)
 
     # generate mask for pos_embedding parameters
@@ -91,21 +91,21 @@ def init_encoder_block_masks(mod: EncoderBlock, sparsity_level: float):
 
     # multi-head attention masks
     in_proj_mask = init_weight_mask_from_tensor(mod.self_attention.in_proj_weight, sparsity_level)
-    in_proj_mask["init_func"] = torch.nn.init.xavier_uniform_
-    in_proj_mask["init_std"] = get_xavier_uniform_init_std(mod.self_attention.in_proj_weight)
+    in_proj_mask["init_func"] = torch.nn.init.xavier_normal_
+    in_proj_mask["init_std"] = get_xavier_init_std(mod.self_attention.in_proj_weight)
     masks.append(in_proj_mask)
 
     out_proj_mask = init_weight_mask_from_tensor(mod.self_attention.out_proj.weight, sparsity_level)
-    out_proj_mask["init_func"] = torch.nn.init.xavier_uniform_
-    out_proj_mask["init_std"] = get_xavier_uniform_init_std(mod.self_attention.out_proj.weight)
+    out_proj_mask["init_func"] = torch.nn.init.xavier_normal_
+    out_proj_mask["init_std"] = get_xavier_init_std(mod.self_attention.out_proj.weight)
     masks.append(out_proj_mask)
 
     # mlp block masks
     for sub_m in mod.mlp.modules():
         if isinstance(sub_m, torch.nn.Linear):
             temp_mask = init_weight_mask_from_tensor(sub_m.weight, sparsity_level)
-            temp_mask["init_func"] = torch.nn.init.xavier_uniform_
-            temp_mask["init_std"] = get_xavier_uniform_init_std(sub_m.weight)
+            temp_mask["init_func"] = torch.nn.init.xavier_normal_
+            temp_mask["init_std"] = get_xavier_init_std(sub_m.weight)
             masks.append(temp_mask)
 
     return masks
