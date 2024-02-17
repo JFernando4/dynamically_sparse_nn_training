@@ -13,10 +13,12 @@
   "use_best_network": true,
   "__comment_4__": "Dynamics sparse training parameters.",
   "topology_update_freq": 6,
+  "epoch_freq": true,
   "sparsity": 0.1,
   "drop_fraction": 0.1,
   "df_decay": 1.0,
   "dst_method": "set_rf",
   "__comment_5__": "For creating the results directory.",
-  "relevant_parameters": ["num_epochs", "dst_method", "sparsity", "drop_fraction", "df_decay", "topology_update_freq"]
+  "relevant_parameters": ["num_epochs", "dst_method", "sparsity", "drop_fraction", "df_decay", "topology_update_freq",
+    "epoch_freq"]
 }
