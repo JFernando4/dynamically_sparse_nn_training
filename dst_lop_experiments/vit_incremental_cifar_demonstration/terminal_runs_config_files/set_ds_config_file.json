@@ -13,7 +13,7 @@
   "use_best_network": true,
   "__comment_4__": "Dynamics sparse training parameters.",
   "topology_update_freq": 6,
-  "epoch_freq": true,
+  "epoch_freq": false,
   "sparsity": 0.9,
   "df_decay": 1.0,
   "dst_method": "set_ds",
