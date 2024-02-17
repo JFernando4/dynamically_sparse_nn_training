@@ -14,7 +14,7 @@
   "__comment_4__": "Dynamics sparse training parameters.",
   "topology_update_freq": 6,
   "epoch_freq": false,
-  "sparsity": 0.9,
+  "sparsity": 0.8,
   "drop_fraction": 0.01,
   "df_decay": 0.95,
   "dst_method": "set_rf",
