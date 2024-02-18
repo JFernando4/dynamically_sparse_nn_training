@@ -105,7 +105,7 @@ class IncrementalCIFARExperiment(Experiment):
         # initialize masks
         self.net_masks = None
         if self.sparse_network:
-            self.net_masks = init_vit_weight_masks(self.net, self.sparsity)
+            self.net_masks = init_vit_weight_masks(self.net, self.sparsity, include_conv_proj=True)
             apply_weight_masks(self.net_masks)
 
         # initialize optimizer and loss function
