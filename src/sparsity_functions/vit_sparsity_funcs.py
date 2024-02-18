@@ -12,7 +12,8 @@ def get_xavier_init_std(tensor: torch.Tensor()):
     return torch.math.sqrt(2.0 / (fan_in + fan_out))
 
 
-def init_vit_weight_masks(net: VisionTransformer, sparsity_level: float, include_class_token: bool = False,
+def init_vit_weight_masks(net: VisionTransformer, sparsity_level: float, include_conv_proj: bool = False,
+                          include_class_token: bool = False,
                           include_pos_embedding: bool = False):
     """
     Initializes the weight masks for vision transformers not including layer norm modules
@@ -20,6 +21,7 @@ def init_vit_weight_masks(net: VisionTransformer, sparsity_level: float, include
     Args:
         net: VisionTransformer class instance
         sparsity_level: float between [0,1) indicating the sparsity level
+        include_conv_proj: bool indicating whether to also generate a mask for the convolutional projections
         include_class_token: bool indicating whether to also generate a mask for the class token parameter
         include_pos_embedding: bool indicating whether to also generate a mask for the pos_embedding parameter
 
@@ -29,11 +31,12 @@ def init_vit_weight_masks(net: VisionTransformer, sparsity_level: float, include
 
     masks = []
     # generate mask for convolutional projection
-    conv_proj_mask = init_weight_mask_from_tensor(net.conv_proj.weight, sparsity_level)
-    fan_in = net.conv_proj.in_channels * net.conv_proj.kernel_size[0] * net.conv_proj.kernel_size[1]
-    conv_proj_mask["init_func"] = lambda z: torch.nn.init.trunc_normal_(z, std=torch.math.sqrt(1 / fan_in))
-    conv_proj_mask["init_std"] = torch.math.sqrt(1 / fan_in)
-    masks.append(conv_proj_mask)
+    if include_conv_proj:
+        conv_proj_mask = init_weight_mask_from_tensor(net.conv_proj.weight, sparsity_level)
+        fan_in = net.conv_proj.in_channels * net.conv_proj.kernel_size[0] * net.conv_proj.kernel_size[1]
+        conv_proj_mask["init_func"] = lambda z: torch.nn.init.trunc_normal_(z, std=torch.math.sqrt(1 / fan_in))
+        conv_proj_mask["init_std"] = torch.math.sqrt(1 / fan_in)
+        masks.append(conv_proj_mask)
 
     # generate mask for class_token parameters
     if include_class_token:
