@@ -484,6 +484,8 @@ class IncrementalCIFARExperiment(Experiment):
                 initialize_vit(self.net)
                 self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
                                              weight_decay=self.weight_decay)
+                if self.sparse_network:
+                    apply_weight_masks(self.net_masks)
             if self.use_lr_schedule:
                 self.lr_scheduler = self.get_lr_scheduler(steps_per_epoch=len(train_dataloader))
 

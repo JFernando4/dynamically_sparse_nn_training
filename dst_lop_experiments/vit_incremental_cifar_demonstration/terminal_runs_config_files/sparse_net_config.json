@@ -11,6 +11,7 @@
   "initial_num_classes": 5,
   "fixed_classes": false,
   "use_best_network": true,
+  "reset_network": true,
   "__comment_4__": "Dynamics sparse training parameters.",
   "sparsity": 0.9,
   "dst_method": "none",
