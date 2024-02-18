@@ -56,6 +56,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.dst_method = access_dict(exp_params, "dst_method", default="none", val_type=str, choices=dst_methods_names)
         self.drop_fraction = access_dict(exp_params, "drop_fraction", default=0.0, val_type=float)
         self.df_decay = access_dict(exp_params, "df_decay", default=1.0, val_type=float)
+        self.sparse_network = self.sparsity > 0
         self.use_dst = self.dst_method != "none"
         self.use_set_rth = "rth" in self.dst_method
         self.use_set_ds = "set_ds" in self.dst_method
@@ -103,7 +104,7 @@ class IncrementalCIFARExperiment(Experiment):
 
         # initialize masks
         self.net_masks = None
-        if self.use_dst:
+        if self.sparse_network:
             self.net_masks = init_vit_weight_masks(self.net, self.sparsity, include_pos_embedding=True)
             apply_weight_masks(self.net_masks)
 
@@ -223,7 +224,7 @@ class IncrementalCIFARExperiment(Experiment):
         for k, v in self.results_dict.items():
             self.results_dict[k] = partial_results[k] if not isinstance(partial_results[k], torch.Tensor) else partial_results[k].to(self.device)
 
-        if not self.use_dst:
+        if not self.sparse_network:
             return
 
         for i, mask in enumerate(self.net_masks):
@@ -255,7 +256,8 @@ class IncrementalCIFARExperiment(Experiment):
                 if accuracy > self.best_accuracy:
                     self.best_accuracy = accuracy
                     self.best_accuracy_model_parameters = deepcopy(self.net.state_dict())
-                    self.best_accuracy_masks = [deepcopy(m["mask"]) for m in self.net_masks]
+                    if self.use_dst:
+                        self.best_accuracy_masks = [deepcopy(m["mask"]) for m in self.net_masks]
 
             # store summaries
             self.results_dict[data_name + "_evaluation_runtime"][epoch_number] += torch.tensor(evaluation_time, dtype=torch.float32)
@@ -341,7 +343,7 @@ class IncrementalCIFARExperiment(Experiment):
                 self.inject_noise()
                 if self.use_lr_schedule:
                     self.lr_scheduler.step()
-                if self.use_dst:
+                if self.sparse_network:
                     apply_weight_masks(self.net_masks)
 
                 # store summaries
@@ -355,12 +357,15 @@ class IncrementalCIFARExperiment(Experiment):
                 self.current_minibatch += 1
                 if self.time_to_update_topology(minibatch_loop=True):
                     self.update_topology()
+
             epoch_end = time.perf_counter()
 
             self._store_test_summaries(test_dataloader, val_dataloader, epoch_number=e, epoch_runtime=epoch_end - epoch_start)
             self.current_epoch += 1
+
             if self.time_to_update_topology(minibatch_loop=False):
                 self.update_topology()
+
             self.extend_classes(training_data, test_data, val_data, train_dataloader)
 
             if self.current_epoch % self.checkpoint_save_frequency == 0:
@@ -456,8 +461,9 @@ class IncrementalCIFARExperiment(Experiment):
             self._print("Best accuracy in the task: {0:.4f}".format(self.best_accuracy))
             if self.use_best_network:
                 self.net.load_state_dict(self.best_accuracy_model_parameters)
-                for mask_dict, best_mask in zip(self.net_masks, self.best_accuracy_masks):
-                    mask_dict["mask"] = best_mask
+                if self.use_dst:
+                    for mask_dict, best_mask in zip(self.net_masks, self.best_accuracy_masks):
+                        mask_dict["mask"] = best_mask
             self.best_accuracy = torch.zeros_like(self.best_accuracy)
             self.best_accuracy_model_parameters = {}
             self.best_accuracy_masks = []
