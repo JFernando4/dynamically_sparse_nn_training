@@ -58,14 +58,15 @@ def update_one_weight_mask_set_dense_to_sparse(mask, weight: torch.Tensor, init_
             mask: The weight mask.
             weight: The weights of one layer, corresponding to the mask.
             init_function: Function for initializing the values of masked out weights
-            scale_factor: float to multply random initial weights by
+            scale_factor: float to multiply random initial weights by
     """
 
     # generate random initial weights
     dummy_weight = torch.zeros_like(weight)
     init_function(dummy_weight)
-    dummy_weight *= scale_factor
-    # fill zeros in weight matrix with randomn initial weights
+    if scale_factor != 1.0:
+        dummy_weight *= scale_factor
+    # fill zeros in weight matrix with random initial weights
     zeros_indices = torch.where(mask.flatten() == 0.0)[0]
     weight.view(-1)[zeros_indices] += dummy_weight.view(-1)[zeros_indices]
     # prune weight matrix down
