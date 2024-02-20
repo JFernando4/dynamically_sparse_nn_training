@@ -310,10 +310,12 @@ class IncrementalCIFARExperiment(Experiment):
 
     def train(self, train_dataloader: DataLoader, test_dataloader: DataLoader, val_dataloader: DataLoader,
               test_data: CifarDataSet, training_data: CifarDataSet, val_data: CifarDataSet):
+
         # partition data
         training_data.select_new_partition(self.all_classes[:self.current_num_classes])
         test_data.select_new_partition(self.all_classes[:self.current_num_classes])
         val_data.select_new_partition(self.all_classes[:self.current_num_classes])
+
         # get lr scheduler and save model parameters
         if self.use_lr_schedule:
             self.lr_scheduler = self.get_lr_scheduler(steps_per_epoch=len(train_dataloader))
