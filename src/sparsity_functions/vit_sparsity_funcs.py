@@ -13,8 +13,8 @@ def get_xavier_init_std(tensor: torch.Tensor()):
 
 
 def init_vit_weight_masks(net: VisionTransformer, sparsity_level: float, include_conv_proj: bool = False,
-                          include_class_token: bool = False,
-                          include_pos_embedding: bool = False):
+                          include_class_token: bool = False, include_pos_embedding: bool = False,
+                          include_msa: bool = False):
     """
     Initializes the weight masks for vision transformers not including layer norm modules
 
@@ -24,6 +24,7 @@ def init_vit_weight_masks(net: VisionTransformer, sparsity_level: float, include
         include_conv_proj: bool indicating whether to also generate a mask for the convolutional projections
         include_class_token: bool indicating whether to also generate a mask for the class token parameter
         include_pos_embedding: bool indicating whether to also generate a mask for the pos_embedding parameter
+        include_msa: bool indicating whether to include masks for the multi-head self-attention
 
     Returns
         list of dictionaries for each weight matrix in the vision transformer
@@ -53,18 +54,19 @@ def init_vit_weight_masks(net: VisionTransformer, sparsity_level: float, include
         masks.append(pos_embedding_mask)
 
     # generate masks for encoder
-    masks.extend(init_vit_encoder_masks(net.encoder, sparsity_level))
+    masks.extend(init_vit_encoder_masks(net.encoder, sparsity_level, include_msa))
 
     return masks
 
 
-def init_vit_encoder_masks(mod: Encoder, sparsity_level: float):
+def init_vit_encoder_masks(mod: Encoder, sparsity_level: float, include_msa: bool = False):
     """
     Initializes the weights masks for the encoder of the vision transformer
 
      Args:
          mod: instance of torchvision's Encoder
          sparsity_level: float in [0,1) indicating the sparsity level
+         include_msa: bool indicating whether to include masks for the multi-head self-attention
 
     Returns:
         list of dictionaries for each weight matrix of each layer in the encoder
@@ -74,34 +76,36 @@ def init_vit_encoder_masks(mod: Encoder, sparsity_level: float):
 
     for e_block in mod.layers:
         assert isinstance(e_block, EncoderBlock)
-        masks.extend(init_encoder_block_masks(e_block, sparsity_level))
+        masks.extend(init_encoder_block_masks(e_block, sparsity_level, include_msa))
 
     return masks
 
 
-def init_encoder_block_masks(mod: EncoderBlock, sparsity_level: float):
+def init_encoder_block_masks(mod: EncoderBlock, sparsity_level: float, include_msa: bool = False):
     """
     Initializes the weights masks for the encoder blocks
 
      Args:
          mod: instances of torchvision's EncoderBlock
          sparsity_level: float in [0,1) indicating the sparsity level
+         include_msa: bool indicating whether to include masks for the multi-head self-attention
 
     Returns:
         list of dictionaries for each weight matrix of each layer in the encoder
     """
     masks = []
 
-    # multi-head attention masks
-    in_proj_mask = init_weight_mask_from_tensor(mod.self_attention.in_proj_weight, sparsity_level)
-    in_proj_mask["init_func"] = torch.nn.init.xavier_normal_
-    in_proj_mask["init_std"] = get_xavier_init_std(mod.self_attention.in_proj_weight)
-    masks.append(in_proj_mask)
+    # multi-head self-attention masks
+    if include_msa:
+        in_proj_mask = init_weight_mask_from_tensor(mod.self_attention.in_proj_weight, sparsity_level)
+        in_proj_mask["init_func"] = torch.nn.init.xavier_normal_
+        in_proj_mask["init_std"] = get_xavier_init_std(mod.self_attention.in_proj_weight)
+        masks.append(in_proj_mask)
 
-    out_proj_mask = init_weight_mask_from_tensor(mod.self_attention.out_proj.weight, sparsity_level)
-    out_proj_mask["init_func"] = torch.nn.init.xavier_normal_
-    out_proj_mask["init_std"] = get_xavier_init_std(mod.self_attention.out_proj.weight)
-    masks.append(out_proj_mask)
+        out_proj_mask = init_weight_mask_from_tensor(mod.self_attention.out_proj.weight, sparsity_level)
+        out_proj_mask["init_func"] = torch.nn.init.xavier_normal_
+        out_proj_mask["init_std"] = get_xavier_init_std(mod.self_attention.out_proj.weight)
+        masks.append(out_proj_mask)
 
     # mlp block masks
     for sub_m in mod.mlp.modules():
