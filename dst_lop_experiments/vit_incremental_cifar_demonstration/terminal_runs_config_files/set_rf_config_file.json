@@ -15,7 +15,7 @@
   "topology_update_freq": 6,
   "epoch_freq": false,
   "sparsity": 0.9,
-  "drop_fraction": 0.001,
+  "drop_fraction": 0.01,
   "df_decay": 1.0,
   "dst_method": "set_rf",
   "__comment_5__": "For creating the results directory.",
