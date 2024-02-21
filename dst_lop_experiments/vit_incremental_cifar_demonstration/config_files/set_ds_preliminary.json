@@ -7,8 +7,7 @@
       "dst_method",
       "sparsity",
       "df_decay",
-      "topology_update_freq",
-      "epoch_freq"
+      "topology_update_freq"
     ]
   },
 
