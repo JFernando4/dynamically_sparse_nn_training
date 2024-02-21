@@ -56,6 +56,8 @@ class IncrementalCIFARExperiment(Experiment):
         self.dst_method = access_dict(exp_params, "dst_method", default="none", val_type=str, choices=dst_methods_names)
         self.drop_fraction = access_dict(exp_params, "drop_fraction", default=0.0, val_type=float)
         self.df_decay = access_dict(exp_params, "df_decay", default=1.0, val_type=float)
+        self.include_msa_mask = access_dict(exp_params, "include_msa_mask", default=False, val_type=bool)
+        self.include_conv_proj_mask = access_dict(exp_params, "include_conv_proj_mask", default=False, val_type=bool)
         self.sparse_network = self.sparsity > 0
         self.use_dst = self.dst_method != "none"
         self.use_set_rth = "rth" in self.dst_method
@@ -105,7 +107,8 @@ class IncrementalCIFARExperiment(Experiment):
         # initialize masks
         self.net_masks = None
         if self.sparse_network:
-            self.net_masks = init_vit_weight_masks(self.net, self.sparsity)
+            self.net_masks = init_vit_weight_masks(self.net, self.sparsity, include_msa=self.include_msa_mask,
+                                                   include_conv_proj=self.include_conv_proj_mask)
             apply_weight_masks(self.net_masks)
 
         # initialize optimizer and loss function
