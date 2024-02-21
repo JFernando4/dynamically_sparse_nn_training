@@ -32,7 +32,7 @@
     "dst_method": ["str", "set_ds"],
     "sparsity": ["fixed", 0.7],
     "df_decay": ["fixed", 0.05, 0.1, 0.2],
-    "topology_update_freq": ["fixed", 6, 3],
+    "topology_update_freq": ["fixed", 6],
     "include_msa_mask": false,
     "include_conv_proj_mask": false,
     "epoch_freq": false
