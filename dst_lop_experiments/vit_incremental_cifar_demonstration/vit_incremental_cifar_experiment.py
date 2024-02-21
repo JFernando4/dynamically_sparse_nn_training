@@ -410,7 +410,7 @@ class IncrementalCIFARExperiment(Experiment):
             elif self.use_set_ds:
                 third_arg = (mask["init_func"], self.df_decay)
             else:
-                third_arg = (int(self.current_df_decay * self.drop_fraction * mask["mask"].numel()), )
+                third_arg = (int(self.current_df_decay * self.drop_fraction * mask["mask"].sum()), )
 
             old_mask = deepcopy(mask["mask"])
             new_mask = self.dst_update_function(mask["mask"], mask["weight"], *third_arg)
