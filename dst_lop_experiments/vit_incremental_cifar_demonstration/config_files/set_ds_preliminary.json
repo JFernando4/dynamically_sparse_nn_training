@@ -25,8 +25,6 @@
     "use_data_augmentation": true,
     "use_lr_schedule": true,
     "use_best_network": true,
-    "include_msa_mask": false,
-    "include_conv_proj_mask": false,
     "runs": 2
   },
 
@@ -35,6 +33,8 @@
     "sparsity": ["fixed", 0.7],
     "df_decay": ["fixed", 0.05, 0.1, 0.2],
     "topology_update_freq": ["fixed", 6, 3],
+    "include_msa_mask": false,
+    "include_conv_proj_mask": false,
     "epoch_freq": false
   },
 
