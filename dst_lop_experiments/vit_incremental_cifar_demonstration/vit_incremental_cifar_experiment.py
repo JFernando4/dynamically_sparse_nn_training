@@ -3,7 +3,6 @@ import time
 import os
 import pickle
 from copy import deepcopy
-import collections
 
 # third party libraries
 import torch
@@ -428,7 +427,6 @@ class IncrementalCIFARExperiment(Experiment):
         self.current_df_decay = self.df_decay * self.current_df_decay if self.df_decay < 1.0 else 1.0
         self.store_mask_update_summary(removed_masks, added_masks)
         self.current_topology_update += 1
-        self.optim.state = collections.defaultdict(dict)
 
     def store_mask_update_summary(self, removed_masks: list, added_masks: list):
         """
