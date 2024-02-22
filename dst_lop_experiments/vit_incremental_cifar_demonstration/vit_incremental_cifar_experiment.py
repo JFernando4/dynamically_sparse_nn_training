@@ -65,6 +65,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.use_set_rth = "rth" in self.dst_method
         self.use_set_ds = "set_ds" in self.dst_method
         self.dst_update_function = set_up_dst_update_function(self.dst_method, init_type="xavier_uniform")
+        self.current_drop = 0.0
         self.current_df_decay = 1.0
         self.previously_added_masks = None
         self.current_topology_update = 0
@@ -401,6 +402,11 @@ class IncrementalCIFARExperiment(Experiment):
             return False
         if not minibatch_loop and not self.epoch_freq:
             return False
+
+        # drop only until the number of total dropped weights is equal to the total number of active weights
+        if self.current_drop >= 1.0:
+            return False
+
         if minibatch_loop:
             return (self.current_minibatch % self.topology_update_freq) == 0
         return (self.current_epoch % self.topology_update_freq) == 0
@@ -428,6 +434,7 @@ class IncrementalCIFARExperiment(Experiment):
             removed_masks.append(torch.clip(mask_difference, min=0.0, max=1.0))
             mask["mask"] = new_mask
 
+        self.current_drop += self.current_df_decay * self.drop_fraction
         self.current_df_decay = self.df_decay * self.current_df_decay if self.df_decay < 1.0 else 1.0
         self.store_mask_update_summary(removed_masks, added_masks)
         self.current_topology_update += 1
@@ -480,6 +487,7 @@ class IncrementalCIFARExperiment(Experiment):
             self.best_accuracy_masks = []
             self._save_model_parameters()
             self.current_df_decay = 1.0
+            self.current_drop = 0.0
 
             if self.current_num_classes == self.num_classes: return
 
