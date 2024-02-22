@@ -403,10 +403,6 @@ class IncrementalCIFARExperiment(Experiment):
         if not minibatch_loop and not self.epoch_freq:
             return False
 
-        # drop only until the number of total dropped weights is equal to the total number of active weights
-        if self.current_drop >= 1.0:
-            return False
-
         if minibatch_loop:
             return (self.current_minibatch % self.topology_update_freq) == 0
         return (self.current_epoch % self.topology_update_freq) == 0
@@ -415,6 +411,12 @@ class IncrementalCIFARExperiment(Experiment):
         """
         Updates the neural network topology according to the chosen dst algorithm
         """
+
+        # drop only until the number of total dropped weights is equal to the total number of active weights
+        if self.current_drop >= 1.0:
+            self.current_topology_update += 1
+            return
+
         removed_masks = []
         added_masks = []
         for mask in self.net_masks:
