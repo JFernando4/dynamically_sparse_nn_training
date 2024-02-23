@@ -352,7 +352,9 @@ class IncrementalCIFARExperiment(Experiment):
                 # backpropagate and update weights
                 current_loss.backward()
                 if self.use_l1_penalty:
-                    apply_weight_penalty(self.net_masks, self.l1_masked_weight_penalty)
+                    current_lr = self.stepsize if not self.use_lr_schedule else self.lr_scheduler.get_last_lr()[0]
+                    penalty = self.l1_masked_weight_penalty * current_lr
+                    apply_weight_penalty(self.net_masks, penalty)
                 self.optim.step()
                 self.inject_noise()
                 if self.use_lr_schedule:
