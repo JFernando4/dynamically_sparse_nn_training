@@ -25,7 +25,6 @@
     "dst_method",
     "sparsity",
     "drop_fraction",
-    "df_decay",
     "topology_update_freq",
     "max_epochs_for_topology_update",
     "msa_mask",
