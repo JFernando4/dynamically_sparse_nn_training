@@ -52,21 +52,19 @@ class IncrementalCIFARExperiment(Experiment):
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
         self.epoch_freq = access_dict(exp_params, "epoch_freq", default=False, val_type=bool)
         self.sparsity = access_dict(exp_params, "sparsity", default=0.0, val_type=float)
+        self.sparse_network = self.sparsity > 0
         dst_methods_names = ["none", "set", "set_r", "set_rf", "rigl", "rigl_r", "rigl_rf", "set_rth", "set_rth_min", "set_ds"]
         self.dst_method = access_dict(exp_params, "dst_method", default="none", val_type=str, choices=dst_methods_names)
+        self.use_dst = self.dst_method != "none"
+        self.use_set_rth = "rth" in self.dst_method
+        self.use_set_ds = "set_ds" in self.dst_method
+        self.dst_update_function = set_up_dst_update_function(self.dst_method, init_type="xavier_uniform")
         self.drop_fraction = access_dict(exp_params, "drop_fraction", default=0.0, val_type=float)
         self.df_decay = access_dict(exp_params, "df_decay", default=1.0, val_type=float)
         self.msa_mask = access_dict(exp_params, "msa_mask", default=False, val_type=bool)       # self-attention mask
         self.conv_mask = access_dict(exp_params, "conv_mask", default=False, val_type=bool)     # conv projection mask
         self.ct_mask = access_dict(exp_params, "ct_mask", default=False, val_type=bool)         # class token mask
         self.pe_mask = access_dict(exp_params, "pe_mask", default=False, val_type=bool)         # pos-embedding mask
-        self.sparse_network = self.sparsity > 0
-        self.use_dst = self.dst_method != "none"
-        self.use_set_rth = "rth" in self.dst_method
-        self.use_set_ds = "set_ds" in self.dst_method
-        self.dst_update_function = set_up_dst_update_function(self.dst_method, init_type="xavier_uniform")
-        self.current_drop = 0.0
-        self.current_df_decay = 1.0
         self.previously_added_masks = None
         self.current_topology_update = 0
 
@@ -412,11 +410,6 @@ class IncrementalCIFARExperiment(Experiment):
         Updates the neural network topology according to the chosen dst algorithm
         """
 
-        # drop only until the number of total dropped weights is equal to the total number of active weights
-        if self.current_drop >= 1.0:
-            self.current_topology_update += 1
-            return
-
         removed_masks = []
         added_masks = []
         for mask in self.net_masks:
@@ -427,7 +420,7 @@ class IncrementalCIFARExperiment(Experiment):
             else:
                 if "num_active" not in mask.keys():
                     mask["num_active"] = mask["mask"].sum()
-                third_arg = (int(self.current_df_decay * self.drop_fraction * mask["num_active"]), )
+                third_arg = (int(self.drop_fraction * mask["num_active"]), )
 
             old_mask = deepcopy(mask["mask"])
             new_mask = self.dst_update_function(mask["mask"], mask["weight"], *third_arg)
@@ -436,8 +429,6 @@ class IncrementalCIFARExperiment(Experiment):
             removed_masks.append(torch.clip(mask_difference, min=0.0, max=1.0))
             mask["mask"] = new_mask
 
-        self.current_drop += self.current_df_decay * self.drop_fraction
-        self.current_df_decay = self.df_decay * self.current_df_decay if self.df_decay < 1.0 else 1.0
         self.store_mask_update_summary(removed_masks, added_masks)
         self.current_topology_update += 1
 
@@ -464,7 +455,7 @@ class IncrementalCIFARExperiment(Experiment):
                 prop_added_then_removed = 0.0
             else:
                 prop_added_then_removed = total_added_then_removed / total_removed
-            # print("Total removed: {0}, decay factor: {1}".format(total_removed, self.current_df_decay))
+            # print("Total removed: {0}".format(total_removed))
             # print("Proportion of added then removed: {0:.4f}".format(prop_added_then_removed))
             self.results_dict["prop_added_then_removed"][self.current_topology_update] += prop_added_then_removed
             if self.dst_method == "set_rth" or self.dst_method == "set_ds":
@@ -488,8 +479,6 @@ class IncrementalCIFARExperiment(Experiment):
             self.best_accuracy_model_parameters = {}
             self.best_accuracy_masks = []
             self._save_model_parameters()
-            self.current_df_decay = 1.0
-            self.current_drop = 0.0
 
             if self.current_num_classes == self.num_classes: return
 
