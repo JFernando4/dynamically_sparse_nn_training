@@ -8,6 +8,7 @@
       "sparsity",
       "drop_fraction",
       "topology_update_freq",
+      "max_epochs_for_topology_update",
       "msa_mask",
       "conv_mask"
     ]
@@ -29,14 +30,11 @@
   "learning_params": {
     "dst_method": ["str", "set_rf"],
     "sparsity": ["fixed", 0.5, 0.6, 0.7],
-    "drop_fraction": 0.001,
-    "df_decay": 1.0,
-    "topology_update_freq": ["fixed", 6],
+    "drop_fraction": 0.01,
+    "topology_update_freq": ["fixed", 10],
+    "max_epochs_for_topology_update": 50,
     "msa_mask": true,
-    "conv_mask": true,
-    "ct_mask":false,
-    "pe_mask": false,
-    "epoch_freq": false
+    "conv_mask": true
   },
 
   "slurm_parameters": {
