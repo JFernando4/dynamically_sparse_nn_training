@@ -413,7 +413,9 @@ class IncrementalCIFARExperiment(Experiment):
         Updates the neural network topology according to the chosen dst algorithm
         """
 
-        if self.num_epochs_since_task_start > self.max_epochs_for_topology_update:
+        if self.num_epochs_since_task_start >= self.max_epochs_for_topology_update:
+            if self.num_epochs_since_task_start == self.max_epochs_for_topology_update:
+                print("No more updates")
             self.current_topology_update += 1
             return
 
