@@ -65,6 +65,8 @@ class IncrementalCIFARExperiment(Experiment):
         self.conv_mask = access_dict(exp_params, "conv_mask", default=False, val_type=bool)     # conv projection mask
         self.ct_mask = access_dict(exp_params, "ct_mask", default=False, val_type=bool)         # class token mask
         self.pe_mask = access_dict(exp_params, "pe_mask", default=False, val_type=bool)         # pos-embedding mask
+        self.max_epochs_for_topology_update = access_dict(exp_params, "max_epochs_for_topology_update", default=100, val_type=int)
+        self.num_epochs_since_task_start = 0
         self.previously_added_masks = None
         self.current_topology_update = 0
 
@@ -370,6 +372,7 @@ class IncrementalCIFARExperiment(Experiment):
 
             self._store_test_summaries(test_dataloader, val_dataloader, epoch_number=e, epoch_runtime=epoch_end - epoch_start)
             self.current_epoch += 1
+            self.num_epochs_since_task_start += 1
 
             if self.time_to_update_topology(minibatch_loop=False):
                 self.update_topology()
@@ -409,6 +412,10 @@ class IncrementalCIFARExperiment(Experiment):
         """
         Updates the neural network topology according to the chosen dst algorithm
         """
+
+        if self.num_epochs_since_task_start > self.max_epochs_for_topology_update:
+            self.current_topology_update += 1
+            return
 
         removed_masks = []
         added_masks = []
@@ -478,6 +485,7 @@ class IncrementalCIFARExperiment(Experiment):
             self.best_accuracy = torch.zeros_like(self.best_accuracy)
             self.best_accuracy_model_parameters = {}
             self.best_accuracy_masks = []
+            self.num_epochs_since_task_start = 0
             self._save_model_parameters()
 
             if self.current_num_classes == self.num_classes: return
