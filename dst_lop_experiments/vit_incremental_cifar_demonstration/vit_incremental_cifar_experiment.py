@@ -17,7 +17,7 @@ from mlproj_manager.file_management import store_object_with_several_attempts
 from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict
 
 from src import initialize_vit, initialize_vit_heads, init_vit_weight_masks
-from src.sparsity_functions import set_up_dst_update_function, apply_weight_masks
+from src.sparsity_functions import set_up_dst_update_function, apply_weight_masks, apply_weight_penalty
 from src.utils import get_cifar_data
 
 
@@ -69,6 +69,8 @@ class IncrementalCIFARExperiment(Experiment):
         self.num_epochs_since_task_start = 0
         self.previously_added_masks = None
         self.current_topology_update = 0
+        self.l1_masked_weight_penalty = access_dict(exp_params, "l1_masked_weight_penalty", default=0.0, val_type=float)
+        self.use_l1_penalty = self.l1_masked_weight_penalty > 0.0
 
         # network resetting parameters
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
@@ -349,6 +351,8 @@ class IncrementalCIFARExperiment(Experiment):
 
                 # backpropagate and update weights
                 current_loss.backward()
+                if self.use_l1_penalty:
+                    apply_weight_penalty(self.net_masks, self.l1_masked_weight_penalty)
                 self.optim.step()
                 self.inject_noise()
                 if self.use_lr_schedule:
