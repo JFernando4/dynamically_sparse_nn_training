@@ -15,7 +15,7 @@
   "topology_update_freq": 6,
   "epoch_freq": false,
   "sparsity": 0.7,
-  "drop_fraction": 0.01,
+  "drop_fraction": 0.001,
   "df_decay": 1.0,
   "dst_method": "set_rf",
   "msa_mask": true,
