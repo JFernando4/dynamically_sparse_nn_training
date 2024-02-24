@@ -15,6 +15,7 @@
   "topology_update_freq": 6,
   "sparsity": 0.7,
   "drop_fraction": 0.01,
+  "l1_masked_weight_penalty": 0.001,
   "dst_method": "set_rf",
   "max_epochs_for_topology_update": 50,
   "msa_mask": true,
@@ -27,7 +28,7 @@
     "drop_fraction",
     "topology_update_freq",
     "max_epochs_for_topology_update",
-    "msa_mask",
-    "conv_mask"
+    "weight_decay",
+    "l1_masked_weight_penalty"
   ]
 }
