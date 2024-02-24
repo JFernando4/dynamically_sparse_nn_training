@@ -36,3 +36,21 @@ def apply_regularization_to_net(net: torch.nn.Module, l2_factor: float = 0.0, l1
 
     for param in net.parameters():
         apply_regularization_to_tensor(param.data, l1_factor=l1_factor, l2_factor=l2_factor)
+
+
+def apply_regularization_to_parameter_list(parameter_list, scale_factor: float = 1.0):
+    """
+    Regularizes all the parameters in a given list. Each entry in the list is a dictionary with three key-value pairs:
+        "parameter" - parameter to be regularized
+        "l1" - l1-regularization factor
+        "l2" - l2-regularization factor
+
+    :param parameter_list: list of dictionaries
+    :param scale_factor: positive float to scale the l1 and l2 factor by
+    """
+
+    for parameter_dict in parameter_list:
+        if parameter_dict["l1"] > 0.0 or parameter_dict["l2"] > 0.0:
+            temp_l1 = parameter_dict["l1"] * scale_factor
+            temp_l2 = parameter_dict["l2"] * scale_factor
+            apply_regularization_to_tensor(parameter_dict["parameter"], temp_l1, temp_l2)
