@@ -32,7 +32,7 @@
     "sparsity": ["fixed", 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
     "drop_fraction": 0.01,
     "topology_update_freq": ["fixed", 10],
-    "max_epochs_for_topology_update": 50,
+    "max_epochs_for_topology_update": 80,
     "msa_mask": true,
     "conv_mask": true
   },
