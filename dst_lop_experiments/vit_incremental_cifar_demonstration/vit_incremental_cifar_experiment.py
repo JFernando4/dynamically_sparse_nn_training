@@ -16,9 +16,8 @@ from mlproj_manager.experiments import Experiment
 from mlproj_manager.file_management import store_object_with_several_attempts
 from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict
 
-from src import initialize_vit, initialize_vit_heads, init_vit_weight_masks, init_weight_regularization_list, \
-    apply_regularization_to_parameter_list
-from src.sparsity_functions import set_up_dst_update_function, apply_weight_masks, apply_weight_penalty
+from src import initialize_vit, initialize_vit_heads, init_vit_weight_masks, init_weight_regularization_list
+from src.sparsity_functions import set_up_dst_update_function, apply_weight_masks
 from src.utils import get_cifar_data
 
 
