@@ -85,7 +85,7 @@ def initialize_vit_heads(m: torch.nn.Sequential):
         raise ValueError("Don't know how to handle heads with a representation layer.")
 
 
-def init_weight_regularization_list(net: VisionTransformer, l1_factor: float = 0.0, l2_factor: float = 0.0,
+def init_weight_regularization_list(net: VisionTransformer, l1_factor: float = 0.0,
                                     apply_l1_reg_ct: bool = False, apply_l1_reg_pe: bool = False,
                                     apply_l1_reg_cp: bool = False, apply_l1_reg_msa: bool = False):
     """
@@ -97,55 +97,41 @@ def init_weight_regularization_list(net: VisionTransformer, l1_factor: float = 0
 
     :param net: instance of torchvision VisionTransformer class
     :param l1_factor: l1-regularization penalty
-    :param l2_factor: l2-regularization penalty
     :param apply_l1_reg_ct: bool indicating whether to apply l1-regularization to the class token
     :param apply_l1_reg_pe: bool indicating whether to apply l1-regularization to the positional embedding
     :param apply_l1_reg_cp: bool indicating whether to apply l1-regularization to the convolutional projection
     :param apply_l1_reg_msa: bool indicating whether to apply l1-regularization to attention layers
     :return: list with an entry for each layer
-             each entry in the list is a dictionary with keys: ["parameter", "l1", "l2"]
+             each entry in the list is a dictionary with keys: ["parameter", "l1"]
     """
-    assert 0.0 <= l1_factor and 0.0 <= l2_factor
+    assert 0.0 <= l1_factor
 
     regularization_list = []
 
     # class token parameters
     ct_l1_penalty = l1_factor if apply_l1_reg_ct else 0.0
-    class_token_dict = {"parameter": net.class_token, "l1": ct_l1_penalty, "l2": l2_factor}
+    class_token_dict = {"parameter": net.class_token, "l1": ct_l1_penalty}
     regularization_list.append(class_token_dict)
 
     # convolutional projection parameters
     cp_l1_penalty = l1_factor if apply_l1_reg_cp else 0.0
-    conv_proj_weight_dict = {"parameter": net.conv_proj.weight, "l1": cp_l1_penalty, "l2": l2_factor}
-    conv_proj_bias_dict = {"parameter": net.conv_proj.bias, "l1": 0.0, "l2": l2_factor}
-    regularization_list.extend([conv_proj_weight_dict, conv_proj_bias_dict])
+    conv_proj_weight_dict = {"parameter": net.conv_proj.weight, "l1": cp_l1_penalty}
+    regularization_list.extend([conv_proj_weight_dict])
 
     # positional embedding parameters
     pe_l1_penalty = l1_factor if apply_l1_reg_pe else 0.0
-    pos_embedding_dict = {"parameter": net.encoder.pos_embedding, "l1": pe_l1_penalty, "l2": l2_factor}
+    pos_embedding_dict = {"parameter": net.encoder.pos_embedding, "l1": pe_l1_penalty}
     regularization_list.append(pos_embedding_dict)
 
     # encoder parameters
     for encoder_block in net.encoder.layers:
-        temp_list = get_encoder_block_reg_dictionaries(encoder_block, l1_factor, l2_factor, apply_l1_reg_msa)
+        temp_list = get_encoder_block_reg_dictionaries(encoder_block, l1_factor, apply_l1_reg_msa)
         regularization_list.extend(temp_list)
-
-    assert isinstance(net.encoder.ln, torch.nn.LayerNorm)
-    last_ln_weight_dict = {"parameter": net.encoder.ln.weight, "l1": 0.0, "l2": l2_factor}
-    last_ln_bias_dict = {"parameter": net.encoder.ln.bias, "l1": 0.0, "l2": l2_factor}
-    regularization_list.extend([last_ln_weight_dict, last_ln_bias_dict])
-
-    # network head parameters
-    assert isinstance(net.heads[0], torch.nn.Linear)
-    head_weight_dict = {"parameter": net.heads[0].weight, "l1": 0.0, "l2": l2_factor}
-    head_bias_dict = {"parameter": net.heads[0].bias, "l1": 0.0, "l2": l2_factor}
-    regularization_list.extend([head_weight_dict, head_bias_dict])
 
     return regularization_list
 
 
-def get_encoder_block_reg_dictionaries(mod: EncoderBlock, l1_factor: float = 0.0, l2_factor: float = 0.0,
-                                       apply_l1_reg_msa: bool = False):
+def get_encoder_block_reg_dictionaries(mod: EncoderBlock, l1_factor: float = 0.0, apply_l1_reg_msa: bool = False):
     """
     Gets the parameters that need to be regularized in the EncoderBlock.
     See function above for the description of the arguments.
@@ -154,24 +140,14 @@ def get_encoder_block_reg_dictionaries(mod: EncoderBlock, l1_factor: float = 0.0
     regularization_list = []
 
     msa_l1_penalty = l1_factor if apply_l1_reg_msa else 0.0
-    in_proj_weight_dict = {"parameter": mod.self_attention.in_proj_weight, "l1": msa_l1_penalty, "l2": l2_factor}
-    in_proj_bias_dict = {"parameter": mod.self_attention.in_proj_bias, "l1": 0.0, "l2": l2_factor}
-    out_proj_weight_dict = {"parameter": mod.self_attention.out_proj.weight, "l1": msa_l1_penalty, "l2": l2_factor}
-    out_proj_bias_dict = {"parameter": mod.self_attention.out_proj.bias, "l1": 0.0, "l2": l2_factor}
-    regularization_list.extend([in_proj_weight_dict, in_proj_bias_dict, out_proj_weight_dict, out_proj_bias_dict])
-
-    assert isinstance(mod.ln_1, torch.nn.LayerNorm) and isinstance(mod.ln_2, torch.nn.LayerNorm)
-    ln1_weight_dict = {"parameter": mod.ln_1.weight, "l1": 0.0, "l2": l2_factor}
-    ln1_bias_dict = {"parameter": mod.ln_1.bias, "l1": 0.0, "l2": l2_factor}
-    ln2_weight_dict = {"parameter": mod.ln_2.weight, "l1": 0.0, "l2": l2_factor}
-    ln2_bias_dict = {"parameter": mod.ln_2.bias, "l1": 0.0, "l2": l2_factor}
-    regularization_list.extend([ln1_weight_dict, ln1_bias_dict, ln2_weight_dict, ln2_bias_dict])
+    in_proj_weight_dict = {"parameter": mod.self_attention.in_proj_weight, "l1": msa_l1_penalty}
+    out_proj_weight_dict = {"parameter": mod.self_attention.out_proj.weight, "l1": msa_l1_penalty}
+    regularization_list.extend([in_proj_weight_dict, out_proj_weight_dict])
 
     for sub_m in mod.mlp.modules():
         if isinstance(sub_m, torch.nn.Linear):
-            temp_weight_dict = {"parameter": sub_m.weight, "l1": l1_factor, "l2": l2_factor}
-            temp_bias_dict = {"parameter": sub_m.bias, "l1": 0.0, "l2": l2_factor}
-            regularization_list.extend([temp_weight_dict, temp_bias_dict])
+            temp_weight_dict = {"parameter": sub_m.weight, "l1": l1_factor}
+            regularization_list.extend([temp_weight_dict])
 
     return regularization_list
 
