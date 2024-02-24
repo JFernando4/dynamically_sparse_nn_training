@@ -70,7 +70,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.previously_added_masks = None
         self.current_topology_update = 0
         self.l1_masked_weight_penalty = access_dict(exp_params, "l1_masked_weight_penalty", default=0.0, val_type=float)
-        self.use_l1_penalty = self.l1_masked_weight_penalty > 0.0
+        self.current_l1_penalty = self.l1_masked_weight_penalty
 
         # network resetting parameters
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
@@ -119,7 +119,7 @@ class IncrementalCIFARExperiment(Experiment):
             apply_weight_masks(self.net_masks)
 
         self.l1_reg_list = []
-        if self.use_l1_penalty:
+        if self.l1_masked_weight_penalty > 0.0:
             self.l1_reg_list = init_weight_regularization_list(self.net, l1_factor=self.l1_masked_weight_penalty,
                                                                apply_l1_reg_ct=self.ct_mask,
                                                                apply_l1_reg_pe=self.pe_mask,
