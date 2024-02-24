@@ -359,7 +359,8 @@ class IncrementalCIFARExperiment(Experiment):
 
                 # add l1 penalty of active weights
                 for param_dict in self.l1_reg_list:
-                    current_loss += param_dict["l1"] * param_dict["parameter"].abs().sum()
+                    l1_penalty = 0.0 if self.num_epochs_since_task_start >= self.max_epochs_for_topology_update else param_dict["l1"]
+                    current_loss += l1_penalty * param_dict["parameter"].abs().sum()
 
                 # backpropagate and update weights
                 current_loss.backward()
