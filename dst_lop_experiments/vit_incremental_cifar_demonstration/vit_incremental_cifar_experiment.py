@@ -201,7 +201,6 @@ class IncrementalCIFARExperiment(Experiment):
 
         checkpoint = {
             "model_weights": self.net.state_dict(),
-            "net_masks": [m["mask"] for m in self.net_masks],
             "optim_state": self.optim.state_dict(),
             "torch_rng_state": torch.get_rng_state(),
             "numpy_rng_state": np.random.get_state(),
@@ -213,6 +212,9 @@ class IncrementalCIFARExperiment(Experiment):
             "current_running_avg_step": self.current_running_avg_step,
             "partial_results": partial_results
         }
+
+        if self.sparse_network:
+            checkpoint["net_masks"] = [m["mask"] for m in self.net_masks]
 
         return checkpoint
 
