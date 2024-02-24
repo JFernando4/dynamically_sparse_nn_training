@@ -17,7 +17,7 @@
   "drop_fraction": 0.01,
   "l1_masked_weight_penalty": 0.001,
   "dst_method": "set_rf",
-  "max_epochs_for_topology_update": 50,
+  "max_epochs_for_topology_update": 20,
   "msa_mask": true,
   "conv_mask": true,
   "__comment_5__": "For creating the results directory.",
