@@ -22,13 +22,13 @@
 
   "learning_params": {
     "stepsize": ["fixed", 0.05, 0.01, 0.005, 0.001],
-    "weight_decay": ["fixed", 1e-5, 5e-6, 2e-6, 1e-6, 5e-7, 1e-7, 1e-8],
+    "weight_decay": ["fixed", 1e-5, 1e-6, 1e-7, 1e-8],
     "dropout_prob": ["fixed", 0.0, 0.05, 0.1, 0.15]
   },
 
   "slurm_parameters": {
     "job_name": "vit_psweep",
-    "time": "2:00:00",
+    "time": "1:50:00",
     "max_runs_per_job": 1,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
     "output_filename": "vit_psweep-%n-%j.out",
