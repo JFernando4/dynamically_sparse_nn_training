@@ -80,7 +80,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.num_epochs = access_dict(exp_params, "num_epochs", default=1, val_type=int)
         self.current_num_classes = access_dict(exp_params, "initial_num_classes", default=2, val_type=int)
         self.fixed_classes = access_dict(exp_params, "fixed_classes", default=True, val_type=bool)
-        self.use_best_network = access_dict(exp_params, "use_best_network", default=False, val_type=bool)
+        self.use_best_network = access_dict(exp_params, "use_best_network", default=True, val_type=bool)
 
         # shrink and perturb parameters
         self.noise_std = access_dict(exp_params, "noise_std", default=0.0, val_type=float)
@@ -126,8 +126,7 @@ class IncrementalCIFARExperiment(Experiment):
                                                                apply_l1_reg_msa=self.msa_mask)
 
         # initialize optimizer and loss function
-        self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
-                                     weight_decay=self.weight_decay)
+        self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum)
         self.lr_scheduler = None
         self.loss = torch.nn.CrossEntropyLoss(reduction="mean")
 
@@ -358,6 +357,10 @@ class IncrementalCIFARExperiment(Experiment):
                 current_loss = self.loss(predictions, label)
                 detached_loss = current_loss.detach().clone()
 
+                for p in self.net.parameters():
+                    current_lr = self.stepsize if not self.use_lr_schedule else self.lr_scheduler.get_last_lr()[0]
+                    current_loss += (self.weight_decay / current_lr) * torch.square(p).sum()
+
                 # add l1 penalty of active weights
                 for param_dict in self.l1_reg_list:
                     l1_penalty = 0.0 if self.num_epochs_since_task_start >= self.max_epochs_for_topology_update else param_dict["l1"]
@@ -518,8 +521,7 @@ class IncrementalCIFARExperiment(Experiment):
                 initialize_vit_heads(self.net.heads)
             if self.reset_network:
                 initialize_vit(self.net)
-                self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
-                                             weight_decay=self.weight_decay)
+                self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum)
                 if self.sparse_network:
                     apply_weight_masks(self.net_masks)
             if self.use_lr_schedule:
