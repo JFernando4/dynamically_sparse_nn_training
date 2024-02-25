@@ -104,7 +104,8 @@ class IncrementalCIFARExperiment(Experiment):
             hidden_dim=384,
             mlp_dim=1536,
             num_classes=self.num_classes,
-            dropout=self.dropout_prob)
+            dropout=self.dropout_prob,
+            attention_dropout=self.dropout_prob)
         initialize_vit(self.net)
         self.net.to(self.device)
 
