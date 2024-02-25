@@ -126,7 +126,8 @@ class IncrementalCIFARExperiment(Experiment):
                                                                apply_l1_reg_msa=self.msa_mask)
 
         # initialize optimizer and loss function
-        self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum)
+        self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
+                                     weight_decay=self.weight_decay / self.stepsize)
         self.lr_scheduler = None
         self.loss = torch.nn.CrossEntropyLoss(reduction="mean")
 
@@ -357,10 +358,6 @@ class IncrementalCIFARExperiment(Experiment):
                 current_loss = self.loss(predictions, label)
                 detached_loss = current_loss.detach().clone()
 
-                for p in self.net.parameters():
-                    current_lr = self.stepsize if not self.use_lr_schedule else self.lr_scheduler.get_last_lr()[0]
-                    current_loss += (self.weight_decay / current_lr) * torch.square(p).sum()
-
                 # add l1 penalty of active weights
                 for param_dict in self.l1_reg_list:
                     l1_penalty = 0.0 if self.num_epochs_since_task_start >= self.max_epochs_for_topology_update else param_dict["l1"]
@@ -372,6 +369,9 @@ class IncrementalCIFARExperiment(Experiment):
                 self.inject_noise()
                 if self.use_lr_schedule:
                     self.lr_scheduler.step()
+                    if self.lr_scheduler.get_last_lr()[0] > 0.0:
+                        self.optim.param_groups[0]['weight_decay'] = self.weight_decay / self.lr_scheduler.get_last_lr()[0]
+
                 if self.sparse_network:
                     apply_weight_masks(self.net_masks)
 
@@ -405,6 +405,7 @@ class IncrementalCIFARExperiment(Experiment):
         scheduler = torch.optim.lr_scheduler.OneCycleLR(self.optim, max_lr=self.stepsize, anneal_strategy="linear",
                                                         epochs=self.class_increase_frequency,
                                                         steps_per_epoch=steps_per_epoch)
+        self.optim.param_groups[0]['weight_decay'] = self.weight_decay / scheduler.get_last_lr()[0]
         return scheduler
 
     def inject_noise(self):
@@ -521,11 +522,13 @@ class IncrementalCIFARExperiment(Experiment):
                 initialize_vit_heads(self.net.heads)
             if self.reset_network:
                 initialize_vit(self.net)
-                self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum)
+                self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
+                                             weight_decay=self.weight_decay / self.stepsize)
                 if self.sparse_network:
                     apply_weight_masks(self.net_masks)
             if self.use_lr_schedule:
                 self.lr_scheduler = self.get_lr_scheduler(steps_per_epoch=len(train_dataloader))
+                self.optim.param_groups[0]['weight_decay'] = self.weight_decay / self.lr_scheduler.get_last_lr()[0]
 
     def _save_model_parameters(self):
         """ Stores the parameters of the model, so it can be evaluated after the experiment is over """
