@@ -351,6 +351,7 @@ class IncrementalCIFARExperiment(Experiment):
         # start training
         for e in range(self.current_epoch, self.num_epochs):
             self._print("\tEpoch number: {0}".format(e + 1))
+            self._print("\tBest loss: {0}".format(self.best_loss))
 
             epoch_start = time.perf_counter()
             for step_number, sample in enumerate(train_dataloader):
