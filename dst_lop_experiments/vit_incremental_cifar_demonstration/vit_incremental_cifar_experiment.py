@@ -81,7 +81,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.current_num_classes = access_dict(exp_params, "initial_num_classes", default=2, val_type=int)
         self.fixed_classes = access_dict(exp_params, "fixed_classes", default=True, val_type=bool)
         self.use_best_network = access_dict(exp_params, "use_best_network", default=True, val_type=bool)
-        self.best_loss = access_dict(exp_params, "best_loss", default=False, val_type=bool)
+        self.compare_loss = access_dict(exp_params, "compare_loss", default=False, val_type=bool)
 
         # shrink and perturb parameters
         self.noise_std = access_dict(exp_params, "noise_std", default=0.0, val_type=float)
@@ -275,8 +275,13 @@ class IncrementalCIFARExperiment(Experiment):
             evaluation_time = time.perf_counter() - evaluation_start_time
 
             if compare_to_best:
-                if accuracy > self.best_accuracy:
+                if accuracy > self.best_accuracy and not self.compare_loss:
                     self.best_accuracy = accuracy
+                    self.best_model_parameters = deepcopy(self.net.state_dict())
+                    if self.use_dst:
+                        self.best_masks = [deepcopy(m["mask"]) for m in self.net_masks]
+                if loss < self.best_loss and self.compare_loss:
+                    self.best_loss = loss
                     self.best_model_parameters = deepcopy(self.net.state_dict())
                     if self.use_dst:
                         self.best_masks = [deepcopy(m["mask"]) for m in self.net_masks]
