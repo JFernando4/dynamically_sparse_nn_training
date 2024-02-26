@@ -529,7 +529,6 @@ class IncrementalCIFARExperiment(Experiment):
                     apply_weight_masks(self.net_masks)
             if self.use_lr_schedule:
                 self.lr_scheduler = self.get_lr_scheduler(steps_per_epoch=len(train_dataloader))
-                self.optim.param_groups[0]['weight_decay'] = self.weight_decay / self.lr_scheduler.get_last_lr()[0]
 
     def _save_model_parameters(self):
         """ Stores the parameters of the model, so it can be evaluated after the experiment is over """
