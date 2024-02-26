@@ -21,8 +21,8 @@
   },
 
   "learning_params": {
-    "stepsize": ["fixed", 0.1, 0.05, 0.01, 0.005],
-    "weight_decay": ["fixed", 1e-5, 5e-6, 2e-6, 1e-6],
+    "stepsize": ["fixed", 0.4, 0.2, 0.1, 0.05, 0.01],
+    "weight_decay": ["fixed", 1e-4, 1e-5, 5e-6],
     "dropout_prob": ["fixed", 0.0, 0.05, 0.1, 0.15]
   },
 
