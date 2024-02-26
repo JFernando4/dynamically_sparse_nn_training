@@ -143,8 +143,8 @@ class IncrementalCIFARExperiment(Experiment):
         self.all_classes = np.random.permutation(self.num_classes)  # define order classes
         self.best_accuracy = torch.tensor(0.0, device=self.device, dtype=torch.float32)
         self.best_loss = torch.ones_like(self.best_accuracy) * torch.inf
-        self.best_accuracy_model_parameters = {}
-        self.best_accuracy_masks = []
+        self.best_model_parameters = {}
+        self.best_masks = []
 
         """ For creating experiment checkpoints """
         self.experiment_checkpoints_dir_path = os.path.join(self.results_dir, "experiment_checkpoints")
@@ -277,9 +277,9 @@ class IncrementalCIFARExperiment(Experiment):
             if compare_to_best:
                 if accuracy > self.best_accuracy:
                     self.best_accuracy = accuracy
-                    self.best_accuracy_model_parameters = deepcopy(self.net.state_dict())
+                    self.best_model_parameters = deepcopy(self.net.state_dict())
                     if self.use_dst:
-                        self.best_accuracy_masks = [deepcopy(m["mask"]) for m in self.net_masks]
+                        self.best_masks = [deepcopy(m["mask"]) for m in self.net_masks]
 
             # store summaries
             self.results_dict[data_name + "_evaluation_runtime"][epoch_number] += torch.tensor(evaluation_time, dtype=torch.float32)
@@ -503,13 +503,13 @@ class IncrementalCIFARExperiment(Experiment):
         if (self.current_epoch % self.class_increase_frequency) == 0 and (not self.fixed_classes):
             self._print("Best accuracy in the task: {0:.4f}".format(self.best_accuracy))
             if self.use_best_network:
-                self.net.load_state_dict(self.best_accuracy_model_parameters)
+                self.net.load_state_dict(self.best_model_parameters)
                 if self.use_dst:
-                    for mask_dict, best_mask in zip(self.net_masks, self.best_accuracy_masks):
+                    for mask_dict, best_mask in zip(self.net_masks, self.best_masks):
                         mask_dict["mask"] = best_mask
             self.best_accuracy = torch.zeros_like(self.best_accuracy)
-            self.best_accuracy_model_parameters = {}
-            self.best_accuracy_masks = []
+            self.best_model_parameters = {}
+            self.best_masks = []
             self.num_epochs_since_task_start = 0
             self._save_model_parameters()
 
