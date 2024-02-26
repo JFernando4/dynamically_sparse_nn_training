@@ -508,6 +508,7 @@ class IncrementalCIFARExperiment(Experiment):
         if (self.current_epoch % self.class_increase_frequency) == 0 and (not self.fixed_classes):
             self._print("Best accuracy in the task: {0:.4f}".format(self.best_accuracy))
             if self.use_best_network:
+                print(self.best_loss)
                 self.net.load_state_dict(self.best_model_parameters)
                 if self.use_dst:
                     for mask_dict, best_mask in zip(self.net_masks, self.best_masks):
