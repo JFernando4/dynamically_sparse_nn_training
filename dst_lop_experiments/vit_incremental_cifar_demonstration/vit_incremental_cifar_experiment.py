@@ -508,6 +508,7 @@ class IncrementalCIFARExperiment(Experiment):
                     for mask_dict, best_mask in zip(self.net_masks, self.best_masks):
                         mask_dict["mask"] = best_mask
             self.best_accuracy = torch.zeros_like(self.best_accuracy)
+            self.best_loss = torch.ones_like(self.best_accuracy) * torch.inf
             self.best_model_parameters = {}
             self.best_masks = []
             self.num_epochs_since_task_start = 0
