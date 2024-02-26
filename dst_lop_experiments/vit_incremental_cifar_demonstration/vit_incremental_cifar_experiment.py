@@ -81,6 +81,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.current_num_classes = access_dict(exp_params, "initial_num_classes", default=2, val_type=int)
         self.fixed_classes = access_dict(exp_params, "fixed_classes", default=True, val_type=bool)
         self.use_best_network = access_dict(exp_params, "use_best_network", default=True, val_type=bool)
+        self.best_loss = access_dict(exp_params, "best_loss", default=False, val_type=bool)
 
         # shrink and perturb parameters
         self.noise_std = access_dict(exp_params, "noise_std", default=0.0, val_type=float)
@@ -141,6 +142,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.class_increase_frequency = 100
         self.all_classes = np.random.permutation(self.num_classes)  # define order classes
         self.best_accuracy = torch.tensor(0.0, device=self.device, dtype=torch.float32)
+        self.best_loss = torch.ones_like(self.best_accuracy) * torch.inf
         self.best_accuracy_model_parameters = {}
         self.best_accuracy_masks = []
 
