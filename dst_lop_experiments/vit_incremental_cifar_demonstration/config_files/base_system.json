@@ -8,13 +8,14 @@
       "weight_decay",
       "dropout_prob",
       "momentum",
-      "reset_network"
+      "reset_network",
+      "compare_loss"
     ]
   },
 
   "experiment_params": {
-    "stepsize": 0.01,
-    "weight_decay": 2e-6,
+    "stepsize": 0.2,
+    "weight_decay": 1e-5,
     "dropout_prob": 0.1,
     "momentum": 0.9,
     "num_epochs": 2000,
@@ -27,7 +28,8 @@
   },
 
   "learning_params": {
-    "reset_network": false
+    "reset_network": false,
+    "compare_loss": true
   },
 
   "slurm_parameters": {
