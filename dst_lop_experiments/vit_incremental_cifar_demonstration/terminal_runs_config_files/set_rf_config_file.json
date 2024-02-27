@@ -1,8 +1,8 @@
 {
   "__comment_1__": "Parameters found in a parameter sweep on the whole CIFAR-100 data set with lr scheduler.",
   "stepsize": 0.01,
-  "weight_decay": 0.001,
-  "dropout_prob": 0.05,
+  "weight_decay": 2e-6,
+  "dropout_prob": 0.1,
   "use_lr_schedule": true,
   "__comment_2__": "Parameter value used in the original vit paper section B.1.1.",
   "momentum": 0.9,
@@ -15,9 +15,8 @@
   "topology_update_freq": 10,
   "sparsity": 0.7,
   "drop_fraction": 0.01,
-  "l1_masked_weight_penalty": 0.001,
   "dst_method": "set_rf",
-  "max_epochs_for_topology_update": 20,
+  "max_epochs_for_topology_update": 50,
   "msa_mask": true,
   "conv_mask": true,
   "__comment_5__": "For creating the results directory.",
@@ -27,8 +26,6 @@
     "sparsity",
     "drop_fraction",
     "topology_update_freq",
-    "max_epochs_for_topology_update",
-    "weight_decay",
-    "l1_masked_weight_penalty"
+    "max_epochs_for_topology_update"
   ]
 }
