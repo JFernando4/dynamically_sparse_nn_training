@@ -1,8 +1,8 @@
 {
   "__comment_1__": "Parameters found in a parameter sweep on the whole CIFAR-100 data set with lr scheduler.",
   "stepsize": 0.01,
-  "weight_decay": 0.001,
-  "dropout_prob": 0.05,
+  "weight_decay": 2e-6,
+  "dropout_prob": 0.1,
   "use_lr_schedule": true,
   "__comment_2__": "Parameter value used in the original vit paper section B.1.1.",
   "momentum": 0.9,
@@ -12,19 +12,17 @@
   "fixed_classes": false,
   "use_best_network": true,
   "__comment_4__": "Dynamics sparse training parameters.",
-  "topology_update_freq": 6,
-  "epoch_freq": false,
-  "sparsity": 0.9,
-  "drop_fraction": 0.001,
-  "df_decay": 1.0,
+  "topology_update_freq": 20,
+  "sparsity": 0.01,
+  "drop_fraction": 0.005,
   "dst_method": "set_r",
+  "max_epochs_for_topology_update": 50,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
     "num_epochs",
     "dst_method",
     "sparsity",
     "drop_fraction",
-    "df_decay",
-    "topology_update_freq",
-    "epoch_freq"]
+    "max_epochs_for_topology_update",
+    "topology_update_freq"]
 }
