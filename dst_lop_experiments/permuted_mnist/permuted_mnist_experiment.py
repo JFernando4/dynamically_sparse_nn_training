@@ -16,7 +16,7 @@ from mlproj_manager.util.neural_networks import init_weights_kaiming
 
 # from src
 from src.sparsity_functions.sparsity_funcs import *
-from src.utils import apply_regularization_to_sequential_net, initialize_wandb
+from src.utils import apply_regularization_to_sequential_net
 
 
 class PermutedMNISTExperiment(Experiment):
@@ -77,9 +77,6 @@ class PermutedMNISTExperiment(Experiment):
         total_ckpts = self.num_images_per_epoch * self.num_epochs // (self.running_avg_window * self.batch_size)
         self.results_dict["train_loss_per_checkpoint"] = torch.zeros(total_ckpts, device=self.device, dtype=torch.float32)
         self.results_dict["train_accuracy_per_checkpoint"] = torch.zeros(total_ckpts, device=self.device, dtype=torch.float32)
-        """ Wandb set up """
-        self.wandb_run = initialize_wandb(exp_params, self.results_dir, self.run_index, project="dstlop", entity="dst-lop")
-        self.wandb_run = self.initialize_wandb(exp_params)
 
         """ For creating experiment checkpoints """
         self.current_epoch = 0
@@ -151,13 +148,6 @@ class PermutedMNISTExperiment(Experiment):
             torch.cuda.set_rng_state(checkpoint["cuda_rng_state"])
 
         partial_results = checkpoint["partial_results"]
-        # log partial results to wandb
-        for i in range(self.current_running_avg_step):
-            temp_results = {
-                "train_loss_per_checkpoint": partial_results["train_loss_per_checkpoint"][i],
-                "train_accuracy_per_checkpoint":partial_results["train_accuracy_per_checkpoint"][i]
-            }
-            wandb.log(temp_results, step=(i + 1) * self.running_avg_window)
 
         # store partial results
         for k, v in self.results_dict.items():
@@ -171,7 +161,6 @@ class PermutedMNISTExperiment(Experiment):
             "train_loss_per_checkpoint": self.running_loss / self.running_avg_window,
             "train_accuracy_per_checkpoint": self.running_accuracy / self.running_avg_window
         }
-        wandb.log(data=current_results, step=(self.current_running_avg_step + 1) * self.running_avg_window)
 
         # store train data for checkpoints
         self.results_dict["train_loss_per_checkpoint"][self.current_running_avg_step] += current_results["train_loss_per_checkpoint"]
@@ -253,12 +242,24 @@ def parse_args():
     parser.add_argument('--sparsity', type=int, default=0.8)
     parser.add_argument('--reinit_method', type=str, default='zero', choices=['zero', 'kaiming_normal'],
                         help="How to reinitialize the weights that are regrown.")
-    parser.add_argument('--wandb_dir', type=str, default=os.path.join(file_path, "results"))
-    parser.add_argument('--wandb_mode', type=str, default='offline', choices=['online', 'offline', 'disabled'])
-    parser.add_argument('--wandb_tags', type=str, default="test", help="String of comma separated tags.")
     parser.add_argument('--verbose', type=bool, default=True)
     args = parser.parse_args()
     return args
+
+
+def parse_terminal_arguments():
+    """ Reads experiment arguments """
+    import argparse
+    argument_parser = argparse.ArgumentParser()
+
+    # default values for stepsize, weight_decay, and dropout_prob found in a parameter sweep with lr scheduler
+    argument_parser.add_argument("--config_file", action="store", type=str, required=True,
+                                 help="JSON file with experiment parameters.")
+    argument_parser.add_argument("--run_index", action="store", type=int, default=0,
+                                 help="This determines the random seed for the experiment.")
+    argument_parser.add_argument("--verbose", action="store_true", default=False)
+
+    return argument_parser.parse_args()
 
 
 def main():
@@ -266,22 +267,24 @@ def main():
     This is a quick demonstration of how to run the experiments. For a more systematic run, use the mlproj_manager
     scheduler.
     """
-    args = parse_args()
-    experiment_parameters = vars(args)
+    from mlproj_manager.file_management.file_and_directory_management import read_json_file
+    terminal_arguments = parse_terminal_arguments()
+    experiment_parameters = read_json_file(terminal_arguments.config_file)
+    file_path = os.path.dirname(os.path.abspath(__file__))
 
+    experiment_parameters["data_path"] = os.path.join(file_path, "data")
     print(experiment_parameters)
+    relevant_parameters = experiment_parameters["relevant_parameters"]
 
-    relevant_parameters = ["num_epochs", "num_layers", "num_hidden", "algorithm", "sparsity", "stepsize",
-                           "l1_factor", "l2_factor"]
     results_dir_name = "{0}-{1}".format(relevant_parameters[0], experiment_parameters[relevant_parameters[0]])
     for relevant_param in relevant_parameters[1:]:
         results_dir_name += "_" + relevant_param + "-" + str(experiment_parameters[relevant_param])
 
     initial_time = time.perf_counter()
     exp = PermutedMNISTExperiment(experiment_parameters,
-                                  results_dir=os.path.join(experiment_parameters["results_dir"], results_dir_name),
-                                  run_index=experiment_parameters["index"],
-                                  verbose=experiment_parameters["verbose"])
+                                  results_dir=os.path.join(file_path, "results", results_dir_name),
+                                  run_index=terminal_arguments.run_index,
+                                  verbose=terminal_arguments.verbose)
     exp.run()
     final_time = time.perf_counter()
     print("The running time in minutes is: {0:.2f}".format((final_time - initial_time) / 60))
