@@ -275,16 +275,18 @@ class IncrementalCIFARExperiment(Experiment):
             evaluation_time = time.perf_counter() - evaluation_start_time
 
             if compare_to_best:
-                if accuracy > self.best_accuracy and not self.compare_loss:
+                if accuracy > self.best_accuracy:
                     self.best_accuracy = accuracy
-                    self.best_model_parameters = deepcopy(self.net.state_dict())
-                    if self.use_dst:
-                        self.best_masks = [deepcopy(m["mask"]) for m in self.net_masks]
-                if loss < self.best_loss and self.compare_loss:
+                    if not self.compare_loss:
+                        self.best_model_parameters = deepcopy(self.net.state_dict())
+                        if self.use_dst:
+                            self.best_masks = [deepcopy(m["mask"]) for m in self.net_masks]
+                if loss < self.best_loss:
                     self.best_loss = loss
-                    self.best_model_parameters = deepcopy(self.net.state_dict())
-                    if self.use_dst:
-                        self.best_masks = [deepcopy(m["mask"]) for m in self.net_masks]
+                    if self.compare_loss:
+                        self.best_model_parameters = deepcopy(self.net.state_dict())
+                        if self.use_dst:
+                            self.best_masks = [deepcopy(m["mask"]) for m in self.net_masks]
 
             # store summaries
             self.results_dict[data_name + "_evaluation_runtime"][epoch_number] += torch.tensor(evaluation_time, dtype=torch.float32)
