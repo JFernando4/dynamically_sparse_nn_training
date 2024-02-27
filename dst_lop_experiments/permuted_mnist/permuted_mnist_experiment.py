@@ -39,17 +39,39 @@ class PermutedMNISTExperiment(Experiment):
             torch.cuda.manual_seed(actual_seed)
 
         """ Experiment parameters """
+
+        # learning parameters
         self.stepsize = exp_params["stepsize"]
         self.l1_factor = exp_params["l1_factor"]
         self.l2_factor = exp_params["l2_factor"]
         self.use_regularization = (self.l2_factor > 0.0) or (self.l1_factor > 0.0)
-        self.data_path = exp_params["data_path"]
+
+        # architecture parameters
         self.num_epochs = exp_params["num_epochs"]      # number of training epochs
         self.num_layers = exp_params["num_layers"]      # number of hidden layers
         self.num_hidden = exp_params["num_hidden"]      # number of hidden units per hidden layer
-        self.dst_algorithm = access_dict(exp_params, "algorithm", default="set",
-                                         choices=["set", "dense", "static_sparse", "rigl"])
+
+        # problem parameters
+        self.steps_per_task = access_dict(exp_params, "steps_per_task", default=60000, val_type=int)
+
+        # dynamic sparse learning parameters
+        self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
         self.sparsity = access_dict(exp_params, "sparsity", default=0.0, val_type=float)
+        self.sparse_network = self.sparsity > 0
+        dst_methods_names = ["none", "set", "set_r", "set_rf", "rigl", "rigl_r", "rigl_rf", "set_ds"]
+        self.dst_method = access_dict(exp_params, "dst_method", default="none", val_type=str, choices=dst_methods_names)
+        self.use_dst = self.dst_method != "none"
+        self.use_set_ds = "set_ds" in self.dst_method
+        self.dst_update_function = set_up_dst_update_function(self.dst_method, init_type="xavier_uniform")
+        self.drop_fraction = access_dict(exp_params, "drop_fraction", default=0.0, val_type=float)
+        self.dst_scale = access_dict(exp_params, "dst_scale", default=1.0, val_type=float)
+        self.max_steps_for_topology_update = access_dict(exp_params, "max_steps_for_topology_update", default=100, val_type=int)
+        self.num_steps_since_task_start = 0
+        self.previously_added_masks = None
+        self.current_topology_update = 0
+
+        # paths for loading and storing data
+        self.data_path = exp_params["data_path"]
         self.results_dir = results_dir
 
         """ Training constants """
