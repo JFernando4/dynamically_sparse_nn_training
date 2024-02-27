@@ -7,14 +7,14 @@
   "__comment_2__": "Parameter value used in the original vit paper section B.1.1.",
   "momentum": 0.9,
   "__comment_3__": "Incremental experiment parameters. Classes increase by 5 every 100 epochs.",
-  "num_epochs": 800,
-  "initial_num_classes": 5,
-  "fixed_classes": false,
+  "num_epochs": 100,
+  "initial_num_classes": 100,
+  "fixed_classes": true,
   "use_best_network": true,
   "__comment_4__": "Dynamics sparse training parameters.",
   "topology_update_freq": 6,
-  "sparsity": 0.1,
-  "df_decay": 0.01,
+  "sparsity": 0.7,
+  "df_decay": 0.1,
   "dst_method": "set_ds",
   "msa_mask": true,
   "conv_mask": true,
@@ -24,6 +24,7 @@
     "dst_method",
     "sparsity",
     "df_decay",
-    "topology_update_freq"
+    "topology_update_freq",
+    "fixed_classes"
   ]
 }
