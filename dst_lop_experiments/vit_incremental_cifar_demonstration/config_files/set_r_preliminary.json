@@ -18,7 +18,7 @@
     "dropout_prob": 0.1,
     "use_lr_schedule": true,
     "momentum": 0.9,
-    "num_epochs": 800,
+    "num_epochs": 1000,
     "initial_num_classes": 5,
     "fixed_classes": false,
     "use_best_network": true,
@@ -29,15 +29,15 @@
     "dst_method": ["str", "set_r"],
     "sparsity": ["fixed", 0.05],
     "drop_fraction": ["fixed", 0.005, 0.01, 0.02, 0.05],
-    "topology_update_freq": ["fixed", 20],
-    "max_epochs_for_topology_update": ["fixed", 50, 100],
+    "topology_update_freq": ["fixed", 100],
+    "max_epochs_for_topology_update": ["fixed", 50],
     "msa_mask": true,
     "conv_mask": true
   },
 
   "slurm_parameters": {
     "job_name": "pre_vit_inc",
-    "time": "3:00:00",
+    "time": "4:40:00",
     "max_runs_per_job": 1,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
     "output_filename": "vit_inc-%n-%j.out",
