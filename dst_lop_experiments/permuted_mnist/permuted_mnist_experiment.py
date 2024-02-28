@@ -53,6 +53,7 @@ class PermutedMNISTExperiment(Experiment):
 
         # problem parameters
         self.steps_per_task = access_dict(exp_params, "steps_per_task", default=60000, val_type=int)
+        self.current_number_task_steps = 0
 
         # dynamic sparse learning parameters
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
@@ -120,9 +121,10 @@ class PermutedMNISTExperiment(Experiment):
             net.append(current_hidden_layer)
             if self.sparsity > 0.0:
                 masks.append(init_weight_mask(current_hidden_layer, self.sparsity))
+                masks[-1]["init_func"] = lambda z: init_weights_kaiming(z, nonlinearity="relu", normal=True)
             net.append(torch.nn.ReLU())
             in_features = out_features
-        # output layer
+        # output layer, no masks applied to it
         net.append(torch.nn.Linear(self.num_hidden, self.num_classes, bias=True))
 
         # initialize weights
