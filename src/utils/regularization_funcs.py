@@ -7,7 +7,7 @@ from mlproj_manager.util import apply_regularization_to_tensor
 
 @torch.no_grad()
 def apply_regularization_to_sequential_net(net: torch.nn.Sequential, l2_factor: float = 0.0, l1_factor: float = 0.0,
-                                           regularized_bias: bool = True):
+                                           regularized_bias: bool = False):
     """
     Applies regularization to each module in a Sequential module
     :param net: an instance of torch.nn.Sequential
