@@ -3,6 +3,7 @@ import time
 import os
 import argparse
 import pickle
+from copy import deepcopy
 
 # third party libraries
 from torch.utils.data import DataLoader
@@ -13,6 +14,7 @@ from mlproj_manager.experiments import Experiment
 from mlproj_manager.problems import MnistDataSet
 from mlproj_manager.util import access_dict, Permute, get_random_seeds, turn_off_debugging_processes
 from mlproj_manager.util.neural_networks import init_weights_kaiming
+from mlproj_manager.file_management import store_object_with_several_attempts
 
 # from src
 from src.sparsity_functions.sparsity_funcs import *
@@ -53,7 +55,8 @@ class PermutedMNISTExperiment(Experiment):
 
         # problem parameters
         self.steps_per_task = access_dict(exp_params, "steps_per_task", default=60000, val_type=int)
-        self.current_number_task_steps = 0
+        assert self.steps_per_task <= 60000
+        self.current_task_steps = 0
 
         # dynamic sparse learning parameters
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
@@ -212,8 +215,11 @@ class PermutedMNISTExperiment(Experiment):
 
             training_data.set_transformation(Permute(np.random.permutation(self.num_inputs)))  # apply new permutation
             print("\tEpoch number: {0}".format(self.current_epoch + 1))
-
+            self.current_task_steps = 0
             for i, sample in enumerate(mnist_data_loader):
+                if self.current_task_steps >= self.steps_per_task: break
+                self.current_task_steps += 1
+
                 # sample observation and target
                 image = sample["image"].reshape(self.batch_size, self.num_inputs)
                 label = sample["label"]
@@ -228,9 +234,11 @@ class PermutedMNISTExperiment(Experiment):
 
                 # backpropagate and update weights
                 current_reg_loss.backward()
-                if self.use_regularization: apply_regularization_to_sequential_net(self.net)
+                if self.use_regularization:
+                    apply_regularization_to_sequential_net(self.net, self.l2_factor, self.l1_factor)
                 self.optim.step()
-                if self.sparsity > 0.0: apply_weight_masks(self.masks)
+                if self.sparsity > 0.0:
+                    apply_weight_masks(self.masks)
 
                 # store summaries
                 current_accuracy = torch.mean((predictions.argmax(axis=1) == label.argmax(axis=1)).to(torch.float32))
@@ -240,35 +248,74 @@ class PermutedMNISTExperiment(Experiment):
                     self._print("\t\tStep Number: {0}".format(i + 1))
                     self._store_training_summaries()
 
-                # todo: topology update
+                if self.time_to_update_topology(self.current_task_steps):
+                    self.update_topology()
 
             self.current_epoch += 1
             if self.current_epoch % self.checkpoint_save_frequency == 0:    # checkpoint experiment
                 self.save_experiment_checkpoint()
+            self._save_mode_parameters()
 
+    def time_to_update_topology(self, current_minibatch: int):
+        if not self.use_dst:
+            return False
+        return (current_minibatch % self.topology_update_freq) == 0
 
-def parse_args():
-    file_path = os.path.dirname(os.path.abspath(__file__))
+    def update_topology(self):
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--index', type=int, default=0,
-                        help="Run index; a unique random seed is assigned to each different index.")
-    parser.add_argument('--stepsize', type=float, default=0.001)
-    parser.add_argument('--l1_factor', type=float, default=0.0)
-    parser.add_argument('--l2_factor', type=float, default=0.0)
-    parser.add_argument('--data_path', type=str, default=os.path.join(file_path, "data"))
-    parser.add_argument('--results_dir', type=str, default=os.path.join(file_path, "results"))
-    parser.add_argument('--num_epochs', type=int, default=5 )
-    parser.add_argument('--num_layers', type=int, default=3)
-    parser.add_argument('--num_hidden', type=int, default=100)
-    parser.add_argument('--algorithm', type=str, default='static_sparse',
-                        help="Algorithm to use for training.", choices=["set", "rigl", "static_sparse", "dense"])
-    parser.add_argument('--sparsity', type=int, default=0.8)
-    parser.add_argument('--reinit_method', type=str, default='zero', choices=['zero', 'kaiming_normal'],
-                        help="How to reinitialize the weights that are regrown.")
-    parser.add_argument('--verbose', type=bool, default=True)
-    args = parser.parse_args()
-    return args
+        if self.current_task_steps >= self.max_steps_for_topology_update:
+            self.current_topology_update += 1
+            return
+        removed_masks = []
+        added_masks = []
+        for mask in self.masks:
+            if self.use_set_ds:
+                third_arg = (mask["init_func"], self.dst_scale)
+            else:
+                if "num_active" not in mask.keys():
+                    mask["num_active"] = mask["mask"].sum()
+                third_arg = (int(self.drop_fraction * mask["num_active"]),)
+
+            old_mask = deepcopy(mask["mask"])
+            new_mask = self.dst_update_function(mask["mask"], mask["weight"], *third_arg)
+            mask_difference = old_mask - new_mask
+            added_masks.append(torch.clip(mask_difference, min=-1.0, max=0.0).abs())
+            removed_masks.append(torch.clip(mask_difference, min=0.0, max=1.0))
+            mask["mask"] = new_mask
+
+        self.store_mask_update_summary(removed_masks, added_masks)
+        self.current_topology_update += 1
+
+    def store_mask_update_summary(self, removed_masks: list, added_masks: list):
+        """
+        Computes and stores the proportion of weights that were removed in the current topology update that were just
+        added in the previous topology update
+
+        Args:
+            removed_masks: list of masks for weights that were removed in each layer for the current topology update
+            added_masks: list of masks for weights that were added in each layer in the current topology update
+
+        Return:
+            None, but updates self.results_dict and self.previously_added_masks
+        """
+
+        if self.previously_added_masks is not None:
+            total_removed = 0
+            total_added_then_removed = 0
+            for prev_added, recently_removed in zip(self.previously_added_masks, removed_masks):
+                total_removed += recently_removed.sum()
+                total_added_then_removed += ((prev_added + recently_removed) == 2.0).sum()
+            if total_removed == 0:
+                prop_added_then_removed = 0.0
+            else:
+                prop_added_then_removed = total_added_then_removed / total_removed
+            # print("Total removed: {0}".format(total_removed))
+            # print("Proportion of added then removed: {0:.4f}".format(prop_added_then_removed))
+            self.results_dict["prop_added_then_removed"][self.current_topology_update] += prop_added_then_removed
+            if self.dst_method == "set_rth" or self.dst_method == "set_ds":
+                self.results_dict["total_removed_per_update"][self.current_topology_update] += total_removed
+
+        self.previously_added_masks = added_masks
 
 
 def parse_terminal_arguments():
