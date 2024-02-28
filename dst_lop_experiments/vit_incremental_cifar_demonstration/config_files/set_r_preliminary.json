@@ -27,8 +27,8 @@
 
   "learning_params": {
     "dst_method": ["str", "set_r"],
-    "sparsity": ["fixed", 0.01],
-    "drop_fraction": ["fixed", 0.005, 0.01, 0.02, 0.05, 0.1],
+    "sparsity": ["fixed", 0.05],
+    "drop_fraction": ["fixed", 0.005, 0.01, 0.02, 0.05],
     "topology_update_freq": ["fixed", 20],
     "max_epochs_for_topology_update": ["fixed", 50, 100],
     "msa_mask": true,
