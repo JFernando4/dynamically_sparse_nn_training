@@ -473,7 +473,7 @@ class IncrementalCIFARExperiment(Experiment):
 
     def store_mask_update_summary(self, removed_masks: list, added_masks: list):
         """
-        Computes and storesthe proportion of weights that were removed in the current topology update that were just
+        Computes and stores the proportion of weights that were removed in the current topology update that were just
         added in the previous topology update
 
         Args:
