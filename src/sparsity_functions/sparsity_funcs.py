@@ -266,6 +266,24 @@ def init_weight_mask(layer, sparsity):
     return {'weight': layer.weight, 'mask': mask}
 
 
+@torch.no_grad()
+def restart_layer_norm(layer: torch.nn.LayerNorm, restart_num: float):
+    """ restarts a number of the layer norm parameters according to their weight magnitude
+
+    Args:
+        layer: The layer to restart weights for
+        restart_num: Number of weights to restart
+
+    Returns:
+        None, but modifies the given layer norm module
+    """
+
+    abs_weights = layer.weight.abs()
+    sorted_indices = torch.argsort(abs_weights)
+    layer.weight[sorted_indices[:restart_num]] = 1.0
+    layer.bias[sorted_indices[:restart_num]] = 0.0
+
+
 def init_weight_mask_from_tensor(weight_tensor: torch.Tensor, sparsity):
     """
     Initializes a weight mask for a tensor of parameters.
