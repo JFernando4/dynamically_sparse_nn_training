@@ -16,7 +16,7 @@ from mlproj_manager.experiments import Experiment
 from mlproj_manager.file_management import store_object_with_several_attempts
 from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict
 
-from src import initialize_vit, initialize_vit_heads, init_vit_weight_masks, init_weight_regularization_list
+from src import initialize_vit, initialize_vit_heads, init_vit_weight_masks, init_weight_regularization_list, initialize_layer_norm_module
 from src.sparsity_functions import set_up_dst_update_function, apply_weight_masks
 from src.utils import get_cifar_data
 
@@ -75,6 +75,7 @@ class IncrementalCIFARExperiment(Experiment):
         # network resetting parameters
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
         self.reset_network = access_dict(exp_params, "reset_network", default=False, val_type=bool)
+        self.reset_layer_norm = access_dict(exp_params, "reset_layer_norm", default=False, val_type=bool)
 
         # problem definition parameters
         self.num_epochs = access_dict(exp_params, "num_epochs", default=1, val_type=int)
@@ -537,6 +538,8 @@ class IncrementalCIFARExperiment(Experiment):
                                              weight_decay=self.weight_decay / self.stepsize)
                 if self.sparse_network:
                     apply_weight_masks(self.net_masks)
+            if self.reset_layer_norm:
+                self.net.apply(initialize_layer_norm_module)
             if self.use_lr_schedule:
                 self.lr_scheduler = self.get_lr_scheduler(steps_per_epoch=len(train_dataloader))
 
