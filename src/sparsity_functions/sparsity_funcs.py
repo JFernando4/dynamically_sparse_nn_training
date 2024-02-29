@@ -279,6 +279,7 @@ def restart_layer_norm(layer: torch.nn.LayerNorm, restart_num: int):
     """
 
     abs_weights = layer.weight.abs()
+    print(abs_weights.mean())
     sorted_indices = torch.argsort(abs_weights)
     layer.weight[sorted_indices[:restart_num]] = 1.0
     layer.bias[sorted_indices[:restart_num]] = 0.0
