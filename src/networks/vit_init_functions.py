@@ -32,7 +32,7 @@ def xavier_vit_initialization(m: torch.nn.Module):
         return
 
 
-def initialize_layer_norm_module(m: torch.nn.LayerNorm):
+def initialize_layer_norm_module(m: torch.nn.Module):
     """
     Initializes the weights of a layer norm module to one and the bias to zero
     """
