@@ -16,7 +16,7 @@ from mlproj_manager.experiments import Experiment
 from mlproj_manager.file_management import store_object_with_several_attempts
 from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict
 
-from src import initialize_vit, initialize_vit_heads, init_vit_weight_masks, init_weight_regularization_list, initialize_layer_norm_module
+from src import initialize_vit, initialize_vit_heads, init_vit_weight_masks, initialize_layer_norm_module
 from src.sparsity_functions import set_up_dst_update_function, apply_weight_masks
 from src.utils import get_cifar_data
 
@@ -27,8 +27,7 @@ class IncrementalCIFARExperiment(Experiment):
         super().__init__(exp_params, results_dir, run_index, verbose)
 
         # set debugging options for pytorch
-        debug = access_dict(exp_params, key="debug", default=True, val_type=bool)
-        turn_off_debugging_processes(debug)
+        turn_off_debugging_processes(access_dict(exp_params, key="debug", default=True, val_type=bool))
         # define torch device
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -69,8 +68,6 @@ class IncrementalCIFARExperiment(Experiment):
         self.num_epochs_since_task_start = 0
         self.previously_added_masks = None
         self.current_topology_update = 0
-        self.l1_masked_weight_penalty = access_dict(exp_params, "l1_masked_weight_penalty", default=0.0, val_type=float)
-        self.current_l1_penalty = self.l1_masked_weight_penalty
 
         # network resetting parameters
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
@@ -119,14 +116,6 @@ class IncrementalCIFARExperiment(Experiment):
                                                    include_class_token=self.ct_mask,
                                                    include_pos_embedding=self.pe_mask)
             apply_weight_masks(self.net_masks)
-
-        self.l1_reg_list = []
-        if self.l1_masked_weight_penalty > 0.0:
-            self.l1_reg_list = init_weight_regularization_list(self.net, l1_factor=self.l1_masked_weight_penalty,
-                                                               apply_l1_reg_ct=self.ct_mask,
-                                                               apply_l1_reg_pe=self.pe_mask,
-                                                               apply_l1_reg_cp=self.conv_mask,
-                                                               apply_l1_reg_msa=self.msa_mask)
 
         # initialize optimizer and loss function
         self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
@@ -369,11 +358,6 @@ class IncrementalCIFARExperiment(Experiment):
                 current_loss = self.loss(predictions, label)
                 detached_loss = current_loss.detach().clone()
 
-                # add l1 penalty of active weights
-                for param_dict in self.l1_reg_list:
-                    l1_penalty = 0.0 if self.num_epochs_since_task_start >= self.max_epochs_for_topology_update else param_dict["l1"]
-                    current_loss += l1_penalty * param_dict["parameter"].abs().sum()
-
                 # backpropagate and update weights
                 current_loss.backward()
                 self.optim.step()
@@ -561,21 +545,17 @@ def parse_terminal_arguments():
     """ Reads experiment arguments """
     import argparse
     argument_parser = argparse.ArgumentParser()
-
-    # default values for stepsize, weight_decay, and dropout_prob found in a parameter sweep with lr scheduler
     argument_parser.add_argument("--config_file", action="store", type=str, required=True,
                                  help="JSON file with experiment parameters.")
     argument_parser.add_argument("--run_index", action="store", type=int, default=0,
                                  help="This determines the random seed for the experiment.")
     argument_parser.add_argument("--verbose", action="store_true", default=False)
-
     return argument_parser.parse_args()
 
 
 def main():
     """
-    This is a quick demonstration of how to run the experiments. For a more systematic run, use the mlproj_manager
-    scheduler.
+    Function for running the experiment from command line given a path to a json config file
     """
     from mlproj_manager.file_management.file_and_directory_management import read_json_file
     terminal_arguments = parse_terminal_arguments()
