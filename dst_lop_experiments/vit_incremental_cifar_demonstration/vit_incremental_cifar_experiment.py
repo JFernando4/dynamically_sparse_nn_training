@@ -3,6 +3,7 @@ import time
 import os
 import pickle
 from copy import deepcopy
+from functools import partial
 
 # third party libraries
 import torch
@@ -105,7 +106,9 @@ class IncrementalCIFARExperiment(Experiment):
             mlp_dim=1536,
             num_classes=self.num_classes,
             dropout=self.dropout_prob,
-            attention_dropout=self.dropout_prob)
+            attention_dropout=self.dropout_prob,
+            norm_layer=partial(torch.nn.LayerNorm, eps=1e-6, elementwise_affine=False)
+        )
         initialize_vit(self.net)
         self.net.to(self.device)
 
