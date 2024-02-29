@@ -87,8 +87,7 @@ def init_vit_encoder_masks(mod: Encoder, sparsity_level: float, include_msa: boo
         ln_masks.extend(temp_ln_masks)
 
     if include_ln:
-        last_ln_mask = {"module": mod.ln}
-        ln_masks.append(last_ln_mask)
+        ln_masks.append(mod.ln)
 
     return masks, ln_masks
 
@@ -124,9 +123,7 @@ def init_encoder_block_masks(mod: EncoderBlock, sparsity_level: float, include_m
         masks.append(out_proj_mask)
 
     if include_ln:
-        l1_mask = {"module": mod.ln_1}
-        l2_mask = {"module": mod.ln_2}
-        ln_masks.extend([l1_mask, l2_mask])
+        ln_masks.extend([mod.ln_1, mod.ln_2])
 
     # mlp block masks
     for sub_m in mod.mlp.modules():
