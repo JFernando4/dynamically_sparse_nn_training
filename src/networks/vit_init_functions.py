@@ -37,6 +37,7 @@ def initialize_layer_norm_module(m: torch.nn.Module):
     Initializes the weights of a layer norm module to one and the bias to zero
     """
     if not isinstance(m, torch.nn.LayerNorm): return
+    if not m.elementwise_affine: return
     torch.nn.init.ones_(m.weight)
     torch.nn.init.zeros_(m.bias)
 
