@@ -267,7 +267,7 @@ def init_weight_mask(layer, sparsity):
 
 
 @torch.no_grad()
-def restart_layer_norm(layer: torch.nn.LayerNorm, restart_num: float):
+def restart_layer_norm(layer: torch.nn.LayerNorm, restart_num: int):
     """ restarts a number of the layer norm parameters according to their weight magnitude
 
     Args:
