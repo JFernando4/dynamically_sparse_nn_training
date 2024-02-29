@@ -1,0 +1,17 @@
+{
+  "__comment_1__": "Parameters found in a parameter sweep",
+  "stepsize": 0.01,
+  "__comment_2__": "Network architecture parameters",
+  "num_layers": 3,
+  "num_hidden": 100,
+  "__comment_3__": "Problem definition parameters",
+  "num_epochs": 500,
+  "steps_per_task": 60000,
+  "__comment_4__": "Dynamics sparse training parameters.",
+  "dst_method": "none",
+  "__comment_5__": "For creating the results directory.",
+  "relevant_parameters": [
+    "num_epochs",
+    "dst_method"
+  ]
+}

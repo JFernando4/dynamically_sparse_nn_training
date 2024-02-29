@@ -44,19 +44,20 @@ class PermutedMNISTExperiment(Experiment):
 
         # learning parameters
         self.stepsize = exp_params["stepsize"]
-        self.l1_factor = exp_params["l1_factor"]
-        self.l2_factor = exp_params["l2_factor"]
+        self.l1_factor = access_dict(exp_params, "l1_factor", default=0.0, val_type=float)
+        self.l2_factor = access_dict(exp_params, "l2_factor", default=0.0, val_type=float)
         self.use_regularization = (self.l2_factor > 0.0) or (self.l1_factor > 0.0)
 
         # architecture parameters
-        self.num_epochs = exp_params["num_epochs"]      # number of training epochs
         self.num_layers = exp_params["num_layers"]      # number of hidden layers
         self.num_hidden = exp_params["num_hidden"]      # number of hidden units per hidden layer
 
         # problem parameters
+        self.num_epochs = exp_params["num_epochs"]      # number of training epochs
         self.steps_per_task = access_dict(exp_params, "steps_per_task", default=60000, val_type=int)
         assert self.steps_per_task <= 60000
         self.current_task_steps = 0
+        self.current_experiment_step = 0
 
         # dynamic sparse learning parameters
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
@@ -100,9 +101,15 @@ class PermutedMNISTExperiment(Experiment):
         self.running_avg_window = 100
         self.current_running_avg_step, self.running_loss, self.running_accuracy, self.current_epoch = (0, 0.0, 0.0, 0)
         self.results_dict = {}
-        total_ckpts = self.num_images_per_epoch * self.num_epochs // (self.running_avg_window * self.batch_size)
+        total_ckpts = self.steps_per_task * self.num_epochs // (self.running_avg_window * self.batch_size)
         self.results_dict["train_loss_per_checkpoint"] = torch.zeros(total_ckpts, device=self.device, dtype=torch.float32)
         self.results_dict["train_accuracy_per_checkpoint"] = torch.zeros(total_ckpts, device=self.device, dtype=torch.float32)
+
+        if self.sparse_network:
+            total_top_updates = (self.steps_per_task * self.num_epochs) // self.topology_update_freq
+            self.results_dict["prop_added_then_removed"] = torch.zeros(total_top_updates, device=self.device, dtype=torch.float32)
+            if self.use_set_ds:
+                self.results_dict["total_removed_per_update"] = torch.zeros(total_top_updates, device=self.device, dtype=torch.float32)
 
         """ For creating experiment checkpoints """
         self.current_epoch = 0
@@ -219,6 +226,7 @@ class PermutedMNISTExperiment(Experiment):
             for i, sample in enumerate(mnist_data_loader):
                 if self.current_task_steps >= self.steps_per_task: break
                 self.current_task_steps += 1
+                self.current_experiment_step += 1
 
                 # sample observation and target
                 image = sample["image"].reshape(self.batch_size, self.num_inputs)
@@ -248,13 +256,12 @@ class PermutedMNISTExperiment(Experiment):
                     self._print("\t\tStep Number: {0}".format(i + 1))
                     self._store_training_summaries()
 
-                if self.time_to_update_topology(self.current_task_steps):
+                if self.time_to_update_topology(self.current_experiment_step):
                     self.update_topology()
 
             self.current_epoch += 1
             if self.current_epoch % self.checkpoint_save_frequency == 0:    # checkpoint experiment
                 self.save_experiment_checkpoint()
-            self._save_mode_parameters()
 
     def time_to_update_topology(self, current_minibatch: int):
         if not self.use_dst:
