@@ -47,6 +47,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.momentum = exp_params["momentum"]
         self.use_lr_schedule = access_dict(exp_params, "use_lr_schedule", default=True, val_type=bool)
         self.dropout_prob = access_dict(exp_params, "dropout_prob", default=0.05, val_type=float)
+        self.elementwise_affine = access_dict(exp_params, "elementwise_affine", default=True, val_type=bool)
 
         # dynamic sparse learning parameters
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
@@ -107,7 +108,7 @@ class IncrementalCIFARExperiment(Experiment):
             num_classes=self.num_classes,
             dropout=self.dropout_prob,
             attention_dropout=self.dropout_prob,
-            norm_layer=partial(torch.nn.LayerNorm, eps=1e-6, elementwise_affine=False)
+            norm_layer=partial(torch.nn.LayerNorm, eps=1e-6, elementwise_affine=self.elementwise_affine)
         )
         initialize_vit(self.net)
         self.net.to(self.device)
