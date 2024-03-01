@@ -66,7 +66,6 @@ class IncrementalCIFARExperiment(Experiment):
         self.conv_mask = access_dict(exp_params, "conv_mask", default=False, val_type=bool)     # conv projection mask
         self.ct_mask = access_dict(exp_params, "ct_mask", default=False, val_type=bool)         # class token mask
         self.pe_mask = access_dict(exp_params, "pe_mask", default=False, val_type=bool)         # pos-embedding mask
-        self.include_ln = access_dict(exp_params, "include_ln", default=False, val_type=bool)   # restart layer norm sporadically
         self.max_epochs_for_topology_update = access_dict(exp_params, "max_epochs_for_topology_update", default=100, val_type=int)
         self.num_epochs_since_task_start = 0
         self.previously_added_masks = None
@@ -119,8 +118,7 @@ class IncrementalCIFARExperiment(Experiment):
             self.net_masks, self.ln_masks = init_vit_weight_masks(self.net, self.sparsity, include_msa=self.msa_mask,
                                                                   include_conv_proj=self.conv_mask,
                                                                   include_class_token=self.ct_mask,
-                                                                  include_pos_embedding=self.pe_mask,
-                                                                  include_ln=self.include_ln)
+                                                                  include_pos_embedding=self.pe_mask)
             apply_weight_masks(self.net_masks)
 
         # initialize optimizer and loss function
@@ -458,11 +456,6 @@ class IncrementalCIFARExperiment(Experiment):
             mask["mask"] = new_mask
 
         self.store_mask_update_summary(removed_masks, added_masks)
-
-        if self.include_ln:
-            for ln_mod in self.ln_masks:
-                num_restart = int(ln_mod.weight.numel() * self.drop_fraction)
-                restart_layer_norm(ln_mod, num_restart)
 
         self.current_topology_update += 1
 
