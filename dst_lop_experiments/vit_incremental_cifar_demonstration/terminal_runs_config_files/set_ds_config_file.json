@@ -12,7 +12,7 @@
   "fixed_classes": false,
   "use_best_network": true,
   "__comment_4__": "Dynamics sparse training parameters.",
-  "topology_update_freq": 6,
+  "topology_update_freq": 20,
   "sparsity": 0.01,
   "df_decay": 0.1,
   "dst_method": "set_ds",
