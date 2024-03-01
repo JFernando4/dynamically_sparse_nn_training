@@ -44,6 +44,7 @@ class IncrementalCIFARExperiment(Experiment):
         # optimization parameters
         self.stepsize = exp_params["stepsize"]
         self.weight_decay = exp_params["weight_decay"]
+        self.rescaled_wd = access_dict(exp_params, "rescaled_wd", default=False, val_type=bool)
         self.momentum = exp_params["momentum"]
         self.use_lr_schedule = access_dict(exp_params, "use_lr_schedule", default=True, val_type=bool)
         self.dropout_prob = access_dict(exp_params, "dropout_prob", default=0.05, val_type=float)
@@ -120,8 +121,8 @@ class IncrementalCIFARExperiment(Experiment):
             apply_weight_masks(self.net_masks)
 
         # initialize optimizer and loss function
-        self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
-                                     weight_decay=self.weight_decay / self.stepsize)
+        wd = self.weight_decay if self.rescaled_wd else self.weight_decay / self.stepsize
+        self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum, weight_decay=wd)
         self.lr_scheduler = None
         self.loss = torch.nn.CrossEntropyLoss(reduction="mean")
 
@@ -366,7 +367,7 @@ class IncrementalCIFARExperiment(Experiment):
                 self.inject_noise()
                 if self.use_lr_schedule:
                     self.lr_scheduler.step()
-                    if self.lr_scheduler.get_last_lr()[0] > 0.0:
+                    if self.lr_scheduler.get_last_lr()[0] > 0.0 and not self.rescaled_wd:
                         self.optim.param_groups[0]['weight_decay'] = self.weight_decay / self.lr_scheduler.get_last_lr()[0]
 
                 if self.sparse_network:
@@ -402,7 +403,8 @@ class IncrementalCIFARExperiment(Experiment):
         scheduler = torch.optim.lr_scheduler.OneCycleLR(self.optim, max_lr=self.stepsize, anneal_strategy="linear",
                                                         epochs=self.class_increase_frequency,
                                                         steps_per_epoch=steps_per_epoch)
-        self.optim.param_groups[0]['weight_decay'] = self.weight_decay / scheduler.get_last_lr()[0]
+        if not self.rescaled_wd:
+            self.optim.param_groups[0]['weight_decay'] = self.weight_decay / scheduler.get_last_lr()[0]
         return scheduler
 
     def inject_noise(self):
@@ -519,8 +521,8 @@ class IncrementalCIFARExperiment(Experiment):
                 initialize_vit_heads(self.net.heads)
             if self.reset_network:
                 initialize_vit(self.net)
-                self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
-                                             weight_decay=self.weight_decay / self.stepsize)
+                wd = self.weight_decay if self.rescaled_wd else self.weight_decay / self.stepsize
+                self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum, weight_decay=wd)
                 if self.sparse_network:
                     apply_weight_masks(self.net_masks)
             if self.reset_layer_norm:
