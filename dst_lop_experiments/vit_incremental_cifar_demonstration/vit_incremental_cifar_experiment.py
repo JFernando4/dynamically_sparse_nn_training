@@ -19,7 +19,7 @@ from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, 
 
 from src import initialize_vit, initialize_vit_heads, init_vit_weight_masks, initialize_layer_norm_module
 from src.sparsity_functions import set_up_dst_update_function, apply_weight_masks, restart_layer_norm
-from src.utils import get_cifar_data
+from src.utils import get_cifar_data, compute_accuracy_from_batch
 
 
 class IncrementalCIFARExperiment(Experiment):
@@ -312,7 +312,7 @@ class IncrementalCIFARExperiment(Experiment):
                 test_predictions = self.net.forward(images)[:, self.all_classes[:self.current_num_classes]]
 
                 avg_loss += self.loss(test_predictions, test_labels)
-                avg_acc += torch.mean((test_predictions.argmax(axis=1) == test_labels.argmax(axis=1)).to(torch.float32))
+                avg_acc += compute_accuracy_from_batch(test_predictions, test_labels)
                 num_test_batches += 1
 
         return avg_loss / num_test_batches, avg_acc / num_test_batches
@@ -377,7 +377,7 @@ class IncrementalCIFARExperiment(Experiment):
                     apply_weight_masks(self.net_masks)
 
                 # store summaries
-                current_accuracy = torch.mean((predictions.argmax(axis=1) == label.argmax(axis=1)).to(torch.float32))
+                current_accuracy = compute_accuracy_from_batch(predictions, label)
                 self.running_loss += detached_loss
                 self.running_accuracy += current_accuracy.detach()
                 if (step_number + 1) % self.running_avg_window == 0:
@@ -435,8 +435,6 @@ class IncrementalCIFARExperiment(Experiment):
         """
 
         if self.num_epochs_since_task_start >= self.max_epochs_for_topology_update:
-            if self.num_epochs_since_task_start == self.max_epochs_for_topology_update:
-                print("No more updates")
             self.current_topology_update += 1
             return
 
