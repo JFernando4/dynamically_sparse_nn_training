@@ -8,7 +8,8 @@
       "sparsity",
       "drop_fraction",
       "topology_update_freq",
-      "max_epochs_for_topology_update"
+      "max_epochs_for_topology_update",
+      "reset_layer_norm"
     ]
   },
 
@@ -29,10 +30,11 @@
     "dst_method": ["str", "set_r"],
     "sparsity": ["fixed", 0.05],
     "drop_fraction": ["fixed", 0.005, 0.01, 0.02, 0.05],
-    "topology_update_freq": ["fixed", 100],
+    "topology_update_freq": ["fixed", 20],
     "max_epochs_for_topology_update": ["fixed", 50],
     "msa_mask": true,
-    "conv_mask": true
+    "conv_mask": true,
+    "reset_layer_norm": true
   },
 
   "slurm_parameters": {
