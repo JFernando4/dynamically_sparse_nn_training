@@ -7,14 +7,15 @@
       "dst_method",
       "sparsity",
       "df_decay",
-      "topology_update_freq"
+      "topology_update_freq",
+      "reset_layer_norm"
     ]
   },
 
   "experiment_params": {
     "stepsize": 0.01,
-    "weight_decay": 0.001,
-    "dropout_prob": 0.05,
+    "weight_decay": 2e-6,
+    "dropout_prob": 0.1,
     "use_lr_schedule": true,
     "momentum": 0.9,
     "num_epochs": 2000,
@@ -28,9 +29,10 @@
 
   "learning_params": {
     "topology_update_freq": ["fixed", 6],
-    "sparsity": ["fixed", 0.7],
-    "df_decay": ["fixed", 0.1],
-    "dst_method": ["str", "set_ds"]
+    "sparsity": ["fixed", 0.1],
+    "df_decay": ["fixed", 0.05],
+    "dst_method": ["str", "set_ds"],
+    "reset_layer_norm": ["fixed", true]
   },
 
   "slurm_parameters": {
