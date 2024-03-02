@@ -28,7 +28,7 @@
   },
 
   "learning_params": {
-    "topology_update_freq": ["fixed", 6],
+    "topology_update_freq": ["fixed", 40],
     "sparsity": ["fixed", 0.1],
     "df_decay": ["fixed", 0.05],
     "dst_method": ["str", "set_ds"],
