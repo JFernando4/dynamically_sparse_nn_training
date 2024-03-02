@@ -26,6 +26,8 @@
     "sparsity",
     "df_decay",
     "topology_update_freq",
-    "reset_layer_norm"
+    "reset_layer_norm",
+    "msa_mask",
+    "conv_mask"
   ]
 }
