@@ -14,7 +14,7 @@
   "__comment_4__": "Dynamics sparse training parameters.",
   "topology_update_freq": 40,
   "sparsity": 0.5,
-  "df_decay": 0.1,
+  "df_decay": 0.2,
   "dst_method": "set_ds",
   "msa_mask": false,
   "conv_mask": false,
