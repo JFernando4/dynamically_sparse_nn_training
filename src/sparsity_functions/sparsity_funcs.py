@@ -1,6 +1,4 @@
 import torch
-import wandb
-from mlproj_manager.util import apply_regularization_to_tensor
 
 
 @torch.no_grad()
@@ -312,17 +310,6 @@ def apply_weight_masks(masks: list):
     for mask_dict in masks:
         mask_dict["weight"].multiply_(mask_dict["mask"])
         # mask_dict['weight'].data *= mask_dict['mask']
-
-
-def apply_weight_penalty(masks: list, l1_penalty: float = 0.0):
-    """ Applies an L1 regularization penalty to active weights
-
-    Args:
-        masks: list of dicts, each dict contains 'weight' and 'mask' keys
-        l1_penalty: float corresponding to the sclae of the l1-regularization penalty
-    """
-    for mask_dict in masks:
-        apply_regularization_to_tensor(mask_dict["weight"], l1_factor=l1_penalty)
 
 
 def update_weight_masks(masks, drop_fraction, reinit='zero', grow_method='set'):
