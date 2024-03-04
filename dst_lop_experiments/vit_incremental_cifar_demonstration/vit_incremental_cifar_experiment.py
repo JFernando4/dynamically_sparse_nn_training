@@ -54,7 +54,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.epoch_freq = access_dict(exp_params, "epoch_freq", default=False, val_type=bool)
         self.sparsity = access_dict(exp_params, "sparsity", default=0.0, val_type=float)
         self.sparse_network = self.sparsity > 0
-        dst_methods_names = ["none", "set", "set_r", "set_rf", "rigl", "rigl_r", "rigl_rf", "set_rth", "set_rth_min", "set_ds"]
+        dst_methods_names = ["none", "set", "set_r", "set_rf", "rigl", "rigl_r", "rigl_rf", "set_ds"]
         self.dst_method = access_dict(exp_params, "dst_method", default="none", val_type=str, choices=dst_methods_names)
         self.use_dst = self.dst_method != "none"
         self.use_set_rth = "rth" in self.dst_method
