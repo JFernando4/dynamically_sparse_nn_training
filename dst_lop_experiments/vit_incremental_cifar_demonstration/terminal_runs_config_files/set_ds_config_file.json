@@ -12,14 +12,12 @@
   "fixed_classes": false,
   "use_best_network": true,
   "__comment_4__": "Dynamics sparse training parameters.",
-  "topology_update_freq": 40,
+  "topology_update_freq": 6,
   "sparsity": 0.1,
   "df_decay": 0.05,
   "dst_method": "set_ds",
   "msa_mask": true,
   "conv_mask": true,
-  "pe_mask": true,
-  "ct_mask": true,
   "reset_layer_norm": true,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
@@ -28,8 +26,6 @@
     "sparsity",
     "df_decay",
     "topology_update_freq",
-    "reset_layer_norm",
-    "pe_mask",
-    "ct_mask"
+    "reset_layer_norm"
   ]
 }
