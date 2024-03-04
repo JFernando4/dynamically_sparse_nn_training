@@ -18,7 +18,7 @@ from mlproj_manager.file_management import store_object_with_several_attempts
 from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict
 
 from src import initialize_vit, initialize_vit_heads, init_vit_weight_masks, initialize_layer_norm_module
-from src.sparsity_functions import set_up_dst_update_function, apply_weight_masks, restart_layer_norm
+from src.sparsity_functions import set_up_dst_update_function, apply_weight_masks
 from src.utils import get_cifar_data, compute_accuracy_from_batch
 
 
