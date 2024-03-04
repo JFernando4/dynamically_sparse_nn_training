@@ -1,0 +1,52 @@
+{
+  "file_management": {
+    "experiment_name": "preliminary_vit_dst_cifar_incremental",
+    "data_path": "/home/jfernan/dynamically_sparse_nn_training/experiments/vit_incremental_cifar_demonstration/data/",
+    "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
+    "relevant_parameters": [
+      "dst_method",
+      "sparsity",
+      "drop_fraction",
+      "topology_update_freq",
+      "max_epochs_for_topology_update",
+      "reset_layer_norm"
+    ]
+  },
+
+  "experiment_params": {
+    "stepsize": 0.01,
+    "weight_decay": 2e-6,
+    "dropout_prob": 0.1,
+    "use_lr_schedule": true,
+    "momentum": 0.9,
+    "num_epochs": 1000,
+    "initial_num_classes": 5,
+    "fixed_classes": false,
+    "use_best_network": true,
+    "runs": 2
+  },
+
+  "learning_params": {
+    "dst_method": ["str", "set"],
+    "sparsity": ["fixed", 0.1],
+    "drop_fraction": ["fixed", 0.02, 0.01, 0.005, 0.001],
+    "topology_update_freq": ["fixed", 40],
+    "max_epochs_for_topology_update": ["fixed", 80, 100],
+    "msa_mask": true,
+    "conv_mask": true,
+    "reset_layer_norm": true
+  },
+
+  "slurm_parameters": {
+    "job_name": "pre_vit_inc",
+    "time": "4:40:00",
+    "max_runs_per_job": 1,
+    "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
+    "output_filename": "vit_inc-%n-%j.out",
+    "mem": "12G",
+    "mail-type": "BEGIN,END,FAIL",
+    "mail-user":"jfhernan@ualberta.ca",
+    "cpus-per-task": 12,
+    "gpus-per-node": 1
+  }
+}
