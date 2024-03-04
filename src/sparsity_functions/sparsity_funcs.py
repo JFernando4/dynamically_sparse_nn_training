@@ -38,12 +38,11 @@ def update_one_weight_mask_rigl(mask, weight, refresh_num, reinit='zero'):
         refresh_num: The number of weights to drop and grow.
         reinit: How to reinitialize the weights that are regrown. Options: 'zero', 'kaiming_normal'
         """
-    # mask = prune_magnitude(mask, weight, refresh_num)
     if refresh_num == 0.0:
         return mask
     mask = prune_magnitude_optimized(mask, weight, refresh_num)
     if reinit == "random_fixed":
-        mask = grow_random_fixed(mask, weight, refresh_num)
+        mask = grow_random_fixed_rigl(mask, weight, refresh_num)
     else:
         mask = grow_rigl(mask, weight, refresh_num, reinit)
     weight.multiply_(mask)
@@ -193,9 +192,35 @@ def grow_random(mask, weight, grow_num, reinit):
 
 
 @torch.no_grad()
+def grow_random_fixed_rigl(mask, weight, grow_num):
+    """
+     Grow connections in the weight mask by selecting the entries where the gradient is largest. The initialization
+     value for the new weights is the minimum of the absolute value of the current active weights times the sign of
+     the gradient.
+    """
+    non_active = len(torch.where(mask.flatten() == 0)[0])
+    if non_active == 0:
+        return mask
+    # get minimum of the absolute value of the current active weights
+    active_indices = torch.where(mask.flatten() == 1.0)[0]
+    min_abs_active_weights = weight.abs().flatten()[active_indices].min()
+    # find and grow where the magnitude of the gradient is largest for inactive weights
+    grad = torch.abs(weight.grad) + 1e-3    # if weight grads happen to be 0, they will get a small value now
+    grad = grad * (mask == 0.0)             # only consider non-active weights
+    sorted_grads_indices = torch.argsort(grad.flatten(), descending=True)
+    to_grow = min(grow_num, non_active)
+    to_grow_indices = sorted_grads_indices[:to_grow]
+    mask.view(-1)[to_grow_indices] = 1.0
+    # initialize new weights to the min of absolute value of active weights times the sign of the gradient
+    weight.view(-1)[to_grow_indices] = min_abs_active_weights * torch.sign(weight.grad.view(-1)[to_grow_indices])
+
+    return mask
+
+
+@torch.no_grad()
 def grow_random_fixed(mask, weight, grow_num, reinit_val: float = None):
     """
-    Grow connections in thew eight mask by randomly selecting inactive weights.
+    Grow connections in the weight mask by randomly selecting inactive weights.
     The value of those weights is set to the provided reinitialization value or the min of the current active weights.
     """
     # get the minimum of the current active indices
@@ -226,7 +251,7 @@ def grow_rigl(mask, weight, grow_num, reinit):
 
     grad = torch.abs(weight.grad) + 1e-3  # if weight grads happen to be 0, they will get a small value now
     grad = grad * (mask == 0).float()  # only consider non-active weights
-    sorted_grads, indices = torch.sort(grad.flatten(), descending=True)
+    indices = torch.argsort(grad.flatten(), descending=True)
 
     to_grow = min(grow_num, non_active)
     indices = indices[:to_grow]
