@@ -19,6 +19,7 @@
   "msa_mask": true,
   "conv_mask": true,
   "pe_mask": true,
+  "ct_mask": true,
   "reset_layer_norm": true,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
@@ -28,6 +29,7 @@
     "df_decay",
     "topology_update_freq",
     "reset_layer_norm",
-    "pe_mask"
+    "pe_mask",
+    "ct_mask"
   ]
 }
