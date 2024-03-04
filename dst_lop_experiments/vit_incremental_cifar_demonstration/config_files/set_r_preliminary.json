@@ -28,10 +28,10 @@
 
   "learning_params": {
     "dst_method": ["str", "set_r"],
-    "sparsity": ["fixed", 0.05],
-    "drop_fraction": ["fixed", 0.005, 0.01, 0.02, 0.05],
-    "topology_update_freq": ["fixed", 20],
-    "max_epochs_for_topology_update": ["fixed", 50],
+    "sparsity": ["fixed", 0.1],
+    "drop_fraction": ["fixed", 0.02, 0.01, 0.005, 0.001],
+    "topology_update_freq": ["fixed", 40],
+    "max_epochs_for_topology_update": ["fixed", 80, 100],
     "msa_mask": true,
     "conv_mask": true,
     "reset_layer_norm": true
