@@ -87,12 +87,6 @@ def update_one_weight_mask_set_random_with_threshold(mask, weight: torch.Tensor,
             threshold: Threshold used for pruning and growing
             reinit_type: str indicating how to reinitialize weights "thr" = +/-threshold, "min" = +/-min active weight
     """
-    # inactive_indices = torch.where(mask.flatten() == 0.0)[0]
-    # drop_num = inactive_indices.numel()
-    # weight.view(-1)[inactive_indices[:len(inactive_indices) // 2]] += threshold
-    # weight.view(-1)[inactive_indices[len(inactive_indices) // 2:]] -= threshold
-    #
-    # mask = prune_magnitude_from_dense_weights(weight, drop_num)
     active_weights_indices = torch.where(mask.flatten() == 1.0)[0]
     abs_active_weights = weight.flatten().abs()[active_weights_indices]
     to_prune = torch.where(abs_active_weights < threshold)[0]
