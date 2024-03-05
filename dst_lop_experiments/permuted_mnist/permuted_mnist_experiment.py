@@ -71,12 +71,13 @@ class PermutedMNISTExperiment(Experiment):
         self.drop_fraction = access_dict(exp_params, "drop_fraction", default=0.0, val_type=float)
         self.dst_scale = access_dict(exp_params, "dst_scale", default=1.0, val_type=float)
         self.max_steps_for_topology_update = access_dict(exp_params, "max_steps_for_topology_update", default=100, val_type=int)
-        self.num_steps_since_task_start = 0
         self.previously_added_masks = None
         self.current_topology_update = 0
 
         # paths for loading and storing data
         self.data_path = exp_params["data_path"]
+        self.store_parameters = access_dict(exp_params, "store_parameters", default=False, val_type=bool)
+        self.parameter_save_frequency = 50  # how often to save the parameters in terms of number of tasks
         self.results_dir = results_dir
 
         """ Training constants """
@@ -219,8 +220,8 @@ class PermutedMNISTExperiment(Experiment):
 
     def train(self, mnist_data_loader: DataLoader, training_data: MnistDataSet):
 
-        # for e in range(self.num_epochs):
         while self.current_epoch < self.num_epochs:
+            self._save_model_parameters()
 
             training_data.set_transformation(Permute(np.random.permutation(self.num_inputs)))  # apply new permutation
             print("\tEpoch number: {0}".format(self.current_epoch + 1))
@@ -325,6 +326,19 @@ class PermutedMNISTExperiment(Experiment):
                 self.results_dict["total_removed_per_update"][self.current_topology_update] += total_removed
 
         self.previously_added_masks = added_masks
+
+    def _save_model_parameters(self):
+        """ Stores the parameters of the network """
+        if not (self.current_epoch % self.parameter_save_frequency == 0):
+            return
+        model_parameters_dir_path = os.path.join(self.results_dir, "model_parameters")
+        os.makedirs(model_parameters_dir_path, exist_ok=True)
+
+        file_name = "index-{0}_task-{1}.pt".format(self.run_index, self.current_epoch)
+        file_path = os.path.join(model_parameters_dir_path, file_name)
+
+        store_object_with_several_attempts((self.net.state_dict(), self.masks), file_path, storing_format="torch",
+                                           num_attempts=10)
 
 
 def parse_terminal_arguments():
