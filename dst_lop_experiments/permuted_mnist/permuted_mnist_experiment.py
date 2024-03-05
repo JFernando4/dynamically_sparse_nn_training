@@ -115,7 +115,7 @@ class PermutedMNISTExperiment(Experiment):
         self.current_epoch = 0
         self.experiment_checkpoints_dir_path = os.path.join(self.results_dir, "experiment_checkpoints")
         self.checkpoint_identifier_name = "current_epoch"
-        self.checkpoint_save_frequency = 1     # create running_avg_window every 10 epochs
+        self.checkpoint_save_frequency = 1     # create a checkpoint after this many task changes
         self.load_experiment_checkpoint()
 
     # ----------------------------- For initializing the experiment ----------------------------- #
@@ -152,6 +152,7 @@ class PermutedMNISTExperiment(Experiment):
 
         checkpoint = {
             "model_weights": self.net.state_dict(),
+            "weight_masks": self.masks,
             "torch_rng_state": torch.random.get_rng_state(),
             "numpy_rng_state": np.random.get_state(),
             "epoch_number": self.current_epoch,
@@ -172,6 +173,7 @@ class PermutedMNISTExperiment(Experiment):
             checkpoint = pickle.load(experiment_checkpoint_file)
 
         self.net.load_state_dict(checkpoint["model_weights"])
+        self.masks = checkpoint["weight_masks"]
         torch.set_rng_state(checkpoint["torch_rng_state"])
         np.random.set_state(checkpoint["numpy_rng_state"])
         self.current_epoch = checkpoint["epoch_number"]
