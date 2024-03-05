@@ -322,7 +322,7 @@ class PermutedMNISTExperiment(Experiment):
             # print("Total removed: {0}".format(total_removed))
             # print("Proportion of added then removed: {0:.4f}".format(prop_added_then_removed))
             self.results_dict["prop_added_then_removed"][self.current_topology_update] += prop_added_then_removed
-            if self.dst_method == "set_rth" or self.dst_method == "set_ds":
+            if self.use_set_ds:
                 self.results_dict["total_removed_per_update"][self.current_topology_update] += total_removed
 
         self.previously_added_masks = added_masks
