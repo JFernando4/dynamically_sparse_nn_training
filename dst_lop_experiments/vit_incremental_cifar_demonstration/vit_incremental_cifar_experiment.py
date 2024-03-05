@@ -3,7 +3,6 @@ import time
 import os
 import pickle
 from copy import deepcopy
-from functools import partial
 
 # third party libraries
 import torch
