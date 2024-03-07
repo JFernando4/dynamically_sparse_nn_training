@@ -53,7 +53,7 @@ class PermutedMNISTExperiment(Experiment):
         self.num_hidden = exp_params["num_hidden"]      # number of hidden units per hidden layer
 
         # problem parameters
-        self.num_epochs = exp_params["num_epochs"]      # number of training epochs
+        self.num_permutations = exp_params["num_permutations"]      # number of permutations (1 permutation = 1 epoch)
         self.steps_per_task = access_dict(exp_params, "steps_per_task", default=60000, val_type=int)
         assert self.steps_per_task <= 60000
         self.current_task_steps = 0
@@ -84,7 +84,7 @@ class PermutedMNISTExperiment(Experiment):
         self.batch_size = 1
         self.num_classes = 10
         self.num_inputs = 784
-        self.num_images_per_epoch = 60000
+        self.max_num_images_per_permutation = 60000
 
         """ Network set up """
         self.net, self.masks = self.initialize_network()
@@ -100,22 +100,22 @@ class PermutedMNISTExperiment(Experiment):
 
         """ Experiment Summaries """
         self.running_avg_window = 100
-        self.current_running_avg_step, self.running_loss, self.running_accuracy, self.current_epoch = (0, 0.0, 0.0, 0)
+        self.current_running_avg_step, self.running_loss, self.running_accuracy, self.current_permutation = (0, 0.0, 0.0, 0)
         self.results_dict = {}
-        total_ckpts = self.steps_per_task * self.num_epochs // (self.running_avg_window * self.batch_size)
+        total_ckpts = self.steps_per_task * self.num_permutations // (self.running_avg_window * self.batch_size)
         self.results_dict["train_loss_per_checkpoint"] = torch.zeros(total_ckpts, device=self.device, dtype=torch.float32)
         self.results_dict["train_accuracy_per_checkpoint"] = torch.zeros(total_ckpts, device=self.device, dtype=torch.float32)
 
         if self.sparse_network:
-            total_top_updates = (self.steps_per_task * self.num_epochs) // self.topology_update_freq
+            total_top_updates = (self.steps_per_task * self.num_permutations) // self.topology_update_freq
             self.results_dict["prop_added_then_removed"] = torch.zeros(total_top_updates, device=self.device, dtype=torch.float32)
             if self.use_set_ds:
                 self.results_dict["total_removed_per_update"] = torch.zeros(total_top_updates, device=self.device, dtype=torch.float32)
 
         """ For creating experiment checkpoints """
-        self.current_epoch = 0
+        self.current_permutation = 0
         self.experiment_checkpoints_dir_path = os.path.join(self.results_dir, "experiment_checkpoints")
-        self.checkpoint_identifier_name = "current_epoch"
+        self.checkpoint_identifier_name = "current_permutation"
         self.checkpoint_save_frequency = 1     # create a checkpoint after this many task changes
         self.load_experiment_checkpoint()
 
@@ -156,7 +156,7 @@ class PermutedMNISTExperiment(Experiment):
             "weight_masks": self.masks,
             "torch_rng_state": torch.random.get_rng_state(),
             "numpy_rng_state": np.random.get_state(),
-            "epoch_number": self.current_epoch,
+            "permutation_number": self.current_permutation,
             "current_running_avg_step": self.current_running_avg_step,
             "current_running_averages": (self.running_accuracy, self.running_loss),
             "partial_results": partial_results
@@ -177,7 +177,7 @@ class PermutedMNISTExperiment(Experiment):
         self.masks = checkpoint["weight_masks"]
         torch.set_rng_state(checkpoint["torch_rng_state"])
         np.random.set_state(checkpoint["numpy_rng_state"])
-        self.current_epoch = checkpoint["epoch_number"]
+        self.current_permutation = checkpoint["permutation_number"]
         self.current_running_avg_step = checkpoint["current_running_avg_step"]
         self.running_accuracy, self.running_loss = checkpoint["current_running_averages"]
 
@@ -220,11 +220,11 @@ class PermutedMNISTExperiment(Experiment):
 
     def train(self, mnist_data_loader: DataLoader, training_data: MnistDataSet):
 
-        while self.current_epoch < self.num_epochs:
+        while self.current_permutation < self.num_permutations:
             self._save_model_parameters()
 
             training_data.set_transformation(Permute(np.random.permutation(self.num_inputs)))  # apply new permutation
-            print("\tEpoch number: {0}".format(self.current_epoch + 1))
+            print("\tPermutation number: {0}".format(self.current_permutation + 1))
             self.current_task_steps = 0
             for i, sample in enumerate(mnist_data_loader):
                 if self.current_task_steps >= self.steps_per_task: break
@@ -262,8 +262,8 @@ class PermutedMNISTExperiment(Experiment):
                 if self.time_to_update_topology(self.current_experiment_step):
                     self.update_topology()
 
-            self.current_epoch += 1
-            if self.current_epoch % self.checkpoint_save_frequency == 0:    # checkpoint experiment
+            self.current_permutation += 1
+            if self.current_permutation % self.checkpoint_save_frequency == 0:    # checkpoint experiment
                 self.save_experiment_checkpoint()
 
     def time_to_update_topology(self, current_minibatch: int):
@@ -329,12 +329,12 @@ class PermutedMNISTExperiment(Experiment):
 
     def _save_model_parameters(self):
         """ Stores the parameters of the network """
-        if not (self.current_epoch % self.parameter_save_frequency == 0):
+        if not (self.current_permutation % self.parameter_save_frequency == 0):
             return
         model_parameters_dir_path = os.path.join(self.results_dir, "model_parameters")
         os.makedirs(model_parameters_dir_path, exist_ok=True)
 
-        file_name = "index-{0}_task-{1}.pt".format(self.run_index, self.current_epoch)
+        file_name = "index-{0}_task-{1}.pt".format(self.run_index, self.current_permutation)
         file_path = os.path.join(model_parameters_dir_path, file_name)
 
         store_object_with_several_attempts((self.net.state_dict(), self.masks), file_path, storing_format="torch",

@@ -15,7 +15,7 @@
   "max_steps_for_topology_update": 60000,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
-    "num_epochs",
+    "num_permutations",
     "dst_method",
     "sparsity",
     "drop_fraction",
