@@ -248,6 +248,10 @@ class PermutedMNISTExperiment(Experiment):
                 if self.use_regularization:
                     apply_regularization_to_sequential_net(self.net, self.l2_factor, self.l1_factor)
                 self.optim.step()
+
+                # update topology and apply masks to weights
+                if self.time_to_update_topology(self.current_experiment_step):
+                    self.update_topology()
                 if self.sparsity > 0.0:
                     apply_weight_masks(self.masks)
 
@@ -259,8 +263,7 @@ class PermutedMNISTExperiment(Experiment):
                     self._print("\t\tStep Number: {0}".format(i + 1))
                     self._store_training_summaries()
 
-                if self.time_to_update_topology(self.current_experiment_step):
-                    self.update_topology()
+
 
             self.current_permutation += 1
             if self.current_permutation % self.checkpoint_save_frequency == 0:    # checkpoint experiment
