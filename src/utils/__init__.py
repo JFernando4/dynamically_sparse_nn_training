@@ -4,5 +4,5 @@
 from .regularization_funcs import apply_regularization_to_sequential_net, apply_regularization_to_net, \
     apply_regularization_to_parameter_list
 from .evaluation_functions import compute_accuracy_from_batch
-from .wandb_setup import initialize_wandb, get_wandb_id
+# from .wandb_setup import initialize_wandb, get_wandb_id
 from .data_management import get_cifar_data, subsample_cifar_data_set
