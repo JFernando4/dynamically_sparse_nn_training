@@ -5,7 +5,7 @@
   "num_layers": 3,
   "num_hidden": 100,
   "__comment_3__": "Problem definition parameters",
-  "num_epochs": 500,
+  "num_permutations": 500,
   "steps_per_task": 10000,
   "__comment_4__": "Dynamics sparse training parameters.",
   "dst_method": "none",
