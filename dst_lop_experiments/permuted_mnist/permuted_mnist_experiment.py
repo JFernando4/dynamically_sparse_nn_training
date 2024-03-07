@@ -153,7 +153,6 @@ class PermutedMNISTExperiment(Experiment):
 
         checkpoint = {
             "model_weights": self.net.state_dict(),
-            "weight_masks": self.masks,
             "torch_rng_state": torch.random.get_rng_state(),
             "numpy_rng_state": np.random.get_state(),
             "permutation_number": self.current_permutation,
@@ -161,6 +160,9 @@ class PermutedMNISTExperiment(Experiment):
             "current_running_averages": (self.running_accuracy, self.running_loss),
             "partial_results": partial_results
         }
+
+        if self.sparse_network:
+            checkpoint["weight_masks"] = [m["mask"] for m in self.masks]
 
         if self.device.type == "cuda":
             checkpoint["cuda_rng_state"] = torch.cuda.get_rng_state()
@@ -190,6 +192,12 @@ class PermutedMNISTExperiment(Experiment):
         for k, v in self.results_dict.items():
             self.results_dict[k] = partial_results[k] if not isinstance(partial_results[k], torch.Tensor) else \
             partial_results[k].to(self.device)
+
+        if not self.sparse_network:
+            return
+
+        for i, mask in enumerate(self.masks):
+            self.masks[i]["mask"] = checkpoint["weight_masks"][i].to(self.device)
 
     # ----------------------------- For storing summaries ----------------------------- #
     def _store_training_summaries(self):
@@ -263,8 +271,6 @@ class PermutedMNISTExperiment(Experiment):
                     self._print("\t\tStep Number: {0}".format(i + 1))
                     self._store_training_summaries()
 
-
-
             self.current_permutation += 1
             if self.current_permutation % self.checkpoint_save_frequency == 0:    # checkpoint experiment
                 self.save_experiment_checkpoint()
@@ -332,7 +338,7 @@ class PermutedMNISTExperiment(Experiment):
 
     def _save_model_parameters(self):
         """ Stores the parameters of the network """
-        if not (self.current_permutation % self.parameter_save_frequency == 0):
+        if not (self.current_permutation % self.parameter_save_frequency == 0) or not self.store_parameters:
             return
         model_parameters_dir_path = os.path.join(self.results_dir, "model_parameters")
         os.makedirs(model_parameters_dir_path, exist_ok=True)
@@ -340,7 +346,8 @@ class PermutedMNISTExperiment(Experiment):
         file_name = "index-{0}_task-{1}.pt".format(self.run_index, self.current_permutation)
         file_path = os.path.join(model_parameters_dir_path, file_name)
 
-        store_object_with_several_attempts((self.net.state_dict(), self.masks), file_path, storing_format="torch",
+        masks = None if not self.sparse_network else [m["mask"] for m in self.masks]
+        store_object_with_several_attempts((self.net.state_dict(), masks), file_path, storing_format="torch",
                                            num_attempts=10)
 
 
