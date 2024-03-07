@@ -369,9 +369,6 @@ class IncrementalCIFARExperiment(Experiment):
                     if self.lr_scheduler.get_last_lr()[0] > 0.0 and not self.rescaled_wd:
                         self.optim.param_groups[0]['weight_decay'] = self.weight_decay / self.lr_scheduler.get_last_lr()[0]
 
-                if self.sparse_network:
-                    apply_weight_masks(self.net_masks)
-
                 # store summaries
                 current_accuracy = compute_accuracy_from_batch(predictions, label)
                 self.running_loss += detached_loss
@@ -381,8 +378,11 @@ class IncrementalCIFARExperiment(Experiment):
                     self._store_training_summaries()
 
                 self.current_minibatch += 1
-                if self.time_to_update_topology(minibatch_loop=True):
+                is_time_to_update = self.time_to_update_topology(minibatch_loop=True)
+                if is_time_to_update:
                     self.update_topology()
+                if self.sparse_network and not is_time_to_update:
+                    apply_weight_masks(self.net_masks)
 
             epoch_end = time.perf_counter()
 
