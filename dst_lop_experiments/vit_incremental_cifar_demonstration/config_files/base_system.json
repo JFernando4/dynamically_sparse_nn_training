@@ -23,7 +23,7 @@
     "use_data_augmentation": true,
     "use_lr_schedule": true,
     "use_best_network": true,
-    "runs": 3
+    "runs": 10
   },
 
   "learning_params": {
