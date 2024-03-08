@@ -275,6 +275,8 @@ class PermutedMNISTExperiment(Experiment):
             if self.current_permutation % self.checkpoint_save_frequency == 0:    # checkpoint experiment
                 self.save_experiment_checkpoint()
 
+        self._save_model_parameters()
+
     def time_to_update_topology(self, current_minibatch: int):
         if not self.use_dst:
             return False
