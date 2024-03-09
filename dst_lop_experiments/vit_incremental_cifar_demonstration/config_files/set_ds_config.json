@@ -24,11 +24,11 @@
     "use_best_network": true,
     "msa_mask": true,
     "conv_mask": true,
-    "runs": 10
+    "runs": 1
   },
 
   "learning_params": {
-    "topology_update_freq": ["fixed", 6],
+    "topology_update_freq": ["fixed", 1],
     "sparsity": ["fixed", 0.1],
     "df_decay": ["fixed", 0.05],
     "dst_method": ["str", "set_ds"],
@@ -37,7 +37,7 @@
 
   "slurm_parameters": {
     "job_name": "vit_inc",
-    "time": "16:00:00",
+    "time": "18:00:00",
     "max_runs_per_job": 1,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
     "output_filename": "vit_inc-%n-%j.out",
