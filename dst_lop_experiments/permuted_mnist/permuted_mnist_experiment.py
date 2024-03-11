@@ -176,7 +176,6 @@ class PermutedMNISTExperiment(Experiment):
             checkpoint = pickle.load(experiment_checkpoint_file)
 
         self.net.load_state_dict(checkpoint["model_weights"])
-        self.masks = checkpoint["weight_masks"]
         torch.set_rng_state(checkpoint["torch_rng_state"])
         np.random.set_state(checkpoint["numpy_rng_state"])
         self.current_permutation = checkpoint["permutation_number"]
@@ -197,7 +196,7 @@ class PermutedMNISTExperiment(Experiment):
             return
 
         for i, mask in enumerate(self.masks):
-            self.masks[i]["mask"] = checkpoint["weight_masks"][i].to(self.device)
+            mask[i]["mask"] = checkpoint["weight_masks"][i].to(self.device)
 
     # ----------------------------- For storing summaries ----------------------------- #
     def _store_training_summaries(self):
