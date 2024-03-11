@@ -1,9 +1,51 @@
+"""
+Modification of pytorch's SGD optimizer that instead of decaying weights towards zero, they're decayed towards their
+initial values.
+
+"""
+
 import torch
 from torch import Tensor
-from torch.optim.optimizer import (Optimizer, required, _use_grad_for_differentiable, _default_to_fused_or_foreach,
-                                   _differentiable_doc, _foreach_doc, _maximize_doc)
-from typing import List, Optional
+from torch.optim.optimizer import Optimizer
+from typing import List, Optional, Tuple
 from copy import deepcopy
+
+_foreach_supported_types = [torch.Tensor, torch.nn.parameter.Parameter]
+
+
+class _RequiredParameter:
+    """Singleton class representing a required parameter for an Optimizer."""
+    def __repr__(self):
+        return "<required parameter>"
+
+
+required = _RequiredParameter()
+
+
+def _use_grad_for_differentiable(func):
+    def _use_grad(self, *args, **kwargs):
+        prev_grad = torch.is_grad_enabled()
+        try:
+            torch.set_grad_enabled(self.defaults['differentiable'])
+            ret = func(self, *args, **kwargs)
+        finally:
+            torch.set_grad_enabled(prev_grad)
+        return ret
+    return _use_grad
+
+
+def _default_to_fused_or_foreach(params: List[torch.Tensor],
+                                 differentiable: bool,
+                                 use_fused: bool = False) -> Tuple[bool, bool]:
+    if torch.jit.is_scripting() or differentiable:
+        return False, False
+    fused = use_fused and all(
+        p is None or (type(p) in _foreach_supported_types and p.is_cuda and torch.is_floating_point(p)) for p in params
+    )
+    foreach = not fused and all(
+        p is None or (type(p) in _foreach_supported_types and p.is_cuda) for p in params
+    )
+    return fused, foreach
 
 
 class SGDL2Init(Optimizer):
@@ -24,7 +66,7 @@ class SGDL2Init(Optimizer):
                         differentiable=differentiable)
 
         params = list(params)
-        self.original_params = [deepcopy(p) for p in params]
+        self.original_params = [p.detach().clone() for p in params]
         self.l2_init_flags = l2_init_flags
         assert len(self.original_params) == len(self.l2_init_flags)
 
@@ -183,4 +225,3 @@ def _single_tensor_sgd(params: List[Tensor],
                 d_p = buf
 
         param.add_(d_p, alpha=-lr)
-
