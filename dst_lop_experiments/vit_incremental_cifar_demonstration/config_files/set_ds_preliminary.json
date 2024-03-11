@@ -15,36 +15,30 @@
 
   "experiment_params": {
     "stepsize": 0.01,
-    "weight_decay": 0.001,
-    "dropout_prob": 0.05,
+    "weight_decay": 2e-6,
+    "dropout_prob": 0.1,
+    "use_lr_schedule": true,
     "momentum": 0.9,
-    "noise_std": 0.0,
-    "num_epochs": 800,
+    "num_epochs": 1000,
     "initial_num_classes": 5,
     "fixed_classes": false,
-    "reset_head": false,
-    "reset_network": false,
-    "use_data_augmentation": true,
-    "use_lr_schedule": true,
     "use_best_network": true,
-    "runs": 2
+    "runs": 5
   },
 
   "learning_params": {
     "dst_method": ["str", "set_ds"],
-    "sparsity": ["fixed", 0.6],
+    "sparsity": ["fixed", 0.1, 0.05],
     "df_decay": ["fixed", 0.05, 0.1, 0.2],
     "topology_update_freq": ["fixed", 6],
     "msa_mask": true,
     "conv_mask": true,
-    "ct_mask":false,
-    "pe_mask": false,
-    "epoch_freq": false
+    "reset_layer_norm": true
   },
 
   "slurm_parameters": {
     "job_name": "pre_vit_inc",
-    "time": "3:30:00",
+    "time": "5:00:00",
     "max_runs_per_job": 1,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
     "output_filename": "vit_inc-%n-%j.out",
