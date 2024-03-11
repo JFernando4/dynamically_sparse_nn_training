@@ -18,6 +18,7 @@ from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, 
 
 from src import initialize_vit, initialize_vit_heads, init_vit_weight_masks, initialize_layer_norm_module
 from src.sparsity_functions import set_up_dst_update_function, apply_weight_masks
+from src.plasticity_functions import SGDL2Init
 from src.utils import get_cifar_data, compute_accuracy_from_batch
 
 
@@ -47,6 +48,9 @@ class IncrementalCIFARExperiment(Experiment):
         self.momentum = exp_params["momentum"]
         self.use_lr_schedule = access_dict(exp_params, "use_lr_schedule", default=True, val_type=bool)
         self.dropout_prob = access_dict(exp_params, "dropout_prob", default=0.05, val_type=float)
+
+        # l2 init
+        self.use_l2_init = access_dict(exp_params, "use_l2_init", default=False, val_type=bool)
 
         # dynamic sparse learning parameters
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
@@ -120,8 +124,9 @@ class IncrementalCIFARExperiment(Experiment):
             apply_weight_masks(self.net_masks)
 
         # initialize optimizer and loss function
+        self.optim_func = torch.optim.SGD if not self.use_l2_init else SGDL2Init
         wd = self.weight_decay if self.rescaled_wd else self.weight_decay / self.stepsize
-        self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum, weight_decay=wd)
+        self.optim = self.optim_func(self.net.parameters(), lr=self.stepsize, momentum=self.momentum, weight_decay=wd)
         self.lr_scheduler = None
         self.loss = torch.nn.CrossEntropyLoss(reduction="mean")
 
@@ -521,7 +526,7 @@ class IncrementalCIFARExperiment(Experiment):
             if self.reset_network:
                 initialize_vit(self.net)
                 wd = self.weight_decay if self.rescaled_wd else self.weight_decay / self.stepsize
-                self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum, weight_decay=wd)
+                self.optim = self.optim_func(self.net.parameters(), lr=self.stepsize, momentum=self.momentum, weight_decay=wd)
                 if self.sparse_network:
                     apply_weight_masks(self.net_masks)
             if self.reset_layer_norm:
