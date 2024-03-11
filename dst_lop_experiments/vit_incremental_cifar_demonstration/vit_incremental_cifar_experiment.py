@@ -51,6 +51,7 @@ class IncrementalCIFARExperiment(Experiment):
 
         # l2 init
         self.use_l2_init = access_dict(exp_params, "use_l2_init", default=False, val_type=bool)
+        self.use_l2_init_ln = access_dict(exp_params, "use_l2_init_ln", default=False, val_type=bool)
 
         # dynamic sparse learning parameters
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
@@ -113,6 +114,7 @@ class IncrementalCIFARExperiment(Experiment):
         )
         initialize_vit(self.net)
         self.net.to(self.device)
+        self.l2_init_flags = self._get_l2_init_flags()
 
         # initialize masks
         self.net_masks = None
@@ -124,9 +126,7 @@ class IncrementalCIFARExperiment(Experiment):
             apply_weight_masks(self.net_masks)
 
         # initialize optimizer and loss function
-        self.optim_func = torch.optim.SGD if not self.use_l2_init else SGDL2Init
-        wd = self.weight_decay if self.rescaled_wd else self.weight_decay / self.stepsize
-        self.optim = self.optim_func(self.net.parameters(), lr=self.stepsize, momentum=self.momentum, weight_decay=wd)
+        self.optim = self._get_optimizer()
         self.lr_scheduler = None
         self.loss = torch.nn.CrossEntropyLoss(reduction="mean")
 
@@ -190,6 +190,31 @@ class IncrementalCIFARExperiment(Experiment):
             self.results_dict["prop_added_then_removed"] = torch.zeros(tensor_size, device=self.device, dtype=torch.float32)
             if self.dst_method == "set_rth" or self.dst_method == "set_ds":
                 self.results_dict["total_removed_per_update"] = torch.zeros(tensor_size, device=self.device, dtype=torch.float32)
+
+    def _get_optimizer(self):
+        """ Creates optimizer object based on the experiment parameters """
+        wd = self.weight_decay if self.rescaled_wd else self.weight_decay / self.stepsize
+        params = self.net.parameters()
+        if not self.use_l2_init and not self.use_l2_init_ln:
+            return torch.optim.SGD(params, lr=self.stepsize, momentum=self.momentum, weight_decay=wd)
+        else:
+            return SGDL2Init(params, self.l2_init_flags, lr=self.stepsize, momentum=self.momentum, weight_decay=wd)
+
+    def _get_l2_init_flags(self):
+        """ Creates list of flags to indicate which parameters are regularized toward their initial value """
+        if not self.use_l2_init and not self.use_l2_init_ln:
+            return []
+
+        if self.use_l2_init:
+            return [True for _ in self.net.parameters()]
+
+        l2_init_flags = []
+        for n, _ in self.net.named_parameters():
+            if "ln" in n and "weight" in n:
+                l2_init_flags.append(True)
+            else:
+                l2_init_flags.append(False)
+        return l2_init_flags
 
     # ----------------------------- For saving and loading experiment checkpoints ----------------------------- #
     def get_experiment_checkpoint(self):
@@ -525,8 +550,7 @@ class IncrementalCIFARExperiment(Experiment):
                 initialize_vit_heads(self.net.heads)
             if self.reset_network:
                 initialize_vit(self.net)
-                wd = self.weight_decay if self.rescaled_wd else self.weight_decay / self.stepsize
-                self.optim = self.optim_func(self.net.parameters(), lr=self.stepsize, momentum=self.momentum, weight_decay=wd)
+                self.optim = self._get_optimizer()
                 if self.sparse_network:
                     apply_weight_masks(self.net_masks)
             if self.reset_layer_norm:

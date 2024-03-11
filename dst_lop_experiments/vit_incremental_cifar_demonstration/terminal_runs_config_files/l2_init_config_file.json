@@ -12,7 +12,8 @@
   "fixed_classes": false,
   "use_best_network": true,
   "reset_layer_norm": false,
-  "use_l2_init": true,
+  "use_l2_init": false,
+  "use_l2_init_ln": true,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
     "num_epochs",
@@ -20,6 +21,7 @@
     "weight_decay",
     "dropout_prob",
     "reset_layer_norm",
-    "use_l2_init"
+    "use_l2_init",
+    "use_l2_init_ln"
   ]
 }
