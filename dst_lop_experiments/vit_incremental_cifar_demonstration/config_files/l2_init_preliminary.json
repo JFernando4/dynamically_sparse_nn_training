@@ -28,7 +28,7 @@
   },
 
   "slurm_parameters": {
-    "job_name": "vit_inc",
+    "job_name": "pre_vit_inc",
     "time": "5:00:00",
     "max_runs_per_job": 1,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
