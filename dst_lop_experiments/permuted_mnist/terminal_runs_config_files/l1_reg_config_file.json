@@ -1,7 +1,7 @@
 {
   "__comment_1__": "Parameters found in a parameter sweep",
   "stepsize": 0.01,
-  "l1_factor": 1e-5,
+  "l1_factor": 1e-8,
   "__comment_2__": "Network architecture parameters",
   "num_layers": 3,
   "num_hidden": 100,
