@@ -118,7 +118,7 @@ class PermutedMNISTExperiment(Experiment):
         self.current_permutation = 0
         self.experiment_checkpoints_dir_path = os.path.join(self.results_dir, "experiment_checkpoints")
         self.checkpoint_identifier_name = "current_permutation"
-        self.checkpoint_save_frequency = 1     # create a checkpoint after this many task changes
+        self.checkpoint_save_frequency = 100     # create a checkpoint after this many task changes
         self.load_experiment_checkpoint()
 
     # ----------------------------- For initializing the experiment ----------------------------- #
