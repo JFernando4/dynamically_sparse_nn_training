@@ -1,0 +1,42 @@
+{
+  "file_management": {
+    "experiment_name": "preliminary_vit_dst_cifar_incremental",
+    "data_path": "/home/jfernan/dynamically_sparse_nn_training/experiments/vit_incremental_cifar_demonstration/data/",
+    "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
+    "relevant_parameters": [
+      "stepsize",
+      "weight_decay",
+      "use_l2_init"
+    ]
+  },
+
+  "experiment_params": {
+    "stepsize": 0.01,
+    "dropout_prob": 0.1,
+    "use_lr_schedule": true,
+    "momentum": 0.9,
+    "num_epochs": 1000,
+    "initial_num_classes": 5,
+    "fixed_classes": false,
+    "use_best_network": true,
+    "runs": 5
+  },
+
+  "learning_params": {
+    "use_l2_init": true,
+    "weight_decay": ["fixed", 1e-4, 2e-5, 1e-5, 2e-6, 1e-6, 2e-7, 1e-7]
+  },
+
+  "slurm_parameters": {
+    "job_name": "vit_inc",
+    "time": "5:00:00",
+    "max_runs_per_job": 1,
+    "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
+    "output_filename": "vit_inc-%n-%j.out",
+    "mem": "12G",
+    "mail-type": "BEGIN,END,FAIL",
+    "mail-user":"jfhernan@ualberta.ca",
+    "cpus-per-task": 12,
+    "gpus-per-node": 1
+  }
+}
