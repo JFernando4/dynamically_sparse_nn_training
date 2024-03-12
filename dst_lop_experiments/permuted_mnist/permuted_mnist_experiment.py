@@ -18,7 +18,7 @@ from mlproj_manager.file_management import store_object_with_several_attempts
 
 # from src
 from src.sparsity_functions.sparsity_funcs import *
-from src.utils import apply_regularization_to_sequential_net
+from src.networks import RegularizedSGD
 
 
 class PermutedMNISTExperiment(Experiment):
@@ -46,7 +46,6 @@ class PermutedMNISTExperiment(Experiment):
         self.stepsize = exp_params["stepsize"]
         self.l1_factor = access_dict(exp_params, "l1_factor", default=0.0, val_type=float)
         self.l2_factor = access_dict(exp_params, "l2_factor", default=0.0, val_type=float)
-        self.use_regularization = (self.l2_factor > 0.0) or (self.l1_factor > 0.0)
 
         # architecture parameters
         self.num_layers = exp_params["num_layers"]      # number of hidden layers
@@ -90,7 +89,10 @@ class PermutedMNISTExperiment(Experiment):
         self.net, self.masks = self.initialize_network()
 
         # initialize optimizer
-        self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize)
+        self.optim = RegularizedSGD(self.net.parameters(),
+                                    lr=self.stepsize,
+                                    weight_decay=self.l2_factor / self.stepsize,
+                                    l1_reg_factor=self.l1_factor / self.stepsize)
 
         # define loss function
         self.loss = torch.nn.CrossEntropyLoss(reduction="mean")
@@ -228,6 +230,7 @@ class PermutedMNISTExperiment(Experiment):
     def train(self, mnist_data_loader: DataLoader, training_data: MnistDataSet):
 
         while self.current_permutation < self.num_permutations:
+            initial_time = time.perf_counter()
             self._save_model_parameters()
 
             training_data.set_transformation(Permute(np.random.permutation(self.num_inputs)))  # apply new permutation
@@ -252,8 +255,6 @@ class PermutedMNISTExperiment(Experiment):
 
                 # backpropagate and update weights
                 current_reg_loss.backward()
-                if self.use_regularization:
-                    apply_regularization_to_sequential_net(self.net, self.l2_factor, self.l1_factor)
                 self.optim.step()
 
                 # update topology and apply masks to weights
@@ -273,6 +274,9 @@ class PermutedMNISTExperiment(Experiment):
             self.current_permutation += 1
             if self.current_permutation % self.checkpoint_save_frequency == 0:    # checkpoint experiment
                 self.save_experiment_checkpoint()
+
+            final_time = time.perf_counter()
+            print("Epoch run time: {0:.2f}".format((final_time - initial_time) / 60))
 
         self._save_model_parameters()
 
