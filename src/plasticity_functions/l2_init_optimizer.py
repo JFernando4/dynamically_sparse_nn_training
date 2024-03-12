@@ -142,6 +142,7 @@ class SGDL2Init(Optimizer):
 
         return loss
 
+
 def sgd(params: List[Tensor],
         d_p_list: List[Tensor],
         original_params: List[Tensor],
@@ -186,6 +187,7 @@ def sgd(params: List[Tensor],
                        nesterov=nesterov,
                        has_sparse_grad=has_sparse_grad,
                        maximize=maximize)
+
 
 def _single_tensor_sgd(params: List[Tensor],
                        d_p_list: List[Tensor],
