@@ -1,0 +1,37 @@
+{
+  "file_management": {
+    "experiment_name": "pmnist_parameter_sweep",
+    "data_path": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/dst_lop_experiments/permuted_mnist/data/",
+    "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
+    "relevant_parameters": [
+      "stepsize",
+      "l1_factor",
+      "steps_per_task"
+    ]
+  },
+
+  "experiment_params": {
+    "stepsize": 0.001,
+    "num_permutations": 500,
+    "num_layers": 3,
+    "num_hidden": 100,
+    "runs": 1
+  },
+
+  "learning_params": {
+    "l1_factor": ["fixed", 1e-5, 1e-6, 1e-7, 1e-8],
+    "steps_per_task": ["fixed", 60000]
+  },
+
+  "slurm_parameters": {
+    "job_name": "pmnist_ps",
+    "time": "19:00:00",
+    "max_runs_per_job": 1,
+    "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
+    "output_filename": "pmnist_ps-%n-%j.out",
+    "mem": "12G",
+    "mail-type": "BEGIN,END,FAIL",
+    "mail-user":"jfhernan@ualberta.ca",
+    "cpus-per-task": 6
+  }
+}
