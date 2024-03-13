@@ -15,7 +15,7 @@
     "num_permutations": 500,
     "num_layers": 3,
     "num_hidden": 100,
-    "runs": 1
+    "runs": 10
   },
 
   "learning_params": {
@@ -25,7 +25,7 @@
 
   "slurm_parameters": {
     "job_name": "pmnist_ps",
-    "time": "19:00:00",
+    "time": "12:00:00",
     "max_runs_per_job": 1,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
     "output_filename": "pmnist_ps-%n-%j.out",
