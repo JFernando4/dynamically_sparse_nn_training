@@ -24,7 +24,7 @@
     "use_best_network": true,
     "msa_mask": true,
     "conv_mask": true,
-    "runs": 3
+    "runs": 10
   },
 
   "learning_params": {
