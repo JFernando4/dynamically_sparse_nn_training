@@ -437,6 +437,14 @@ class IncrementalCIFARExperiment(Experiment):
             if self.current_epoch % self.checkpoint_save_frequency == 0:
                 self.save_experiment_checkpoint()
 
+            abs_param_val = 0
+            total = 0
+            for n, p in self.net.named_parameters():
+                if "ln" in n and "weight" in n:
+                    abs_param_val += p.abs().sum().item()
+                    total += p.numel()
+            print("Current ln weight magnitude: {0:.4f}".format(abs_param_val / total))
+
     def get_lr_scheduler(self, steps_per_epoch: int):
         scheduler = torch.optim.lr_scheduler.OneCycleLR(self.optim, max_lr=self.stepsize, anneal_strategy="linear",
                                                         epochs=self.class_increase_frequency,
