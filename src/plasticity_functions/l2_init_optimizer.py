@@ -50,9 +50,15 @@ def _default_to_fused_or_foreach(params: List[torch.Tensor],
 
 class SGDL2Init(Optimizer):
 
-    def __init__(self, params, l2_init_flags: List[bool], lr=required, momentum=0, dampening=0,
-                 weight_decay=0, nesterov=False, *, maximize: bool = False, foreach: Optional[bool] = None,
-                 differentiable: bool = False):
+    def __init__(self, params, l2_init_flags: List[bool], reg_flags: List[bool] = None, lr=required, momentum=0,
+                 dampening=0, weight_decay=0, nesterov=False, *, maximize: bool = False,
+                 foreach: Optional[bool] = None, differentiable: bool = False):
+        """
+        Args:
+            l2_init_flags: list[bool] of flags indicating which parameters to apply l2 init
+            reg_flags: list[bool] of flags indicating which parameters to apply l2 regularization
+            Other arguments are from torch's SGD optimizer class
+        """
         if lr is not required and lr < 0.0:
             raise ValueError("Invalid learning rate: {}".format(lr))
         if momentum < 0.0:
@@ -68,7 +74,8 @@ class SGDL2Init(Optimizer):
         params = list(params)
         self.original_params = [p.detach().clone() for p in params]
         self.l2_init_flags = l2_init_flags
-        assert len(self.original_params) == len(self.l2_init_flags)
+        self.reg_flags = reg_flags if reg_flags is not None else [True for _ in params]
+        assert len(self.original_params) == len(self.l2_init_flags) and len(self.reg_flags) == len(self.original_params)
 
         if nesterov and (momentum <= 0 or dampening != 0):
             raise ValueError("Nesterov momentum requires a momentum and zero dampening")
@@ -125,6 +132,7 @@ class SGDL2Init(Optimizer):
                 d_p_list,
                 self.original_params,
                 self.l2_init_flags,
+                self.reg_flags,
                 momentum_buffer_list,
                 weight_decay=group['weight_decay'],
                 momentum=group['momentum'],
@@ -147,6 +155,7 @@ def sgd(params: List[Tensor],
         d_p_list: List[Tensor],
         original_params: List[Tensor],
         l2_init_flags: List[bool],
+        reg_flags:List[bool],
         momentum_buffer_list: List[Optional[Tensor]],
         # kwonly args with defaults are not supported by functions compiled with torchscript issue #70627
         # setting this as kwarg for now as functional API is compiled by torch/distributed/optim
@@ -179,6 +188,7 @@ def sgd(params: List[Tensor],
                        d_p_list,
                        original_params,
                        l2_init_flags,
+                       reg_flags,
                        momentum_buffer_list,
                        weight_decay=weight_decay,
                        momentum=momentum,
@@ -193,6 +203,7 @@ def _single_tensor_sgd(params: List[Tensor],
                        d_p_list: List[Tensor],
                        original_params: List[Tensor],
                        l2_init_flags: List[bool],
+                       reg_flags:List[bool],
                        momentum_buffer_list: List[Optional[Tensor]],
                        *,
                        weight_decay: float,
@@ -207,10 +218,11 @@ def _single_tensor_sgd(params: List[Tensor],
         d_p = d_p_list[i] if not maximize else -d_p_list[i]
 
         if weight_decay != 0:
-            if l2_init_flags[i]:
-                d_p = d_p.add(param - original_params[i], alpha=weight_decay)
-            else:
-                d_p = d_p.add(param, alpha=weight_decay)
+            if reg_flags[i]:
+                if l2_init_flags[i]:
+                    d_p = d_p.add(param - original_params[i], alpha=weight_decay)
+                else:
+                    d_p = d_p.add(param, alpha=weight_decay)
 
         if momentum != 0:
             buf = momentum_buffer_list[i]

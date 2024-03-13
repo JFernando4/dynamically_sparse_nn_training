@@ -52,6 +52,7 @@ class IncrementalCIFARExperiment(Experiment):
         # l2 init
         self.use_l2_init = access_dict(exp_params, "use_l2_init", default=False, val_type=bool)
         self.use_l2_init_ln = access_dict(exp_params, "use_l2_init_ln", default=False, val_type=bool)
+        self.skip_ln_reg = access_dict(exp_params, "skip_ln_reg", default=False, val_type=bool)
 
         # dynamic sparse learning parameters
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
@@ -114,7 +115,7 @@ class IncrementalCIFARExperiment(Experiment):
         )
         initialize_vit(self.net)
         self.net.to(self.device)
-        self.l2_init_flags = self._get_l2_init_flags()
+        self.l2_init_flags, self.reg_flags = self._get_optim_flags()
 
         # initialize masks
         self.net_masks = None
@@ -195,26 +196,34 @@ class IncrementalCIFARExperiment(Experiment):
         """ Creates optimizer object based on the experiment parameters """
         wd = self.weight_decay if self.rescaled_wd else self.weight_decay / self.stepsize
         params = self.net.parameters()
-        if not self.use_l2_init and not self.use_l2_init_ln:
+        if not self.use_l2_init and not self.use_l2_init_ln and not self.skip_ln_reg:
             return torch.optim.SGD(params, lr=self.stepsize, momentum=self.momentum, weight_decay=wd)
         else:
-            return SGDL2Init(params, self.l2_init_flags, lr=self.stepsize, momentum=self.momentum, weight_decay=wd)
+            return SGDL2Init(params, self.l2_init_flags, self.reg_flags, lr=self.stepsize, momentum=self.momentum,
+                             weight_decay=wd)
 
-    def _get_l2_init_flags(self):
+    def _get_optim_flags(self):
         """ Creates list of flags to indicate which parameters are regularized toward their initial value """
-        if not self.use_l2_init and not self.use_l2_init_ln:
-            return []
+        if not self.use_l2_init and not self.use_l2_init_ln and not self.skip_ln_reg:
+            return [], []
 
         if self.use_l2_init:
-            return [True for _ in self.net.parameters()]
+            l2_init_flags = [True for _ in self.net.parameters()]
+        elif self.use_l2_init_ln:
+            l2_init_flags = []
+            for n, _ in self.net.named_parameters():
+                l2_init_flags.append("ln" in n and "weight" in n)
+        else:
+            l2_init_flags = [False for _ in self.net.parameters()]
 
-        l2_init_flags = []
-        for n, _ in self.net.named_parameters():
-            if "ln" in n and "weight" in n:
-                l2_init_flags.append(True)
-            else:
-                l2_init_flags.append(False)
-        return l2_init_flags
+        if self.skip_ln_reg:
+            reg_flags = []
+            for n, _ in self.net.named_parameters():
+                reg_flags.append(not "ln" in n)
+        else:
+            reg_flags = [True for _ in self.net.parameters()]
+
+        return l2_init_flags, reg_flags
 
     # ----------------------------- For saving and loading experiment checkpoints ----------------------------- #
     def get_experiment_checkpoint(self):
