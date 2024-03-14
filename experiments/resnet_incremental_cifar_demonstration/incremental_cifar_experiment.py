@@ -16,7 +16,7 @@ from mlproj_manager.experiments import Experiment
 from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict
 from mlproj_manager.util.data_preprocessing_and_transformations import ToTensor, Normalize, RandomCrop, RandomHorizontalFlip, RandomRotator
 
-from src import kaiming_init_resnet_module, build_resnet18, ResGnT
+from src import kaiming_init_resnet_module, build_resnet18, ResGnT, init_batch_norm_module
 from src.utils import subsample_cifar_data_set
 
 
@@ -51,6 +51,7 @@ class IncrementalCIFARExperiment(Experiment):
         # network resetting parameters
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
         self.reset_network = access_dict(exp_params, "reset_network", default=False, val_type=bool)
+        self.reset_bn = access_dict(exp_params, "reset_bn", default=False, val_type=bool)
         if self.reset_head and self.reset_network:
             print(Warning("Resetting the whole network supersedes resetting the head of the network. There's no need to set both to True."))
 
@@ -460,6 +461,8 @@ class IncrementalCIFARExperiment(Experiment):
                 kaiming_init_resnet_module(self.net.fc)
             if self.reset_network:
                 self.net.apply(kaiming_init_resnet_module)
+            if self.reset_bn:
+                self.net.apply(init_batch_norm_module)
 
     def _save_model_parameters(self):
         """ Stores the parameters of the model, so it can be evaluated after the experiment is over """
@@ -497,11 +500,12 @@ def main():
         "fixed_classes": False,
         "reset_head": False,
         "reset_network": False,
+        "reset_bn": True,
         "use_data_augmentation": True,
         "use_cifar100": True,
         "use_lr_schedule": True,
         "use_best_network": True,
-        "use_cbp": True,
+        "use_cbp": False,
         "replacement_rate": 0.000001,
         "utility_function": "weight",
         "maturity_threshold": 1000
