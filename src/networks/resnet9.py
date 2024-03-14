@@ -18,9 +18,15 @@ def kaiming_init_resnet_module(nn_module: torch.nn.Module):
         if nn_module.bias is not None:
             torch.nn.init.constant_(nn_module.bias, 0.0)
 
+    init_batch_norm_module(nn_module)
+
+
+def init_batch_norm_module(nn_module: torch.nn.Module):
+    """ Initializes batch norm layers. Weights are initialized to 1 and bias to 0 """
     if isinstance(nn_module, torch.nn.BatchNorm2d):
         torch.nn.init.constant_(nn_module.weight, 1.0)
         torch.nn.init.constant_(nn_module.bias, 0.0)
+
 
 """
 The implementation bellow is from this website:
