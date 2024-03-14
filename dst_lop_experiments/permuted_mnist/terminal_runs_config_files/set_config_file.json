@@ -8,15 +8,16 @@
   "num_permutations": 500,
   "steps_per_task": 60000,
   "__comment_4__": "Dynamics sparse training parameters.",
-  "dst_method": "set_ds",
-  "topology_update_freq": 1,
+  "topology_update_freq": 100,
   "sparsity": 0.9,
-  "dst_scale": 0.05,
+  "drop_fraction": 0.01,
+  "dst_method": "set",
+  "max_steps_for_topology_update": 60000,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
+    "num_permutations",
     "dst_method",
-    "topology_update_freq",
     "sparsity",
-    "dst_scale"
-  ]
+    "drop_fraction",
+    "topology_update_freq"]
 }
