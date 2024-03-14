@@ -24,7 +24,7 @@
 
   "learning_params": {
     "reset_layer_norm": true,
-    "noise_std": ["fixed", 1e-4, 1e-5, 1e-6, 1e-7]
+    "noise_std": ["fixed", 1e-3, 1e-4, 1e-5, 1e-6, 1e-7]
   },
 
   "slurm_parameters": {
