@@ -19,7 +19,7 @@
   },
 
   "learning_params": {
-    "l1_factor": ["fixed", 1e-5, 1e-6, 1e-7, 1e-8],
+    "l1_factor": ["fixed", 1e-5, 1e-6, 5e-7, 2e-7, 1e-7, 5e-8, 1e-8],
     "steps_per_task": ["fixed", 60000]
   },
 
