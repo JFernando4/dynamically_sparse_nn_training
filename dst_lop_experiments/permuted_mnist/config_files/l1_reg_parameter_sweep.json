@@ -11,6 +11,7 @@
   },
 
   "experiment_params": {
+    "store_parameters": true,
     "stepsize": 0.001,
     "num_permutations": 500,
     "num_layers": 3,
