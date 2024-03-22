@@ -8,7 +8,7 @@ from copy import deepcopy
 import torch
 from torch.utils.data import DataLoader
 import numpy as np
-from torchvision.models.vision_transformer import VisionTransformer
+# from torchvision.models.vision_transformer import VisionTransformer
 
 # from ml project manager
 from mlproj_manager.problems import CifarDataSet
@@ -20,6 +20,7 @@ from src import initialize_vit, initialize_vit_heads, init_vit_weight_masks, ini
 from src.sparsity_functions import set_up_dst_update_function, apply_weight_masks
 from src.plasticity_functions import SGDL2Init
 from src.utils import get_cifar_data, compute_accuracy_from_batch
+from src.networks.torchvision_modified_vit import VisionTransformer
 
 
 class IncrementalCIFARExperiment(Experiment):
@@ -80,6 +81,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
         self.reset_network = access_dict(exp_params, "reset_network", default=False, val_type=bool)
         self.reset_layer_norm = access_dict(exp_params, "reset_layer_norm", default=False, val_type=bool)
+        self.skip_last_layer_norm = access_dict(exp_params, "skip_last_layer_norm", default=False, val_type=bool)
 
         # problem definition parameters
         self.num_epochs = access_dict(exp_params, "num_epochs", default=1, val_type=int)
@@ -111,7 +113,8 @@ class IncrementalCIFARExperiment(Experiment):
             mlp_dim=1536,
             num_classes=self.num_classes,
             dropout=self.dropout_prob,
-            attention_dropout=self.dropout_prob
+            attention_dropout=self.dropout_prob,
+            skip_last_layer_norm=self.skip_last_layer_norm
         )
         initialize_vit(self.net)
         self.net.to(self.device)
