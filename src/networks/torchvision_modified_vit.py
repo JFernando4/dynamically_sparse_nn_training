@@ -20,10 +20,7 @@ from torchvision.utils import _log_api_usage_once
 from torchvision.models._api import WeightsEnum
 from torchvision.models._utils import _ovewrite_named_param
 
-__all__ = [
-    "VisionTransformer"
-]
-
+from.sequential_kw_arguments import SequentialWithKeywordArguments
 
 class ConvStemConfig(NamedTuple):
     out_channels: int
@@ -31,6 +28,28 @@ class ConvStemConfig(NamedTuple):
     stride: int
     norm_layer: Callable[..., nn.Module] = nn.BatchNorm2d
     activation_layer: Callable[..., nn.Module] = nn.ReLU
+
+
+class CustomMLPBlock(torch.nn.Module):
+
+    def __init__(self, in_dim: int, mlp_dim: int, dropout: float) -> None:
+        super().__init__()
+
+        self.ff_1 = torch.nn.Linear(in_dim, mlp_dim, bias=True)
+        self.act = torch.nn.GELU()
+        self.dropout_1 = torch.nn.Dropout(dropout)
+        self.ff_2 = torch.nn.Linear(mlp_dim, in_dim, bias=True)
+        self.dropout_2 = torch.nn.Dropout(dropout)
+
+    def forward(self, x: torch.Tensor, activations: list = None) -> torch.Tensor:
+
+        x = self.ff_1(x)
+        x = self.act(x)
+
+        if activations is not None:
+            activations.append(x)
+
+        return self.dropout_2(self.ff_2(self.dropout_1(x)))
 
 
 class MLPBlock(MLP):
@@ -101,17 +120,19 @@ class EncoderBlock(nn.Module):
 
         # MLP block
         self.ln_2 = norm_layer(hidden_dim)
-        self.mlp = MLPBlock(hidden_dim, mlp_dim, dropout)
+        self.mlp = CustomMLPBlock(hidden_dim, mlp_dim, dropout)
 
-    def forward(self, input: torch.Tensor):
+    def forward(self, input: torch.Tensor, activations: list = None):
         torch._assert(input.dim() == 3, f"Expected (batch_size, seq_length, hidden_dim) got {input.shape}")
         x = self.ln_1(input)
         x, _ = self.self_attention(x, x, x, need_weights=False)
+        if activations is not None:
+            activations.append(x)
         x = self.dropout(x)
         x = x + input
 
         y = self.ln_2(x)
-        y = self.mlp(y)
+        y = self.mlp(y, activations=activations)
         return x + y
 
 
@@ -145,18 +166,18 @@ class Encoder(nn.Module):
                 attention_dropout,
                 norm_layer,
             )
-        self.layers = nn.Sequential(layers)
+        self.layers = SequentialWithKeywordArguments(layers)
 
         self.skip_last_layer_norm = skip_last_layer_norm
         self.ln = norm_layer(hidden_dim)
 
-    def forward(self, input: torch.Tensor):
+    def forward(self, input: torch.Tensor, activations: list = None):
         torch._assert(input.dim() == 3, f"Expected (batch_size, seq_length, hidden_dim) got {input.shape}")
         input = input + self.pos_embedding
         if self.skip_last_layer_norm:
-            return self.layers(self.dropout(input))
+            return self.layers(self.dropout(input), activations=activations)
         else:
-            return self.ln(self.layers(self.dropout(input)))
+            return self.ln(self.layers(self.dropout(input), activations=activations))
 
 
 class VisionTransformer(nn.Module):
