@@ -130,6 +130,7 @@ class Encoder(nn.Module):
         dropout: float,
         attention_dropout: float,
         norm_layer: Callable[..., torch.nn.Module] = partial(nn.LayerNorm, eps=1e-6),
+        skip_last_layer_norm: bool = False
     ):
         super().__init__()
         # Note that batch_size is on the first dim because
@@ -147,12 +148,17 @@ class Encoder(nn.Module):
                 norm_layer,
             )
         self.layers = nn.Sequential(layers)
+
+        self.skip_last_layer_norm = skip_last_layer_norm
         self.ln = norm_layer(hidden_dim)
 
     def forward(self, input: torch.Tensor):
         torch._assert(input.dim() == 3, f"Expected (batch_size, seq_length, hidden_dim) got {input.shape}")
         input = input + self.pos_embedding
-        return self.ln(self.layers(self.dropout(input)))
+        if self.skip_last_layer_norm:
+            return self.layers(self.dropout(input))
+        else:
+            return self.ln(self.layers(self.dropout(input)))
 
 
 class VisionTransformer(nn.Module):
@@ -168,6 +174,7 @@ class VisionTransformer(nn.Module):
         mlp_dim: int,
         dropout: float = 0.0,
         attention_dropout: float = 0.0,
+        skip_last_layer_norm: bool = False,
         num_classes: int = 1000,
         representation_size: Optional[int] = None,
         norm_layer: Callable[..., torch.nn.Module] = partial(nn.LayerNorm, eps=1e-6),
@@ -227,6 +234,7 @@ class VisionTransformer(nn.Module):
             dropout,
             attention_dropout,
             norm_layer,
+            skip_last_layer_norm=skip_last_layer_norm
         )
         self.seq_length = seq_length
 
