@@ -10,17 +10,15 @@ To see the source code, go to: torchvision.models.vision_transformer (for torchv
 import math
 from collections import OrderedDict
 from functools import partial
-from typing import Any, Callable, Dict, List, NamedTuple, Optional
+from typing import Any, Callable, List, NamedTuple, Optional
 
 import torch
 import torch.nn as nn
 
 from torchvision.ops.misc import Conv2dNormActivation, MLP
-from torchvision.transforms._presets import ImageClassification, InterpolationMode
 from torchvision.utils import _log_api_usage_once
-from torchvision.models._api import register_model, Weights, WeightsEnum
-from torchvision.models._meta import _IMAGENET_CATEGORIES
-from torchvision.models._utils import _ovewrite_named_param, handle_legacy_interface
+from torchvision.models._api import WeightsEnum
+from torchvision.models._utils import _ovewrite_named_param
 
 __all__ = [
     "VisionTransformer"
