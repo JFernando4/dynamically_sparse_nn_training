@@ -60,11 +60,12 @@ class IncrementalCIFARExperiment(Experiment):
         self.epoch_freq = access_dict(exp_params, "epoch_freq", default=False, val_type=bool)
         self.sparsity = access_dict(exp_params, "sparsity", default=0.0, val_type=float)
         self.sparse_network = self.sparsity > 0
-        dst_methods_names = ["none", "set", "set_r", "set_rf", "rigl", "rigl_r", "rigl_rf", "set_ds"]
+        dst_methods_names = ["none", "set", "set_r", "set_rf", "rigl", "rigl_r", "rigl_rf", "set_ds", "redo", "redo_kn", "redo_min"]
         self.dst_method = access_dict(exp_params, "dst_method", default="none", val_type=str, choices=dst_methods_names)
         self.use_dst = self.dst_method != "none"
         self.use_set_rth = "rth" in self.dst_method
         self.use_set_ds = "set_ds" in self.dst_method
+        self.use_redo = "redo" in self.dst_method
         self.dst_update_function = set_up_dst_update_function(self.dst_method, init_type="xavier_uniform")
         self.drop_fraction = access_dict(exp_params, "drop_fraction", default=0.0, val_type=float)
         self.df_decay = access_dict(exp_params, "df_decay", default=1.0, val_type=float)
@@ -122,12 +123,13 @@ class IncrementalCIFARExperiment(Experiment):
 
         # initialize masks
         self.net_masks = None
-        if self.sparse_network:
+        if self.use_dst:
             self.net_masks, self.ln_masks = init_vit_weight_masks(self.net, self.sparsity, include_msa=self.msa_mask,
                                                                   include_conv_proj=self.conv_mask,
                                                                   include_class_token=self.ct_mask,
                                                                   include_pos_embedding=self.pe_mask)
-            apply_weight_masks(self.net_masks)
+            if self.sparse_network:
+                apply_weight_masks(self.net_masks)
 
         # initialize optimizer and loss function
         self.optim = self._get_optimizer()
@@ -492,17 +494,24 @@ class IncrementalCIFARExperiment(Experiment):
                 third_arg = (self.df_decay * mask["init_std"], )
             elif self.use_set_ds:
                 third_arg = (mask["init_func"], self.df_decay)
+            elif self.use_redo:
+                third_arg = (self.df_decay, )
             else:
                 if "num_active" not in mask.keys():
                     mask["num_active"] = mask["mask"].sum()
                 third_arg = (int(self.drop_fraction * mask["num_active"]), )
 
-            old_mask = deepcopy(mask["mask"])
-            new_mask = self.dst_update_function(mask["mask"], mask["weight"], *third_arg)
-            mask_difference = old_mask - new_mask
-            added_masks.append(torch.clip(mask_difference, min=-1.0, max=0.0).abs())
-            removed_masks.append(torch.clip(mask_difference, min=0.0, max=1.0))
-            mask["mask"] = new_mask
+            if self.sparse_network:
+                old_mask = deepcopy(mask["mask"])
+                new_mask = self.dst_update_function(mask["mask"], mask["weight"], *third_arg)
+
+                mask_difference = old_mask - new_mask
+                added_masks.append(torch.clip(mask_difference, min=-1.0, max=0.0).abs())
+                removed_masks.append(torch.clip(mask_difference, min=0.0, max=1.0))
+                mask["mask"] = new_mask
+            else:
+                self.dst_update_function(mask["mask"], mask["weight"], *third_arg)
+                removed_masks, added_masks = None, None
 
         self.store_mask_update_summary(removed_masks, added_masks)
 
@@ -520,6 +529,8 @@ class IncrementalCIFARExperiment(Experiment):
         Return:
             None, but updates self.results_dict and self.previously_added_masks
         """
+        if not self.sparse_network:
+            return
 
         if self.previously_added_masks is not None:
             total_removed = 0
