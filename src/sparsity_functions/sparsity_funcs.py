@@ -98,6 +98,34 @@ def update_one_weight_mask_set_random_with_threshold(mask, weight: torch.Tensor,
     return mask
 
 
+@torch.no_grad()
+def update_one_weight_mask_redo(mask, weight, threshold, reinit="zero"):
+    """ Updates the weight mask of one layer by doing ReDo on the weights to figure out which weights to prune.
+        Args:
+            mask: the weight mask.
+            weight: the weights of one layer, corresponding to the mask.
+            threshold: threshold used to determine how many weights to prune
+            reinit: how to reinitialize the weights that are regrown.
+                choices: 'zero', 'kaiming_normal', 'min'
+    """
+
+    active_weights_indices = torch.where(mask.flatten() == 1.0)[0]
+    active_weights = weight.flatten().abs()[active_weights_indices]
+
+    prune_threshold = active_weights.mean() * threshold
+    prune_indices = torch.where(active_weights < prune_threshold)[0]
+    mask.view(-1)[active_weights_indices[prune_indices]] = 0.0
+    grow_num = prune_indices.numel()
+    if reinit == "zero":
+        mask = grow_random(mask, weight, grow_num, "zero")
+    elif reinit == "min":
+        mask = grow_random_fixed(mask, weight, grow_num)
+    elif reinit == "kaiming_normal":
+        mask = grow_random(mask, weight, grow_num, "kaiming_normal")
+    weight.multiply_(mask)
+    return mask
+
+
 def set_up_dst_update_function(dst_method_name: str, init_type: str = "xavier_uniform"):
     """
     Returns a dst update function according to the dst_method name
@@ -127,6 +155,12 @@ def set_up_dst_update_function(dst_method_name: str, init_type: str = "xavier_un
         return lambda m, w, thr: update_one_weight_mask_set_random_with_threshold(m,w, threshold=thr, reinit_type="min")
     elif dst_method_name == "set_ds":
         return update_one_weight_mask_set_dense_to_sparse
+    elif dst_method_name == "redo":
+        return lambda m, w, thr: update_one_weight_mask_redo(m, w, threshold=thr, reinit="zero")
+    elif dst_method_name == "redo_kn":
+        return lambda m, w, thr: update_one_weight_mask_redo(m, w, threshold=thr, reinit="kaiming_normal")
+    elif dst_method_name == "redo_min":
+        return lambda m, w, thr: update_one_weight_mask_redo(m, w, threshold=thr, reinit="min")
     elif dst_method_name == "none":
         return None
     else:
