@@ -1,9 +1,10 @@
 # third party libraries
 import torch.nn
 from torch.nn.init import _calculate_fan_in_and_fan_out
-from torchvision.models.vision_transformer import VisionTransformer, EncoderBlock, MLPBlock, Encoder
+# from torchvision.models.vision_transformer import VisionTransformer, EncoderBlock, MLPBlock, Encoder
 # src
 from src.sparsity_functions.sparsity_funcs import init_weight_mask_from_tensor
+from src.networks.torchvision_modified_vit import VisionTransformer, EncoderBlock, MLPBlock, Encoder
 
 
 def get_xavier_init_std(tensor: torch.Tensor()):
