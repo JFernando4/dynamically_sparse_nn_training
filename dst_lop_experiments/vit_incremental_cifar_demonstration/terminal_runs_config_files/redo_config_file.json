@@ -13,7 +13,7 @@
   "use_best_network": true,
   "__comment_4__": "Dynamics sparse training parameters.",
   "topology_update_freq": 90,
-  "df_decay": 0.1,
+  "df_decay": 0.01,
   "sparsity": 0.0,
   "dst_method": "redo_kn",
   "max_epochs_for_topology_update": 100,
