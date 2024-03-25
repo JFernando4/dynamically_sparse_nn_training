@@ -34,6 +34,7 @@ def evaluate_network(test_data: DataLoader,
                      current_num_classes: int) -> tuple[torch.Tensor, torch.Tensor]:
     """ Evaluates the network on the test data """
 
+    print(device)
     avg_loss = torch.tensor(0.0)
     avg_acc = torch.tensor(0.0)
     num_test_batches = 0
@@ -43,6 +44,7 @@ def evaluate_network(test_data: DataLoader,
         test_labels = sample["label"].to(device)
         test_predictions = net.forward(images)[:, all_classes[:current_num_classes]]
 
+        print(test_predictions.device, test_labels.device)
         avg_loss += loss(test_predictions, test_labels)
         avg_acc += compute_accuracy_from_batch(test_predictions, test_labels)
         num_test_batches += 1
