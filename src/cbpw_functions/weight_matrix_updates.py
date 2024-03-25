@@ -29,7 +29,7 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
 
     if prune_name == "magnitude":
         assert "drop_factor" in kwargs.keys()
-        prune_func = lambda w: magnitude_prune_weights(w, drop_prop=kwargs["drop_factor"])
+        prune_func = lambda w: magnitude_prune_weights(w, drop_factor=kwargs["drop_factor"])
     elif prune_name == "redo":
         assert "drop_factor" in kwargs.keys()
         prune_func = lambda w: redo_prune_weights(w, drop_factor=kwargs["drop_factor"])
