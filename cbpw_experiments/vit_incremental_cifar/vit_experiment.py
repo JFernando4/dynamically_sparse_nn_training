@@ -421,7 +421,6 @@ class IncrementalCIFARExperiment(Experiment):
             total = 0
             for n, p in self.net.named_parameters():
                 if "ln" in n and "weight" in n:
-                    print(f"{n}\n var = {p.abs().std():.4f}")
                     abs_param_val += p.abs().sum().item()
                     total += p.numel()
             print("Current ln weight magnitude: {0:.4f}".format(abs_param_val / total))
