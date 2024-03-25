@@ -171,9 +171,9 @@ class IncrementalCIFARExperiment(Experiment):
             if "pos_embedding" in n and self.pe_cbpw:
                 weight_dict[n] = (p, update_func)
             if ("ln" in n and "weight" in n) and self.ln_cbpw:
-                weight_dict[n] = (p, update_func)
-            if ("in_proj_weight" in n or "out_proj.weight" in n or ("mlp" in n and "weight" in n)) and self.msa_cbpw:
                 weight_dict[n] = (p, ln_update_func)
+            if ("in_proj_weight" in n or "out_proj.weight" in n or ("mlp" in n and "weight" in n)) and self.msa_cbpw:
+                weight_dict[n] = (p, update_func)
 
         return weight_dict
 
