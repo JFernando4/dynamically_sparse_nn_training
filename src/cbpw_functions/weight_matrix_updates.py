@@ -22,7 +22,7 @@ def prune_and_grow_weights(weight: torch.Tensor,
 
 def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs) -> Callable[[torch.Tensor], tuple]:
     """ Sets up weight update function for CBP-w """
-    prune_function_names = ["magnitude", "redo", "gf_redo"]
+    prune_function_names = ["magnitude", "redo", "gf_redo", "gf"]
     grow_function_names = ["pm_min", "kaiming_normal", "xavier_normal", "zero", "kaming_uniform", "xavier_uniform",
                            "fixed"]
     assert prune_name in prune_function_names and grow_name in grow_function_names
