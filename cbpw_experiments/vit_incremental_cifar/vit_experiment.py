@@ -421,6 +421,7 @@ class IncrementalCIFARExperiment(Experiment):
             total = 0
             for n, p in self.net.named_parameters():
                 if "ln" in n and "weight" in n:
+                    print(f"{n}\n var = {p.abs().std():.4f}")
                     abs_param_val += p.abs().sum().item()
                     total += p.numel()
             print("Current ln weight magnitude: {0:.4f}".format(abs_param_val / total))
@@ -459,10 +460,6 @@ class IncrementalCIFARExperiment(Experiment):
         """
         # update topology
         temp_summaries_dict = update_weights(self.weight_dict)
-
-        for k in temp_summaries_dict:
-            if "ln" in k:
-                print(torch.sum(temp_summaries_dict[k][0] == 0.0))
         # compute and store summaries
         removed_masks = [v[0] for v in temp_summaries_dict.values()]
         num_pruned = sum([v[1] for v in temp_summaries_dict.values()])
