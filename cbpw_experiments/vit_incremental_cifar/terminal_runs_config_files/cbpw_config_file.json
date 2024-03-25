@@ -13,7 +13,7 @@
   "use_best_network": true,
   "__comment_4__": "Dynamics sparse training parameters.",
   "topology_update_freq": 90,
-  "prune_method": "gf",
+  "prune_method": "gf_redo",
   "grow_method": "pm_min",
   "drop_factor": 0.01,
   "msa_cbpw": true,
