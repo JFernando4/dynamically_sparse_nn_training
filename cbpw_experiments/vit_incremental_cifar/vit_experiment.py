@@ -161,6 +161,7 @@ class IncrementalCIFARExperiment(Experiment):
             return weight_dict
 
         update_func = setup_cbpw_weight_update_function(self.prune_method, self.grow_method, drop_factor=self.drop_factor)
+        ln_update_func = setup_cbpw_weight_update_function("magnitude", "fixed", reinit_val=1.0)
         for n, p in self.net.named_parameters():
             if "class_token" in n and self.ct_cbpw:
                 weight_dict[n] = (p, update_func)
@@ -171,7 +172,7 @@ class IncrementalCIFARExperiment(Experiment):
             if ("ln" in n and "weight" in n) and self.ln_cbpw:
                 weight_dict[n] = (p, update_func)
             if ("in_proj_weight" in n or "out_proj.weight" in n or ("mlp" in n and "weight" in n)) and self.msa_cbpw:
-                weight_dict[n] = (p, update_func)
+                weight_dict[n] = (p, ln_update_func)
 
         return weight_dict
 
