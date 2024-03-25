@@ -125,7 +125,7 @@ def random_reinit_weights(weight: torch.Tensor, reinit) -> None:
     random_reinit_functions[reinit](temp_weights)
     weight.view(-1)[pruned_indices] = temp_weights.view(-1)[pruned_indices]
 
-
+@torch.no_grad()
 def fixed_reinit_weights(weight: torch.Tensor, reinit_val: float) -> None:
     """ Reinitializes weights toa fixed value """
     pruned_indices = torch.where(weight.flatten() == 0.0)[0]
