@@ -20,7 +20,7 @@ def prune_and_grow_weights(weight: torch.Tensor,
     return mask, num_pruned
 
 
-def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs) -> Callable[[torch.Tensor], None]:
+def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs) -> Callable[[torch.Tensor], tuple]:
     """ Sets up weight update function for CBP-w """
     prune_function_names = ["magnitude", "redo", "gf_redo"]
     grow_function_names = ["pm_min", "kaiming_normal", "xavier_normal", "zero", "kaming_uniform", "xavier_uniform",
@@ -53,6 +53,16 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     return temp_prune_and_grow_weights
 
 
+def update_weights(weight_dict: dict[str, tuple[torch.Tensor, Callable[[torch.Tensor], tuple[torch.Tensor, int]]]]) -> dict:
+    """ Applies the corresponding update function to all the weights in the dictionary """
+    summaries_dict = {}
+    for k, v in weight_dict.items():
+        temp_weight, temp_update_function = v
+        summaries_dict[k] = temp_update_function(temp_weight)
+    return summaries_dict
+
+
+# ----- ----- ----- ----- Pruning Functions ----- ----- ----- ----- #
 @torch.no_grad()
 def gf_redo_prune_weights(weight: torch.Tensor, drop_factor: float):
     """
@@ -87,6 +97,17 @@ def magnitude_prune_weights(weight: torch.Tensor, drop_factor: int):
     weight.view(-1)[indices[:drop_num]] = 0.0
 
 
+@torch.no_grad()
+def gradient_flow_prune_weights(weight: torch.Tensor, drop_factor: int):
+    """ Creates a mask by dropping the weights with the smallest gradient flow """
+
+    gradient_flow = torch.abs(weight * weight.grad).flatten()
+    drop_num = int(weight.numel() * drop_factor)
+    indices = torch.argsort(gradient_flow)
+    weight.view(-1)[indices[:drop_num]] = 0.0
+
+
+# ----- ----- ----- ----- Growing Functions ----- ----- ----- ----- #
 @torch.no_grad()
 def pm_min_reinit_weights(weight: torch.Tensor) -> None:
     """
@@ -125,17 +146,9 @@ def random_reinit_weights(weight: torch.Tensor, reinit) -> None:
     random_reinit_functions[reinit](temp_weights)
     weight.view(-1)[pruned_indices] = temp_weights.view(-1)[pruned_indices]
 
+
 @torch.no_grad()
 def fixed_reinit_weights(weight: torch.Tensor, reinit_val: float) -> None:
     """ Reinitializes weights toa fixed value """
     pruned_indices = torch.where(weight.flatten() == 0.0)[0]
     weight.view(-1)[pruned_indices] = reinit_val
-
-
-def update_weights(weight_dict: dict[str, tuple[torch.Tensor, Callable[[torch.Tensor], tuple[torch.Tensor, int]]]]) -> dict:
-    """ Applies the corresponding update function to all the weights in the dictionary """
-    summaries_dict = {}
-    for k, v in weight_dict.items():
-        temp_weight, temp_update_function = v
-        summaries_dict[k] = temp_update_function(temp_weight)
-    return summaries_dict
