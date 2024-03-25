@@ -36,6 +36,9 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     elif prune_name == "gf_redo":
         assert "drop_factor" in kwargs.keys()
         prune_func = lambda w: gf_redo_prune_weights(w, drop_factor=kwargs["drop_factor"])
+    elif prune_name == "gf":
+        assert "drop_factor" in kwargs.keys()
+        prune_func = lambda w: gradient_flow_prune_weights(w, drop_factor=kwargs["drop_factor"])
 
     if grow_name == "pm_min":
         grow_func = lambda w: pm_min_reinit_weights(w)
