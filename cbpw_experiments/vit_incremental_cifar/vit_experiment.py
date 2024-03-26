@@ -59,7 +59,7 @@ class IncrementalCIFARExperiment(Experiment):
         # CBPw parameters
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
         self.epoch_freq = access_dict(exp_params, "epoch_freq", default=False, val_type=bool)
-        pruning_functions_names = ["none", "magnitude", "redo", "gf_redo", "gf"]
+        pruning_functions_names = ["none", "magnitude", "redo", "gf"]
         grow_methods = ["none", "pm_min", "xavier_normal", "zero"]
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str, choices=pruning_functions_names)
         self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str, choices=grow_methods)
@@ -484,8 +484,8 @@ class IncrementalCIFARExperiment(Experiment):
                 prop_added_then_removed = 0.0
             else:
                 prop_added_then_removed = total_added_then_removed / total_removed
-            print("Total removed: {0}".format(total_removed))
-            print("Proportion of added then removed: {0:.4f}".format(prop_added_then_removed))
+            # print("Total removed: {0}".format(total_removed))
+            # print("Proportion of added then removed: {0:.4f}".format(prop_added_then_removed))
             self.results_dict["prop_added_then_removed"][self.current_topology_update] += prop_added_then_removed
             if "redo" in self.prune_method:
                 self.results_dict["total_removed_per_update"][self.current_topology_update] += total_removed
