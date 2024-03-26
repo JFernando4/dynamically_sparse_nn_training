@@ -15,6 +15,7 @@
     "num_permutations": 500,
     "num_layers": 3,
     "num_hidden": 100,
+    "store_parameters": true,
     "runs": 30
   },
 
