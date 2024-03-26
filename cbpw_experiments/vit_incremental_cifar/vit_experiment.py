@@ -455,7 +455,7 @@ class IncrementalCIFARExperiment(Experiment):
 
     def update_topology(self):
         """
-        Updates the neural network topology according to the chosen dst algorithm
+        Updates the neural network topology according to the chosen cbpw parameters
         """
         # update topology
         temp_summaries_dict = update_weights(self.weight_dict)
