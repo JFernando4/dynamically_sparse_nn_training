@@ -101,7 +101,7 @@ def hessian_approx_prune_weights(weight: torch.Tensor, drop_factor: float):
     Prunes using redo criteria but using gradient flow instead of magnitude pruning
     """
 
-    gradient_flow = torch.abs(weight.flatten().squre() * weight.grad.flatten().square())
+    gradient_flow = torch.abs(weight.flatten().square() * weight.grad.flatten().square())
     prune_threshold = drop_factor * gradient_flow.mean()
     prune_indices = torch.where(gradient_flow < prune_threshold)[0]
     weight.view(-1)[prune_indices] = 0.0
