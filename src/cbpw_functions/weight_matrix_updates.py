@@ -22,23 +22,20 @@ def prune_and_grow_weights(weight: torch.Tensor,
 
 def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs) -> Callable[[torch.Tensor], tuple]:
     """ Sets up weight update function for CBP-w """
-    prune_function_names = ["magnitude", "redo", "gf_redo", "gf"]
+    prune_function_names = ["magnitude", "redo", "gf_redo", "gf", "hess_approx"]
     grow_function_names = ["pm_min", "kaiming_normal", "xavier_normal", "zero", "kaming_uniform", "xavier_uniform",
                            "fixed"]
     assert prune_name in prune_function_names and grow_name in grow_function_names
+    assert "drop_factor" in kwargs.keys()
 
     if prune_name == "magnitude":
-        assert "drop_factor" in kwargs.keys()
         prune_func = lambda w: magnitude_prune_weights(w, drop_factor=kwargs["drop_factor"])
     elif prune_name == "redo":
-        assert "drop_factor" in kwargs.keys()
         prune_func = lambda w: redo_prune_weights(w, drop_factor=kwargs["drop_factor"])
-    elif prune_name == "gf_redo":
-        assert "drop_factor" in kwargs.keys()
-        prune_func = lambda w: gf_redo_prune_weights(w, drop_factor=kwargs["drop_factor"])
     elif prune_name == "gf":
-        assert "drop_factor" in kwargs.keys()
         prune_func = lambda w: gradient_flow_prune_weights(w, drop_factor=kwargs["drop_factor"])
+    elif prune_name == "hess_approx":
+        prune_func = lambda w: hessian_approx_prune_weights(w, drop_factor=kwargs["drop_factor"])
 
     if grow_name == "pm_min":
         grow_func = lambda w: pm_min_reinit_weights(w)
@@ -66,18 +63,6 @@ def update_weights(weight_dict: dict[str, tuple[torch.Tensor, Callable[[torch.Te
 
 
 # ----- ----- ----- ----- Pruning Functions ----- ----- ----- ----- #
-@torch.no_grad()
-def gf_redo_prune_weights(weight: torch.Tensor, drop_factor: float):
-    """
-    Prunes using redo criteria but using gradient flow instead of magnitude pruning
-    """
-
-    gradient_flow = torch.abs(weight.flatten() * weight.grad.flatten())
-    prune_threshold = drop_factor * gradient_flow.mean()
-    prune_indices = torch.where(gradient_flow < prune_threshold)[0]
-    weight.view(-1)[prune_indices] = 0.0
-
-
 @torch.no_grad()
 def redo_prune_weights(weight: torch.Tensor, drop_factor: float):
     """
@@ -108,6 +93,18 @@ def gradient_flow_prune_weights(weight: torch.Tensor, drop_factor: int):
     drop_num = int(weight.numel() * drop_factor)
     indices = torch.argsort(gradient_flow)
     weight.view(-1)[indices[:drop_num]] = 0.0
+
+
+@torch.no_grad()
+def hessian_approx_prune_weights(weight: torch.Tensor, drop_factor: float):
+    """
+    Prunes using redo criteria but using gradient flow instead of magnitude pruning
+    """
+
+    gradient_flow = torch.abs(weight.flatten().squre() * weight.grad.flatten().square())
+    prune_threshold = drop_factor * gradient_flow.mean()
+    prune_indices = torch.where(gradient_flow < prune_threshold)[0]
+    weight.view(-1)[prune_indices] = 0.0
 
 
 # ----- ----- ----- ----- Growing Functions ----- ----- ----- ----- #
