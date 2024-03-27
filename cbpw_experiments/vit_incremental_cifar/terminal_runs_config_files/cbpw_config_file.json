@@ -15,7 +15,7 @@
   "topology_update_freq": 90,
   "prune_method": "hess_approx",
   "grow_method": "pm_min",
-  "drop_factor": 0.05,
+  "drop_factor": 0.01,
   "msa_cbpw": true,
   "conv_cbpw": true,
   "ct_cbpw": true,
