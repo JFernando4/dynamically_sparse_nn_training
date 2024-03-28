@@ -27,9 +27,9 @@
 
   "learning_params": {
     "topology_update_freq": ["fixed", 45, 90, 180],
-    "prune_method": ["str", "gf", "hess_approx", "magnitude"],
+    "prune_method": ["str", "redo"],
     "grow_method": ["str", "pm_min", "xavier_normal"],
-    "drop_factor": ["fixed", 0.005, 0.01, 0.02],
+    "drop_factor": ["fixed", 0.005, 0.01, 0.02, 0.05, 0.1],
     "msa_cbpw": true,
     "conv_cbpw": true,
     "ct_cbpw": true,
