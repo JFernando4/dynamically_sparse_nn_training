@@ -1,0 +1,42 @@
+{
+  "file_management": {
+    "experiment_name": "cbpw_parameters_sweep",
+    "data_path": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/dst_lop_experiments/permuted_mnist/data/",
+    "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
+    "relevant_parameters": [
+      "topology_update_freq",
+      "prune_method",
+      "grow_method",
+      "drop_factor"
+    ]
+  },
+
+  "experiment_params": {
+    "num_permutations": 500,
+    "num_layers": 3,
+    "num_hidden": 100,
+    "stepsize": 0.001,
+    "steps_per_task": 60000,
+    "store_parameters": false,
+    "runs": 10
+  },
+
+  "learning_params": {
+    "topology_update_freq": ["fixed", 250, 500, 1000],
+    "prune_method": ["str", "magnitude", "gf", "hess_approx"],
+    "grow_method": ["str", "pm_min", "xavier_normal", "zero"],
+    "drop_factor": ["fixed", 0.005, 0.01, 0.02, 0.05]
+  },
+
+  "slurm_parameters": {
+    "job_name": "cbpw_ps",
+    "time": "11:00:00",
+    "max_runs_per_job": 1,
+    "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
+    "output_filename": "pmnist_ps-%n-%j.out",
+    "mem": "12G",
+    "mail-type": "BEGIN,END,FAIL",
+    "mail-user":"jfhernan@ualberta.ca",
+    "cpus-per-task": 6
+  }
+}
