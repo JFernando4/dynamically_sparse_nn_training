@@ -28,8 +28,8 @@
   "learning_params": {
     "topology_update_freq": ["fixed", 45, 90, 180],
     "prune_method": ["str", "redo"],
-    "grow_method": ["str", "pm_min", "xavier_normal"],
-    "drop_factor": ["fixed", 0.005, 0.01, 0.02, 0.05, 0.1],
+    "grow_method": ["str", "pm_min"],
+    "drop_factor": ["fixed", 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.4],
     "msa_cbpw": true,
     "conv_cbpw": true,
     "ct_cbpw": true,
