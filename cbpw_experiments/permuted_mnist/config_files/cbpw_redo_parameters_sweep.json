@@ -25,7 +25,7 @@
     "topology_update_freq": ["fixed", 250, 500, 1000],
     "prune_method": ["str", "redo"],
     "grow_method": ["str", "pm_min", "xavier_normal", "zero"],
-    "drop_factor": ["fixed", 0.005, 0.01, 0.02, 0.05]
+    "drop_factor": ["fixed", 0.01, 0.05, 0.2, 0.4]
   },
 
   "slurm_parameters": {
