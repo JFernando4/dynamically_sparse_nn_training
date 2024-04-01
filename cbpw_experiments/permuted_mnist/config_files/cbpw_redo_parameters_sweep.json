@@ -18,7 +18,7 @@
     "stepsize": 0.001,
     "steps_per_task": 60000,
     "store_parameters": false,
-    "runs": 10
+    "runs": 5
   },
 
   "learning_params": {
@@ -30,7 +30,7 @@
 
   "slurm_parameters": {
     "job_name": "cbpw_ps",
-    "time": "10:00:00",
+    "time": "12:00:00",
     "max_runs_per_job": 1,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
     "output_filename": "pmnist_ps-%n-%j.out",
