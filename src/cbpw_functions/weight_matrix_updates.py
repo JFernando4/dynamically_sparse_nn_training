@@ -107,6 +107,16 @@ def hessian_approx_prune_weights(weight: torch.Tensor, drop_factor: float):
     weight.view(-1)[indices[:drop_num]] = 0.0
 
 
+@torch.no_grad()
+def threshold_prune_weights(weight: torch, drop_factor: float) -> None:
+    """
+    Prunes any weight whose absolute value is below the given drop_factor
+    """
+    abs_weight = weight.flatten().abs()
+    indices = torch.where(abs_weight < drop_factor)[0]
+    weight.view(-1)[indices] = 0.0
+
+
 # ----- ----- ----- ----- Growing Functions ----- ----- ----- ----- #
 @torch.no_grad()
 def pm_min_reinit_weights(weight: torch.Tensor) -> None:
