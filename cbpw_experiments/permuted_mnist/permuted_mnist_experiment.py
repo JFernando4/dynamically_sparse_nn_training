@@ -112,7 +112,7 @@ class PermutedMNISTExperiment(Experiment):
         if self.use_cbpw:
             total_top_updates = (self.steps_per_task * self.num_permutations) // self.topology_update_freq
             self.results_dict["prop_added_then_removed"] = torch.zeros(total_top_updates, device=self.device, dtype=torch.float32)
-            if "redo" in self.grow_method:
+            if "redo" in self.prune_method:
                 self.results_dict["total_removed_per_update"] = torch.zeros(total_top_updates, device=self.device, dtype=torch.float32)
 
         """ For creating experiment checkpoints """
