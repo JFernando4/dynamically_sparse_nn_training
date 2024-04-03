@@ -8,7 +8,6 @@ import torch
 from torch import Tensor
 from torch.optim.optimizer import Optimizer
 from typing import List, Optional, Tuple
-from copy import deepcopy
 
 _foreach_supported_types = [torch.Tensor, torch.nn.parameter.Parameter]
 
