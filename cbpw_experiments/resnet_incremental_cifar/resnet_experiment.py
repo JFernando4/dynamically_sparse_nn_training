@@ -2,7 +2,6 @@
 import time
 import os
 import pickle
-from copy import deepcopy
 
 # third party libraries
 import torch
