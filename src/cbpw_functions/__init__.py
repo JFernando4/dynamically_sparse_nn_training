@@ -1,3 +1,3 @@
-from .weight_matrix_updates import setup_cbpw_weight_update_function
+from .weight_matrix_updates import setup_cbpw_weight_update_function, update_weights
 from .utilities import initialize_weight_dict
 
