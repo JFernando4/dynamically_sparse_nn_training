@@ -53,7 +53,7 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     return temp_prune_and_grow_weights
 
 
-def update_weights(weight_dict: dict[str, tuple[torch.Tensor, Callable[[torch.Tensor], tuple[torch.Tensor, int]]]]) -> dict:
+def update_weights(weight_dict: dict[str, tuple]) -> dict:
     """ Applies the corresponding update function to all the weights in the dictionary """
     summaries_dict = {}
     for k, v in weight_dict.items():
