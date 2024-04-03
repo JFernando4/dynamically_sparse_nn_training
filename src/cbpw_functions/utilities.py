@@ -6,7 +6,7 @@ from src.networks.torchvision_modified_vit import VisionTransformer
 from src.networks.torchvision_modified_resnet import ResNet
 
 
-def initialize_weight_dict(net: torch.Module,
+def initialize_weight_dict(net: torch.nn.Module,
                            architecture_type: str,
                            prune_method: str,
                            grow_method: str,
