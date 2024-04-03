@@ -6,6 +6,7 @@ import pickle
 from copy import deepcopy
 
 # third party libraries
+import torch
 from torch.utils.data import DataLoader
 import numpy as np
 
@@ -17,9 +18,10 @@ from mlproj_manager.util.neural_networks import init_weights_kaiming
 from mlproj_manager.file_management import store_object_with_several_attempts
 
 # from src
-from src.sparsity_functions.sparsity_funcs import *
+from src.cbpw_functions import initialize_weight_dict
 from src.networks import RegularizedSGD
-from src.cbpw_functions.weight_matrix_updates import setup_cbpw_weight_update_function, update_weights
+from src.cbpw_functions.weight_matrix_updates import update_weights
+from src.utils.experiment_utils import parse_terminal_arguments
 
 
 class PermutedMNISTExperiment(Experiment):
@@ -87,7 +89,10 @@ class PermutedMNISTExperiment(Experiment):
 
         """ Network set up """
         self.net = self.initialize_network()
-        self.weight_dict = self.initialize_weights_dict()
+        self.weight_dict = None
+        if self.use_cbpw:
+            self.weight_dict = initialize_weight_dict(self.net, "sequential", self.prune_method,
+                                                      self.grow_method, self.drop_factor)
 
         # initialize optimizer
         self.optim = RegularizedSGD(self.net.parameters(),
@@ -141,22 +146,6 @@ class PermutedMNISTExperiment(Experiment):
 
         return net
 
-    def initialize_weights_dict(self):
-        """ Initializes the weight dictionaries used for CBPw """
-        weight_dict = {}
-        if not self.use_cbpw:
-            return weight_dict
-
-        update_func = setup_cbpw_weight_update_function(self.prune_method, self.grow_method, drop_factor=self.drop_factor)
-
-        layer_index = 0
-        for i in range(len(self.net) - 1):
-            if isinstance(self.net[i], torch.nn.Linear):
-                weight_dict[f"linear_{layer_index}"] = (self.net[i].weight, update_func)
-                layer_index += 1
-
-        return weight_dict
-
     # ----------------------------- For saving and loading experiment checkpoints ----------------------------- #
     def get_experiment_checkpoint(self) -> dict:
         """ Creates a dictionary with all the data necessary to restart the experiment """
@@ -205,7 +194,8 @@ class PermutedMNISTExperiment(Experiment):
         if not self.use_cbpw:
             return
 
-        self.weight_dict = self.initialize_weights_dict()
+        self.weight_dict = initialize_weight_dict(self.net, "sequential", self.prune_method,
+                                                  self.grow_method, self.drop_factor)
 
     # ----------------------------- For storing summaries ----------------------------- #
     def _store_training_summaries(self):
@@ -342,21 +332,6 @@ class PermutedMNISTExperiment(Experiment):
         file_path = os.path.join(model_parameters_dir_path, file_name)
 
         store_object_with_several_attempts(self.net.state_dict(), file_path, storing_format="torch", num_attempts=10)
-
-
-def parse_terminal_arguments():
-    """ Reads experiment arguments """
-    import argparse
-    argument_parser = argparse.ArgumentParser()
-
-    # default values for stepsize, weight_decay, and dropout_prob found in a parameter sweep with lr scheduler
-    argument_parser.add_argument("--config_file", action="store", type=str, required=True,
-                                 help="JSON file with experiment parameters.")
-    argument_parser.add_argument("--run_index", action="store", type=int, default=0,
-                                 help="This determines the random seed for the experiment.")
-    argument_parser.add_argument("--verbose", action="store_true", default=False)
-
-    return argument_parser.parse_args()
 
 
 def main():
