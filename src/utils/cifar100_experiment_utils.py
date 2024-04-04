@@ -189,8 +189,8 @@ class IncrementalCIFARExperiment(Experiment):
                 prop_added_then_removed = 0.0
             else:
                 prop_added_then_removed = total_added_then_removed / total_removed
-            # print("Total removed: {0}".format(total_removed))
-            # print("Proportion of added then removed: {0:.4f}".format(prop_added_then_removed))
+            print("Total removed: {0}".format(total_removed))
+            print("Proportion of added then removed: {0:.4f}".format(prop_added_then_removed))
             self.results_dict["prop_added_then_removed"][self.current_topology_update] += prop_added_then_removed
             if "redo" in self.prune_method:
                 self.results_dict["total_removed_per_update"][self.current_topology_update] += total_removed
