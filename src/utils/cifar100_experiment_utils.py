@@ -72,7 +72,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.all_classes = np.random.permutation(self.num_classes)
         self.best_accuracy = torch.tensor(0.0, device=self.device, dtype=torch.float32)
         self.best_loss = torch.ones_like(self.best_accuracy) * torch.inf
-        self.best_accuracy_model_parameters = {}
+        self.best_model_parameters = {}
 
         """ For creating experiment checkpoints """
         self.experiment_checkpoints_dir_path = os.path.join(self.results_dir, "experiment_checkpoints")
@@ -204,9 +204,10 @@ class IncrementalCIFARExperiment(Experiment):
         if (self.current_epoch % self.class_increase_frequency) == 0 and (not self.fixed_classes):
             self._print("Best accuracy in the task: {0:.4f}".format(self.best_accuracy))
             if self.use_best_network:
-                self.net.load_state_dict(self.best_accuracy_model_parameters)
+                self.net.load_state_dict(self.best_model_parameters)
             self.best_accuracy = torch.zeros_like(self.best_accuracy)
-            self.best_accuracy_model_parameters = {}
+            self.best_loss = torch.ones_like(self.best_accuracy) * torch.inf
+            self.best_model_parameters = {}
             save_model_parameters(self.results_dir, self.run_index, self.current_epoch, self.net)
 
             if self.current_num_classes == self.num_classes: return
