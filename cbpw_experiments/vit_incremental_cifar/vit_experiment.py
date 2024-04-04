@@ -16,7 +16,7 @@ from mlproj_manager.experiments import Experiment
 from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict
 
 from src import initialize_vit, initialize_vit_heads, initialize_layer_norm_module
-from src.plasticity_functions import SGDL2Init
+from src.plasticity_functions import SGDL2Init, inject_noise
 from src.utils import get_cifar_data, compute_accuracy_from_batch
 from src.networks.torchvision_modified_vit import VisionTransformer
 from src.cbpw_functions.weight_matrix_updates import setup_cbpw_weight_update_function, update_weights
@@ -385,7 +385,7 @@ class IncrementalCIFARExperiment(Experiment):
                 # backpropagate and update weights
                 current_loss.backward()
                 self.optim.step()
-                self.inject_noise()
+                if self.perturb_weights_indicator: inject_noise(self.net, self.noise_std)
                 if self.use_lr_schedule:
                     self.lr_scheduler.step()
                     if self.lr_scheduler.get_last_lr()[0] > 0.0 and not self.rescaled_wd:
@@ -432,14 +432,6 @@ class IncrementalCIFARExperiment(Experiment):
         if not self.rescaled_wd:
             self.optim.param_groups[0]['weight_decay'] = self.weight_decay / scheduler.get_last_lr()[0]
         return scheduler
-
-    def inject_noise(self):
-        """ Adds a small amount of random noise to the parameters of the network """
-        if not self.perturb_weights_indicator: return
-
-        with torch.no_grad():
-            for param in self.net.parameters():
-                param.add_(torch.randn(param.size(), device=param.device) * self.noise_std)
 
     def time_to_update_topology(self, minibatch_loop: bool = True):
         if not self.use_cbpw:
