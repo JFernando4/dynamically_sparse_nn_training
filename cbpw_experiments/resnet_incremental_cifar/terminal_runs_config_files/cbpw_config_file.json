@@ -11,6 +11,7 @@
   "fixed_classes": false,
   "use_best_network": true,
   "__comment_4__": "CBPw Parameters.",
+  "use_cbpw": true,
   "topology_update_freq": 45,
   "prune_method": "redo",
   "grow_method": "pm_min",
@@ -18,6 +19,7 @@
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
     "num_epochs",
+    "use_cbpw",
     "topology_update_freq",
     "prune_method",
     "grow_method",
