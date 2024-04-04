@@ -16,6 +16,7 @@
   "prune_method": "redo",
   "grow_method": "pm_min",
   "drop_factor": 0.1,
+  "bn_cbpw": true,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
     "num_epochs",
@@ -23,6 +24,7 @@
     "topology_update_freq",
     "prune_method",
     "grow_method",
-    "drop_factor"
+    "drop_factor",
+    "bn_cbpw"
   ]
 }

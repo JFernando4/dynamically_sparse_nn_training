@@ -59,6 +59,8 @@ def update_weights(weight_dict: dict[str, tuple]) -> dict:
     for k, v in weight_dict.items():
         temp_weight, temp_update_function = v
         summaries_dict[k] = temp_update_function(temp_weight)
+        if "bn" in k:
+            print(summaries_dict[k][1].sum())
     return summaries_dict
 
 
