@@ -74,9 +74,9 @@ def initializes_weights_dict_resnet(net: ResNet,
     weight_dict = {}
 
     for n, p in net.named_parameters():
-        if "conv" in n and "weight" in n:
+        if ("conv" in n and "weight" in n) or ("downsample.0" in n and "weight" in n):
             weight_dict[n] = (p, update_func)
-        if ("bn" in n and "weight" in n) and include_bn:
+        if (("bn" in n and "weight" in n) or ("downsample.1" in n and "weight" in n)) and include_bn:
             weight_dict[n] = (p, update_func)
     return weight_dict
 
