@@ -71,6 +71,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.class_increase = 5
         self.all_classes = np.random.permutation(self.num_classes)
         self.best_accuracy = torch.tensor(0.0, device=self.device, dtype=torch.float32)
+        self.best_loss = torch.ones_like(self.best_accuracy) * torch.inf
         self.best_accuracy_model_parameters = {}
 
         """ For creating experiment checkpoints """
