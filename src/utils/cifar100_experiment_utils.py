@@ -81,6 +81,7 @@ class IncrementalCIFARExperiment(Experiment):
         """ For summaries """
         self.running_avg_window = 25
         self.current_running_avg_step, self.running_loss, self.running_accuracy = (0, 0.0, 0.0)
+        self.previously_removed_weights = None
 
         """ Placeholders """
         self.net = torch.nn.Linear(1,1)   # Either ResNet18 or VisionTransformer
@@ -89,6 +90,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.class_increase_frequency = -1                      # positive integer
         self.use_cbpw = None                                    # bool
         self.topology_update_freq = -1                          # non-negative integer
+        self.current_topology_update = -1                       # non-negative integer
         self.prune_method = "placeholder"                       # string from ["none", "magnitude", "redo", "gf", "hess_approx"]
 
     def _initialize_summaries(self):
@@ -164,6 +166,35 @@ class IncrementalCIFARExperiment(Experiment):
 
         self.net.train()
         self._print("\t\tEpoch run time in seconds: {0:.4f}".format(epoch_runtime))
+
+    def _store_mask_update_summary(self, cbpw_summaries: dict[str, tuple]) -> None:
+        """
+        Computes and stores the proportion of weights that were removed in the current topology update that were also
+        removed in the last one
+
+        Args:
+            cbpw_summaries: dict corresponding to the output of the function update_weights in
+                            cbpw_functions.weight_matrix_updates.py
+        """
+        removed_masks = [v[0] for v in cbpw_summaries.values()]
+        total_removed = sum([v[1] for v in cbpw_summaries.values()])
+
+        if self.previously_removed_weights is not None:
+            total_added_then_removed = 0
+            for prev_removed, recently_removed in zip(self.previously_removed_weights, removed_masks):
+                total_added_then_removed += ((prev_removed + recently_removed) == 0.0).sum()
+
+            if total_removed == 0:
+                prop_added_then_removed = 0.0
+            else:
+                prop_added_then_removed = total_added_then_removed / total_removed
+            # print("Total removed: {0}".format(total_removed))
+            # print("Proportion of added then removed: {0:.4f}".format(prop_added_then_removed))
+            self.results_dict["prop_added_then_removed"][self.current_topology_update] += prop_added_then_removed
+            if "redo" in self.prune_method:
+                self.results_dict["total_removed_per_update"][self.current_topology_update] += total_removed
+
+        self.previously_removed_weights = removed_masks
 
     def extend_classes(self, training_data: CifarDataSet, test_data: CifarDataSet, val_data: CifarDataSet):
         """

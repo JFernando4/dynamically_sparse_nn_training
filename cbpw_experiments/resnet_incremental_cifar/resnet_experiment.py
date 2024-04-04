@@ -13,7 +13,7 @@ from mlproj_manager.problems import CifarDataSet
 from mlproj_manager.util import access_dict
 
 from src import kaiming_init_resnet_module, build_resnet18, ResGnT, ResNet
-from src.cbpw_functions import initialize_weight_dict
+from src.cbpw_functions import initialize_weight_dict, update_weights
 from src.plasticity_functions import inject_noise
 from src.utils import get_cifar_data, compute_accuracy_from_batch, parse_terminal_arguments
 from src.utils.cifar100_experiment_utils import IncrementalCIFARExperiment, save_model_parameters
@@ -56,6 +56,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
         assert not ((self.prune_method != "none" and self.grow_method == "none") or (self.prune_method == "none" and self.grow_method != "none"))
         self.drop_factor = access_dict(exp_params, "drop_factor", default=float, val_type=float)
         self.bn_cbpw = access_dict(exp_params, "bn_cbpw", default=False, val_type=bool)
+        self.current_topology_update = 0
 
         # shrink and perturb parameters
         self.noise_std = access_dict(exp_params, "noise_std", default=0.0, val_type=float)
@@ -109,7 +110,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
         is_resnet =  isinstance(self.net, ResNet)
         is_sgd = isinstance(self.optim, torch.optim.SGD)
         is_positive_int = (self.checkpoint_save_frequency > 0) and (self.class_increase_frequency > 0)
-        is_non_negative = (self.topology_update_freq >= 0)
+        is_non_negative = (self.topology_update_freq >= 0) and (self.current_topology_update >= 0)
         is_bool = isinstance(self.use_cbpw, bool)
         is_correct_string = (self.prune_method in pruning_functions_names)
         assert is_resnet and is_sgd and is_positive_int and is_non_negative and is_bool and is_correct_string
@@ -218,6 +219,8 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
                 self.optim.step()
                 if self.use_cbp: self.resgnt.gen_and_test(current_features)
                 if self.perturb_weights_indicator: inject_noise(self.net, self.noise_std)
+                if self.use_cbpw and (self.current_minibatch % self.topology_update_freq) == 0:
+                    self._store_mask_update_summary(update_weights(self.weight_dict))
 
                 # store summaries
                 current_accuracy = compute_accuracy_from_batch(predictions, label)
