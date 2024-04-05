@@ -239,6 +239,14 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
             if self.current_epoch % self.checkpoint_save_frequency == 0:
                 self.save_experiment_checkpoint()
 
+            abs_param_val = 0
+            total = 0
+            for n, p in self.net.named_parameters():
+                if "bn" in n and "weight" in n:
+                    abs_param_val += p.abs().sum().item()
+                    total += p.numel()
+            print("Current bn weight magnitude: {0:.4f}".format(abs_param_val / total))
+
     def set_lr(self):
         """ Changes the learning rate of the optimizer according to the current epoch of the task """
         if not self.use_lr_schedule: return
