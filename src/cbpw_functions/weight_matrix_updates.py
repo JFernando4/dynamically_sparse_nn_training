@@ -62,6 +62,23 @@ def update_weights(weight_dict: dict[str, tuple]) -> dict:
     return summaries_dict
 
 
+@torch.no_grad()
+def reset_norm_layer(mod: torch.nn.Module, norm_type: str = "bn", drop_factor: float = 0.1) -> None:
+    """ Resets the parameter of a normalization layer if the weight is below the given drop factor """
+
+    is_bn = (norm_type == "bn" and isinstance(mod, torch.nn.BatchNorm2d))
+    is_ln = (norm_type == "ln" and isinstance(mod, torch.nn.LayerNorm))
+    if not (is_bn or is_ln):
+        return
+
+    drop_num = int(mod.weight.numel() * drop_factor)
+    abs_weights = mod.weight.abs()
+    indices = torch.argsort(abs_weights)
+    mod.weight[indices[:drop_num]] = 1.0
+    mod.bias[indices[:drop_num]] = 0.0
+
+
+
 # ----- ----- ----- ----- Pruning Functions ----- ----- ----- ----- #
 @torch.no_grad()
 def redo_prune_weights(weight: torch.Tensor, drop_factor: float):
