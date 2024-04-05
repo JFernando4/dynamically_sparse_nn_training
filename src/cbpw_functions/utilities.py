@@ -22,7 +22,7 @@ def initialize_weight_dict(net: torch.nn.Module,
     elif architecture_type == "resnet":
         assert isinstance(net, ResNet)
         return initializes_weights_dict_resnet(net, prune_method=prune_method, grow_method=grow_method,
-                                               drop_factor=drop_factor, **kwargs)
+                                               drop_factor=drop_factor)
 
     elif architecture_type == "sequential":
         assert isinstance(net, torch.nn.Sequential)
@@ -66,8 +66,7 @@ def initialize_weights_dict_vit(net: VisionTransformer,
 def initializes_weights_dict_resnet(net: ResNet,
                                     prune_method: str,
                                     grow_method: str,
-                                    drop_factor: float,
-                                    include_bn: bool) -> dict[str, tuple]:
+                                    drop_factor: float) -> dict[str, tuple]:
     """ Initializes the weight dictionaries used in CBPw for a Residual Network"""
     update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor)
 
@@ -75,8 +74,6 @@ def initializes_weights_dict_resnet(net: ResNet,
 
     for n, p in net.named_parameters():
         if ("conv" in n and "weight" in n) or ("downsample.0" in n and "weight" in n):
-            weight_dict[n] = (p, update_func)
-        if (("bn" in n and "weight" in n) or ("downsample.1" in n and "weight" in n)) and include_bn:
             weight_dict[n] = (p, update_func)
     return weight_dict
 
