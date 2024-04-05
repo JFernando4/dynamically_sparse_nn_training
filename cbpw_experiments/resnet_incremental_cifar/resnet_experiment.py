@@ -222,7 +222,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
                 if self.use_cbpw and (self.current_minibatch % self.topology_update_freq) == 0:
                     self._store_mask_update_summary(update_weights(self.weight_dict))
                     if self.bn_cbpw:
-                        self.net.apply(lambda m: reset_norm_layer(m, norm_type="bn", drop_factor=self.drop_factor))
+                        self.net.apply(lambda m: reset_norm_layer(m, norm_type="bn", drop_factor=0.01))
 
                 # store summaries
                 current_accuracy = compute_accuracy_from_batch(predictions, label)
