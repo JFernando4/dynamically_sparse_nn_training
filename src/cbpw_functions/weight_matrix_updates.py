@@ -71,7 +71,7 @@ def reset_norm_layer(mod: torch.nn.Module, norm_type: str = "bn", drop_factor: f
     if not (is_bn or is_ln):
         return
 
-    drop_num = int(mod.weight.numel() * drop_factor)
+    drop_num = max(1, int(mod.weight.numel() * drop_factor))
     abs_weights = mod.weight.abs()
     indices = torch.argsort(abs_weights)
     mod.weight[indices[:drop_num]] = 1.0
