@@ -13,7 +13,7 @@ from mlproj_manager.problems import CifarDataSet
 from mlproj_manager.util import access_dict
 
 from src import kaiming_init_resnet_module, build_resnet18, ResGnT, ResNet
-from src.cbpw_functions import initialize_weight_dict, update_weights
+from src.cbpw_functions import initialize_weight_dict, update_weights, reset_norm_layer
 from src.plasticity_functions import inject_noise
 from src.utils import get_cifar_data, compute_accuracy_from_batch, parse_terminal_arguments
 from src.utils.cifar100_experiment_utils import IncrementalCIFARExperiment, save_model_parameters
@@ -72,7 +72,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
         self.weight_dict = None
         if self.use_cbpw:
             self.weight_dict = initialize_weight_dict(self.net, "resnet", self.prune_method,
-                                                      self.grow_method, self.drop_factor, include_bn=self.bn_cbpw)
+                                                      self.grow_method, self.drop_factor)
 
         # initialize optimizer
         self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
@@ -221,6 +221,8 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
                 if self.perturb_weights_indicator: inject_noise(self.net, self.noise_std)
                 if self.use_cbpw and (self.current_minibatch % self.topology_update_freq) == 0:
                     self._store_mask_update_summary(update_weights(self.weight_dict))
+                    if self.bn_cbpw:
+                        self.net.apply(lambda m: reset_norm_layer(m, norm_type="bn", drop_factor=self.drop_factor))
 
                 # store summaries
                 current_accuracy = compute_accuracy_from_batch(predictions, label)

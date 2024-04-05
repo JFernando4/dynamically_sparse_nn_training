@@ -16,7 +16,7 @@
   "prune_method": "redo",
   "grow_method": "pm_min",
   "drop_factor": 0.1,
-  "bn_cbpw": false,
+  "bn_cbpw": true,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
     "num_epochs",
