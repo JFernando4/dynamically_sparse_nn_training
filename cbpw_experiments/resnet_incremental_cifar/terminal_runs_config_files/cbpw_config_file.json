@@ -12,7 +12,7 @@
   "use_best_network": true,
   "__comment_4__": "CBPw Parameters.",
   "use_cbpw": true,
-  "topology_update_freq": 45,
+  "topology_update_freq": 450,
   "prune_method": "redo",
   "grow_method": "pm_min",
   "drop_factor": 0.1,
