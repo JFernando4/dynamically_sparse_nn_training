@@ -12,7 +12,7 @@ import numpy as np
 from mlproj_manager.problems import CifarDataSet
 from mlproj_manager.util import access_dict
 
-from src import kaiming_init_resnet_module, build_resnet18, ResGnT, ResNet
+from src import kaiming_init_resnet_module, build_resnet18, ResGnT, ResNet, init_batch_norm_module
 from src.cbpw_functions import initialize_weight_dict, update_weights, reset_norm_layer
 from src.plasticity_functions import inject_noise
 from src.utils import get_cifar_data, compute_accuracy_from_batch, parse_terminal_arguments
@@ -34,6 +34,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
         # network resetting parameters
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
         self.reset_network = access_dict(exp_params, "reset_network", default=False, val_type=bool)
+        self.reset_bn = access_dict(exp_params, "reset_bn", default=False, val_type=bool)
         if self.reset_head and self.reset_network:
             print(Warning("Resetting the whole network supersedes resetting the head of the network. There's no need to set both to True."))
 
@@ -274,6 +275,8 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
             kaiming_init_resnet_module(self.net.fc)
         if self.reset_network:
             self.net.apply(kaiming_init_resnet_module)
+        if self.reset_bn:
+            self.net.apply(init_batch_norm_module)
 
 def main():
     """
