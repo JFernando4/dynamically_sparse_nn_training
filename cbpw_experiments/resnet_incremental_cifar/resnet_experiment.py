@@ -30,6 +30,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
         self.weight_decay = exp_params["weight_decay"]
         self.momentum = exp_params["momentum"]
         self.use_lr_schedule = access_dict(exp_params, "use_lr_schedule", default=False, val_type=bool)
+        self.rescaled_wd = access_dict(exp_params, "rescaled_wd", default=False, val_type=bool)
 
         # network resetting parameters
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
@@ -76,8 +77,9 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
                                                       self.grow_method, self.drop_factor)
 
         # initialize optimizer
+        temp_wd = self.weight_decay if self.rescaled_wd else self.weight_decay / self.stepsize
         self.optim = torch.optim.SGD(self.net.parameters(), lr=self.stepsize, momentum=self.momentum,
-                                     weight_decay=self.weight_decay)
+                                     weight_decay=temp_wd)
 
         # define loss function
         self.loss = torch.nn.CrossEntropyLoss(reduction="mean")
@@ -265,9 +267,12 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
             current_stepsize = round(self.stepsize * (0.2 ** 3), 5)
 
         if current_stepsize is not None:
-            for g in self.optim.param_groups:
-                g['lr'] = current_stepsize
+            self.optim.param_groups[0]["lr"] = current_stepsize
+            # for g in self.optim.param_groups:
+            #     g['lr'] = current_stepsize
             self._print("\tCurrent stepsize: {0:.5f}".format(current_stepsize))
+            if not self.rescaled_wd:
+                self.optim.param_groups[0]["weight_decay"] =self.weight_decay / current_stepsize
 
     def post_class_increase_processing(self):
         """ Performs optional operations after the number of classes has been increased """
