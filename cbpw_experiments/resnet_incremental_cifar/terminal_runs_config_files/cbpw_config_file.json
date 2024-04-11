@@ -14,9 +14,9 @@
   "__comment_4__": "CBPw Parameters.",
   "use_cbpw": false,
   "topology_update_freq": 525,
-  "prune_method": "redo",
+  "prune_method": "hess_approx",
   "grow_method": "xavier_normal",
-  "drop_factor": 0.1,
+  "drop_factor": 0.01,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
     "num_epochs",
