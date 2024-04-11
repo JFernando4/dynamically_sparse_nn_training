@@ -12,7 +12,7 @@
   "fixed_classes": false,
   "use_best_network": true,
   "__comment_4__": "CBPw Parameters.",
-  "use_cbpw": false,
+  "use_cbpw": true,
   "topology_update_freq": 525,
   "prune_method": "hess_approx",
   "grow_method": "xavier_normal",
