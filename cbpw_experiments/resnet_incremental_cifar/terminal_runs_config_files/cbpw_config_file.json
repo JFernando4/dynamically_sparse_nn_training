@@ -13,14 +13,16 @@
   "use_best_network": true,
   "__comment_4__": "CBPw Parameters.",
   "use_cbpw": false,
-  "prune_method": "none",
-  "grow_method": "none",
+  "topology_update_freq": 525,
+  "prune_method": "redo",
+  "grow_method": "xavier_normal",
+  "drop_factor": 0.1,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
     "num_epochs",
-    "use_cbpw",
-    "stepsize",
-    "weight_decay",
-    "rescaled_wd"
+    "topology_update_freq",
+    "prune_method",
+    "grow_method",
+    "drop_factor"
   ]
 }
