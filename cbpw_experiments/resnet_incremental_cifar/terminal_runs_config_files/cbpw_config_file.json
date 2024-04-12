@@ -15,7 +15,7 @@
   "use_cbpw": true,
   "topology_update_freq": 525,
   "prune_method": "hess_approx",
-  "grow_method": "xavier_normal",
+  "grow_method": "pm_min",
   "drop_factor": 0.01,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
