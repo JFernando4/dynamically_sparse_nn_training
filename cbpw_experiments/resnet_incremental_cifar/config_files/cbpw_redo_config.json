@@ -4,31 +4,36 @@
     "data_path": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/dst_lop_experiments/vit_incremental_cifar_demonstration/data/",
     "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
     "relevant_parameters": [
-      "stepsize",
-      "weight_decay",
-      "rescaled_wd",
-      "num_epochs"
+      "prune_method",
+      "grow_method",
+      "drop_factor",
+      "topology_update_freq"
     ]
   },
 
   "experiment_params": {
+    "stepsize": 0.1,
+    "weight_decay": 0.0005,
+    "rescaled_wd": true,
     "use_lr_schedule": true,
     "momentum": 0.9,
     "num_epochs": 4000,
     "initial_num_classes": 5,
     "fixed_classes": false,
     "use_best_network": true,
-    "runs": 2
+    "runs": 1
   },
 
   "learning_params": {
-    "stepsize": 0.1,
-    "weight_decay": 0.0005,
-    "rescaled_wd": true
+    "use_cbpw": true,
+    "topology_update_freq": 525,
+    "prune_method": "redo",
+    "grow_method": "pm_min",
+    "drop_factor": 0.1
   },
 
   "slurm_parameters": {
-    "job_name": "resnet_inc",
+    "job_name": "cbpw_resnet",
     "time": "16:00:00",
     "max_runs_per_job": 1,
     "output_filename": "resnet_inc-%n-%j.out",
