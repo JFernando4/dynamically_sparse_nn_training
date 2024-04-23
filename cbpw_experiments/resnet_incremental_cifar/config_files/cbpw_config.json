@@ -29,12 +29,12 @@
     "topology_update_freq": 525,
     "prune_method": "hess_approx",
     "grow_method": "zero",
-    "drop_factor": 0.2
+    "drop_factor": 0.01
   },
 
   "slurm_parameters": {
     "job_name": "cbpw_resnet",
-    "time": "21:00:00",
+    "time": "22:00:00",
     "max_runs_per_job": 1,
     "output_filename": "resnet_inc-%n-%j.out",
     "mem": "12G",
