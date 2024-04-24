@@ -33,6 +33,20 @@ def initialize_weight_dict(net: torch.nn.Module,
         raise ValueError(f"{architecture_type} is not a valid architecture type.")
 
 
+def initialize_bn_list_resnet(net: ResNet):
+    """
+    Returns a list with all the BatchNormalization layers in a ResNet model
+    """
+    list_of_batch_norm_layers = [net.bn1]
+
+    for residual_stack in (net.layer1, net.layer2, net.layer3):
+        for mod in residual_stack:
+            if isinstance(mod, torch.nn.BatchNorm2d):
+                list_of_batch_norm_layers.append(mod)
+
+    return list_of_batch_norm_layers
+
+
 def initialize_weights_dict_vit(net: VisionTransformer,
                                 prune_method: str,
                                 grow_method: str,

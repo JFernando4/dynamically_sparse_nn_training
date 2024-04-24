@@ -13,7 +13,7 @@ from mlproj_manager.problems import CifarDataSet
 from mlproj_manager.util import access_dict
 
 from src import kaiming_init_resnet_module, build_resnet18, ResGnT, ResNet, init_batch_norm_module
-from src.cbpw_functions import initialize_weight_dict, update_weights, reset_norm_layer
+from src.cbpw_functions import initialize_weight_dict, update_weights, reset_norm_layer, initialize_bn_list_resnet
 from src.plasticity_functions import inject_noise
 from src.utils import get_cifar_data, compute_accuracy_from_batch, parse_terminal_arguments
 from src.utils.cifar100_experiment_utils import IncrementalCIFARExperiment, save_model_parameters
