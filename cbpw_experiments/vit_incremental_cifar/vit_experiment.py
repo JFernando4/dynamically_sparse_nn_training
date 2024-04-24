@@ -516,6 +516,8 @@ class IncrementalCIFARExperiment(Experiment):
                 self.net.apply(initialize_layer_norm_module)
             if self.use_lr_schedule:
                 self.lr_scheduler = self.get_lr_scheduler(steps_per_epoch=len(train_dataloader))
+            return True
+        return False
 
 
 def main():
