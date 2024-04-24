@@ -13,7 +13,7 @@ from mlproj_manager.problems import CifarDataSet
 from mlproj_manager.util import access_dict
 
 from src import kaiming_init_resnet_module, build_resnet18, ResGnT, ResNet, init_batch_norm_module
-from src.cbpw_functions import initialize_weight_dict, update_weights, reset_norm_layer, initialize_bn_list_resnet
+from src.cbpw_functions import initialize_weight_dict, update_weights, initialize_bn_list_resnet, setup_cbpw_layer_norm_update_function
 from src.plasticity_functions import inject_noise
 from src.utils import get_cifar_data, compute_accuracy_from_batch, parse_terminal_arguments
 from src.utils.cifar100_experiment_utils import IncrementalCIFARExperiment, save_model_parameters
@@ -50,6 +50,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
 
         # CBPw parameters
         self.use_cbpw = access_dict(exp_params, "use_cbpw", default=False, val_type=bool)
+        self.use_cbpw_bn = access_dict(exp_params, "use_cbpw_bn", default=False, val_type=bool)
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
         pruning_functions_names = ["none", "magnitude", "redo", "gf", "hess_approx"]
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str, choices=pruning_functions_names)
@@ -57,7 +58,6 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
         self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str, choices=grow_methods)
         assert not ((self.prune_method != "none" and self.grow_method == "none") or (self.prune_method == "none" and self.grow_method != "none"))
         self.drop_factor = access_dict(exp_params, "drop_factor", default=float, val_type=float)
-        self.bn_cbpw = access_dict(exp_params, "bn_cbpw", default=False, val_type=bool)
         self.current_topology_update = 0
 
         # shrink and perturb parameters
@@ -71,10 +71,13 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
         self.net.to(self.device)
 
         # initializes weight dictionary for CBPw
-        self.weight_dict = None
+        self.weight_dict, self.bn_list, self.norm_layer_update_func = None, None, None
         if self.use_cbpw:
             self.weight_dict = initialize_weight_dict(self.net, "resnet", self.prune_method,
                                                       self.grow_method, self.drop_factor)
+            if self.use_cbpw_bn:
+                self.bn_list = initialize_bn_list_resnet(self.net)
+                self.norm_layer_update_func = setup_cbpw_layer_norm_update_function(self.prune_method, self.drop_factor)
 
         # initialize optimizer
         temp_wd = self.weight_decay if self.rescaled_wd else self.weight_decay / self.stepsize
@@ -173,7 +176,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
 
         if self.use_cbpw:
             self.weight_dict = initialize_weight_dict(self.net, "resnet", self.prune_method,
-                                                      self.grow_method, self.drop_factor, include_bn=self.bn_cbpw)
+                                                      self.grow_method, self.drop_factor)
 
     # ------------------------------------- For running the experiment ------------------------------------- #
     def run(self):
@@ -224,8 +227,8 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
                 if self.perturb_weights_indicator: inject_noise(self.net, self.noise_std)
                 if self.use_cbpw and (self.current_minibatch % self.topology_update_freq) == 0:
                     self._store_mask_update_summary(update_weights(self.weight_dict))
-                    if self.bn_cbpw:
-                        self.net.apply(lambda m: reset_norm_layer(m, norm_type="bn", drop_factor=0.01))
+                    if self.use_cbpw_bn:
+                        for bn_layer in self.bn_list: self.norm_layer_update_func(bn_layer); print("yep")
 
                 # store summaries
                 current_accuracy = compute_accuracy_from_batch(predictions, label)
