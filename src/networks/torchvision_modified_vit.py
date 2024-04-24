@@ -311,7 +311,7 @@ class VisionTransformer(nn.Module):
 
         return x
 
-    def forward(self, x: torch.Tensor):
+    def forward(self, x: torch.Tensor, activations: list = None):
         # Reshape and permute the input tensor
         x = self._process_input(x)
         n = x.shape[0]
@@ -320,7 +320,7 @@ class VisionTransformer(nn.Module):
         batch_class_token = self.class_token.expand(n, -1, -1)
         x = torch.cat([batch_class_token, x], dim=1)
 
-        x = self.encoder(x)
+        x = self.encoder(x, activations)
 
         # Classifier "token" as used by standard language architectures
         x = x[:, 0]
