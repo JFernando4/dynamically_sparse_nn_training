@@ -136,6 +136,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
             "numpy_rng_state": np.random.get_state(),
             "cuda_rng_state": torch.cuda.get_rng_state(),
             "epoch_number": self.current_epoch,
+            "current_minibatch": self.current_minibatch,
             "current_num_classes": self.current_num_classes,
             "all_classes": self.all_classes,
             "current_running_avg_step": self.current_running_avg_step,
@@ -163,6 +164,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
         torch.cuda.set_rng_state(checkpoint["cuda_rng_state"])
         np.random.set_state(checkpoint["numpy_rng_state"])
         self.current_epoch = checkpoint["epoch_number"]
+        self.current_minibatch = checkpoint["current_minibatch"]
         self.current_num_classes = checkpoint["current_num_classes"]
         self.all_classes = checkpoint["all_classes"]
         self.current_running_avg_step = checkpoint["current_running_avg_step"]
@@ -225,6 +227,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
                 self.optim.step()
                 if self.use_cbp: self.resgnt.gen_and_test(current_features)
                 if self.perturb_weights_indicator: inject_noise(self.net, self.noise_std)
+                self.current_minibatch += 1
                 if self.use_cbpw and (self.current_minibatch % self.topology_update_freq) == 0:
                     self._store_mask_update_summary(update_weights(self.weight_dict))
                     if self.use_cbpw_bn:
