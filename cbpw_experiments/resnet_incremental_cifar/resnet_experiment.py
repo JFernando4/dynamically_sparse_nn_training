@@ -137,6 +137,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
             "cuda_rng_state": torch.cuda.get_rng_state(),
             "epoch_number": self.current_epoch,
             "current_minibatch": self.current_minibatch,
+            "current_topology_update": self.current_topology_update,
             "current_num_classes": self.current_num_classes,
             "all_classes": self.all_classes,
             "current_running_avg_step": self.current_running_avg_step,
@@ -165,6 +166,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
         np.random.set_state(checkpoint["numpy_rng_state"])
         self.current_epoch = checkpoint["epoch_number"]
         self.current_minibatch = checkpoint["current_minibatch"]
+        self.current_topology_update = checkpoint["current_topology_update"]
         self.current_num_classes = checkpoint["current_num_classes"]
         self.all_classes = checkpoint["all_classes"]
         self.current_running_avg_step = checkpoint["current_running_avg_step"]
@@ -232,6 +234,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
                     self._store_mask_update_summary(update_weights(self.weight_dict))
                     if self.use_cbpw_bn:
                         for bn_layer in self.bn_list: self.norm_layer_update_func(bn_layer); print("yep")
+                    self.current_topology_update += 1
 
                 # store summaries
                 current_accuracy = compute_accuracy_from_batch(predictions, label)
