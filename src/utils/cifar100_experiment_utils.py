@@ -218,6 +218,8 @@ class IncrementalCIFARExperiment(Experiment):
 
             self._print("\tNew class added...")
             self.post_class_increase_processing()
+            return True
+        return False
 
     def post_class_increase_processing(self):
         """
