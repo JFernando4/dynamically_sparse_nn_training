@@ -63,6 +63,37 @@ def update_weights(weight_dict: dict[str, tuple]) -> dict:
 
 
 @torch.no_grad()
+def update_norm_layer(norm_layer: torch.nn.Module,
+                      prune_function: Callable[[torch.Tensor], None]) -> None:
+    assert isinstance(norm_layer, (torch.nn.LayerNorm, torch.nn.BatchNorm2d))
+
+    prune_function(norm_layer.weight)
+    pruned_indices = torch.where(norm_layer.weight.flatten() == 0.0)[0]
+    norm_layer.weight[pruned_indices] = 1.0
+    norm_layer.bias[pruned_indices] = 0.0
+
+
+def setup_cbpw_layer_norm_update_function(prune_name: str, drop_factor: float) -> Callable[[torch.nn.Module], None]:
+    """ Sets up weight update function for CBP-w """
+    prune_function_names = ["magnitude", "redo", "gf_redo", "gf", "hess_approx"]
+    assert prune_name in prune_function_names
+
+    if prune_name == "magnitude":
+        prune_func = lambda w: magnitude_prune_weights(w, drop_factor=drop_factor)
+    elif prune_name == "redo":
+        prune_func = lambda w: redo_prune_weights(w, drop_factor=drop_factor)
+    elif prune_name == "gf":
+        prune_func = lambda w: gradient_flow_prune_weights(w, drop_factor=drop_factor)
+    elif prune_name == "hess_approx":
+        prune_func = lambda w: hessian_approx_prune_weights(w, drop_factor=drop_factor)
+
+    def temp_prune_and_grow_weights(w: torch.nn.Module):
+        return update_norm_layer(w, prune_func)
+
+    return temp_prune_and_grow_weights
+
+
+@torch.no_grad()
 def reset_norm_layer(mod: torch.nn.Module, norm_type: str = "bn", drop_factor: float = 0.1) -> None:
     """ Resets the parameter of a normalization layer if the weight is below the given drop factor """
 
@@ -76,7 +107,6 @@ def reset_norm_layer(mod: torch.nn.Module, norm_type: str = "bn", drop_factor: f
     indices = torch.argsort(abs_weights)
     mod.weight[indices[:drop_num]] = 1.0
     mod.bias[indices[:drop_num]] = 0.0
-
 
 
 # ----- ----- ----- ----- Pruning Functions ----- ----- ----- ----- #
@@ -93,7 +123,7 @@ def redo_prune_weights(weight: torch.Tensor, drop_factor: float):
 
 
 @torch.no_grad()
-def magnitude_prune_weights(weight: torch.Tensor, drop_factor: int):
+def magnitude_prune_weights(weight: torch.Tensor, drop_factor: float):
     """ Creates a mask by dropping the weights with the smallest magnitude """
 
     abs_weight = torch.abs(weight).flatten()
@@ -103,7 +133,7 @@ def magnitude_prune_weights(weight: torch.Tensor, drop_factor: int):
 
 
 @torch.no_grad()
-def gradient_flow_prune_weights(weight: torch.Tensor, drop_factor: int):
+def gradient_flow_prune_weights(weight: torch.Tensor, drop_factor: float):
     """ Creates a mask by dropping the weights with the smallest gradient flow """
 
     gradient_flow = torch.abs(weight * weight.grad).flatten()
