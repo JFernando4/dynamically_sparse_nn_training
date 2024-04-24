@@ -3,7 +3,7 @@ import torch
 
 from .weight_matrix_updates import setup_cbpw_weight_update_function
 from src.networks.torchvision_modified_vit import VisionTransformer
-from src.networks.torchvision_modified_resnet import ResNet
+from src.networks.torchvision_modified_resnet import ResNet, BasicBlock
 
 
 def initialize_weight_dict(net: torch.nn.Module,
@@ -39,10 +39,11 @@ def initialize_bn_list_resnet(net: ResNet):
     """
     list_of_batch_norm_layers = [net.bn1]
 
-    for residual_stack in (net.layer1, net.layer2, net.layer3):
-        for mod in residual_stack:
-            if isinstance(mod, torch.nn.BatchNorm2d):
-                list_of_batch_norm_layers.append(mod)
+    for residual_stack in (net.layer1, net.layer2, net.layer3, net.layer4):
+        for residual_block in residual_stack:
+            assert isinstance(residual_block, BasicBlock)
+            list_of_batch_norm_layers.append(residual_block.bn1)
+            list_of_batch_norm_layers.append(residual_block.bn2)
 
     return list_of_batch_norm_layers
 
