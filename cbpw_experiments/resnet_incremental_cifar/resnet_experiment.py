@@ -51,6 +51,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
         # CBPw parameters
         self.use_cbpw = access_dict(exp_params, "use_cbpw", default=False, val_type=bool)
         self.use_cbpw_bn = access_dict(exp_params, "use_cbpw_bn", default=False, val_type=bool)
+        self.exclude_downsample = access_dict(exp_params, "exclude_downsample", default=False, val_type=bool)
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
         pruning_functions_names = ["none", "magnitude", "redo", "gf", "hess_approx"]
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str, choices=pruning_functions_names)
@@ -74,7 +75,8 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
         self.weight_dict, self.bn_list, self.norm_layer_update_func = None, None, None
         if self.use_cbpw:
             self.weight_dict = initialize_weight_dict(self.net, "resnet", self.prune_method,
-                                                      self.grow_method, self.drop_factor)
+                                                      self.grow_method, self.drop_factor,
+                                                      exclude_downsample=self.exclude_downsample)
             if self.use_cbpw_bn:
                 self.bn_list = initialize_bn_list_resnet(self.net)
                 self.norm_layer_update_func = setup_cbpw_layer_norm_update_function(self.prune_method, self.drop_factor)
