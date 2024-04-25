@@ -69,6 +69,7 @@ def update_norm_layer(norm_layer: torch.nn.Module,
 
     prune_function(norm_layer.weight)
     pruned_indices = torch.where(norm_layer.weight.flatten() == 0.0)[0]
+    print(f"{len(pruned_indices) = }")
     norm_layer.weight[pruned_indices] = 1.0
     norm_layer.bias[pruned_indices] = 0.0
 
@@ -177,7 +178,6 @@ def pm_min_reinit_weights(weight: torch.Tensor) -> None:
         return
 
     min_abs_active = weight.flatten().abs()[active_indices].min()
-    print(min_abs_active)
     weight.view(-1)[pruned_indices[len(pruned_indices) // 2:]] = min_abs_active
     weight.view(-1)[pruned_indices[:len(pruned_indices) // 2]] = -min_abs_active
 
