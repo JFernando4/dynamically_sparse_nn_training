@@ -177,6 +177,7 @@ def pm_min_reinit_weights(weight: torch.Tensor) -> None:
         return
 
     min_abs_active = weight.flatten().abs()[active_indices].min()
+    print(min_abs_active)
     weight.view(-1)[pruned_indices[len(pruned_indices) // 2:]] = min_abs_active
     weight.view(-1)[pruned_indices[:len(pruned_indices) // 2]] = -min_abs_active
 
