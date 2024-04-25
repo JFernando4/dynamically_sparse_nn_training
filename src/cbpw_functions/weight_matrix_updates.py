@@ -127,7 +127,7 @@ def magnitude_prune_weights(weight: torch.Tensor, drop_factor: float):
     """ Creates a mask by dropping the weights with the smallest magnitude """
 
     abs_weight = torch.abs(weight).flatten()
-    drop_num = int(weight.numel() * drop_factor)
+    drop_num = max(int(weight.numel() * drop_factor), 1)    # drop at least one weight
     indices = torch.argsort(abs_weight)
     weight.view(-1)[indices[:drop_num]] = 0.0
 
@@ -137,7 +137,7 @@ def gradient_flow_prune_weights(weight: torch.Tensor, drop_factor: float):
     """ Creates a mask by dropping the weights with the smallest gradient flow """
 
     gradient_flow = torch.abs(weight * weight.grad).flatten()
-    drop_num = int(weight.numel() * drop_factor)
+    drop_num = max(int(weight.numel() * drop_factor), 1)    # drop at least one weight
     indices = torch.argsort(gradient_flow)
     weight.view(-1)[indices[:drop_num]] = 0.0
 
@@ -149,7 +149,7 @@ def hessian_approx_prune_weights(weight: torch.Tensor, drop_factor: float):
     """
 
     hess_approx = torch.abs(weight.flatten().square() * weight.grad.flatten().square())
-    drop_num = int(weight.numel() * drop_factor)
+    drop_num = max(int(weight.numel() * drop_factor), 1)    # drop at least one weight
     indices = torch.argsort(hess_approx)
     weight.view(-1)[indices[:drop_num]] = 0.0
 
