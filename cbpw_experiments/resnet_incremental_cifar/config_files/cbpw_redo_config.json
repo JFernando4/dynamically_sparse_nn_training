@@ -26,15 +26,15 @@
 
   "learning_params": {
     "use_cbpw": true,
-    "topology_update_freq": 525,
+    "topology_update_freq": ["fixed", 45, 225],
     "prune_method": "redo",
     "grow_method": "pm_min",
-    "drop_factor": 0.1
+    "drop_factor": ["fixed", 0.01, 0.05]
   },
 
   "slurm_parameters": {
     "job_name": "cbpw_resnet",
-    "time": "22:00:00",
+    "time": "19:00:00",
     "max_runs_per_job": 1,
     "output_filename": "resnet_inc-%n-%j.out",
     "mem": "12G",

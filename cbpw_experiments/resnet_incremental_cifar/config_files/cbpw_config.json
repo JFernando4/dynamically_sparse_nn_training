@@ -7,7 +7,8 @@
       "prune_method",
       "grow_method",
       "drop_factor",
-      "topology_update_freq"
+      "topology_update_freq",
+      "use_cbpw_bn"
     ]
   },
 
@@ -26,15 +27,16 @@
 
   "learning_params": {
     "use_cbpw": true,
-    "topology_update_freq": 525,
+    "use_cbpw_bn": false,
+    "topology_update_freq": ["fixed", 45, 225],
     "prune_method": "hess_approx",
-    "grow_method": ["str", "zero", "xavier_normal", "pm_min"],
-    "drop_factor": 0.01
+    "grow_method": ["str", "pm_min"],
+    "drop_factor": ["fixed", 0.01, 0.05]
   },
 
   "slurm_parameters": {
     "job_name": "cbpw_resnet",
-    "time": "22:00:00",
+    "time": "19:00:00",
     "max_runs_per_job": 1,
     "output_filename": "resnet_inc-%n-%j.out",
     "mem": "12G",
