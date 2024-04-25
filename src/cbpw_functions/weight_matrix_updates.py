@@ -69,7 +69,6 @@ def update_norm_layer(norm_layer: torch.nn.Module,
 
     prune_function(norm_layer.weight)
     pruned_indices = torch.where(norm_layer.weight.flatten() == 0.0)[0]
-    print(f"{len(pruned_indices) = }")
     norm_layer.weight[pruned_indices] = 1.0
     norm_layer.bias[pruned_indices] = 0.0
 
