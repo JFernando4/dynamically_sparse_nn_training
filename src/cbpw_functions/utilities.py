@@ -93,7 +93,8 @@ def initializes_weights_dict_resnet(net: ResNet,
     weight_dict = {}
     if include_all:
         for n, p in net.named_parameters():
-            if p.requires_grad:
+            is_bn_layer = ("bn" in n) or ("downsample.1" in n)
+            if p.requires_grad and not is_bn_layer:
                 weight_dict[n] = (p, update_func)
         return weight_dict
 
