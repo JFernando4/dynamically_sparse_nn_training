@@ -7,8 +7,7 @@
       "prune_method",
       "grow_method",
       "drop_factor",
-      "topology_update_freq",
-      "use_cbpw_bn"
+      "topology_update_freq"
     ]
   },
 
@@ -22,16 +21,15 @@
     "initial_num_classes": 5,
     "fixed_classes": false,
     "use_best_network": true,
-    "runs": 1
+    "runs": 2
   },
 
   "learning_params": {
     "use_cbpw": true,
-    "use_cbpw_bn": false,
-    "topology_update_freq": ["fixed", 45, 225],
+    "topology_update_freq": ["fixed", 45],
     "prune_method": "hess_approx",
     "grow_method": ["str", "pm_min"],
-    "drop_factor": ["fixed", 0.01, 0.05]
+    "drop_factor": ["fixed", 0.8]
   },
 
   "slurm_parameters": {
