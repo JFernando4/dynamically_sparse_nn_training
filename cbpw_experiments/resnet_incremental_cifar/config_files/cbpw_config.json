@@ -29,7 +29,7 @@
     "topology_update_freq": ["fixed", 45],
     "prune_method": "hess_approx",
     "grow_method": ["str", "pm_min"],
-    "drop_factor": ["fixed", 0.8]
+    "drop_factor": ["fixed", 0.8, 0.4, 0.2, 0.1]
   },
 
   "slurm_parameters": {
