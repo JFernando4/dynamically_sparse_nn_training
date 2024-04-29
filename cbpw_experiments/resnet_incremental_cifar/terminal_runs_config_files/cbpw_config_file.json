@@ -13,9 +13,7 @@
   "use_best_network": true,
   "__comment_4__": "CBPw Parameters.",
   "use_cbpw": true,
-  "exclude_downsample": true,
-  "reset_bn": true,
-  "include_output_layer": true,
+  "use_cbpw_bn": true,
   "topology_update_freq": 45,
   "prune_method": "hess_approx",
   "grow_method": "pm_min",
@@ -27,8 +25,6 @@
     "prune_method",
     "grow_method",
     "drop_factor",
-    "exclude_downsample",
-    "reset_bn",
-    "include_output_layer"
+    "use_cbpw_bn"
   ]
 }
