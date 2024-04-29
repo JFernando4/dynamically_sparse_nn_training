@@ -48,6 +48,8 @@ def initialize_bn_list_resnet(net: ResNet):
             assert isinstance(residual_block, BasicBlock)
             list_of_batch_norm_layers.append(residual_block.bn1)
             list_of_batch_norm_layers.append(residual_block.bn2)
+            if residual_block.downsample is not None:
+                list_of_batch_norm_layers.append(residual_block.downsample[1].weight)
 
     return list_of_batch_norm_layers
 
