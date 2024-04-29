@@ -22,10 +22,11 @@ def initialize_weight_dict(net: torch.nn.Module,
     elif architecture_type == "resnet":
         assert isinstance(net, ResNet)
         exclude_downsample = False if "exclude_downsample" not in kwargs.keys() else kwargs["exclude_downsample"]
+        include_output_layer = False if "include_output_layer" not in kwargs.keys() else kwargs["include_output_layer"]
         include_all = False if "include_all" not in kwargs.keys() else kwargs["include_all"]
         return initializes_weights_dict_resnet(net, prune_method=prune_method, grow_method=grow_method,
                                                drop_factor=drop_factor, exclude_downsample=exclude_downsample,
-                                               include_all=include_all)
+                                               include_output_layer=include_output_layer, include_all=include_all)
 
     elif architecture_type == "sequential":
         assert isinstance(net, torch.nn.Sequential)
@@ -86,6 +87,7 @@ def initializes_weights_dict_resnet(net: ResNet,
                                     grow_method: str,
                                     drop_factor: float,
                                     exclude_downsample: bool,
+                                    include_output_layer: bool,
                                     include_all: bool = False) -> dict[str, tuple]:
     """ Initializes the weight dictionaries used in CBPw for a Residual Network"""
     update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor)
@@ -103,6 +105,9 @@ def initializes_weights_dict_resnet(net: ResNet,
             weight_dict[n] = (p, update_func)
         if ("downsample.0" in n and "weight" in n) and not exclude_downsample:
             weight_dict[n] = (p, update_func)
+        if ("fc.weight" in n) and include_output_layer:
+            weight_dict[n] = (p, update_func)
+
 
     return weight_dict
 

@@ -15,6 +15,7 @@
   "use_cbpw": true,
   "exclude_downsample": true,
   "reset_bn": true,
+  "include_output_layer": true,
   "topology_update_freq": 45,
   "prune_method": "hess_approx",
   "grow_method": "pm_min",
@@ -27,6 +28,7 @@
     "grow_method",
     "drop_factor",
     "exclude_downsample",
-    "reset_bn"
+    "reset_bn",
+    "include_output_layer"
   ]
 }

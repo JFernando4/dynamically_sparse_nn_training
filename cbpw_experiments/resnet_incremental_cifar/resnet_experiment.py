@@ -52,6 +52,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
         self.use_cbpw = access_dict(exp_params, "use_cbpw", default=False, val_type=bool)
         self.use_cbpw_bn = access_dict(exp_params, "use_cbpw_bn", default=False, val_type=bool)
         self.exclude_downsample = access_dict(exp_params, "exclude_downsample", default=False, val_type=bool)
+        self.include_output_layer = access_dict(exp_params, "include_output_layer", default=False, val_type=bool)
         self.include_all = access_dict(exp_params, "include_all", default=False, val_type=bool)
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
         pruning_functions_names = ["none", "magnitude", "redo", "gf", "hess_approx"]
@@ -78,6 +79,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
             self.weight_dict = initialize_weight_dict(self.net, "resnet", self.prune_method,
                                                       self.grow_method, self.drop_factor,
                                                       exclude_downsample=self.exclude_downsample,
+                                                      include_output_layer=self.include_output_layer,
                                                       include_all=self.include_all)
             if self.use_cbpw_bn:
                 self.bn_list = initialize_bn_list_resnet(self.net)
@@ -235,6 +237,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
                 self.optim.step()
                 if self.use_cbp: self.resgnt.gen_and_test(current_features)
                 if self.perturb_weights_indicator: inject_noise(self.net, self.noise_std)
+
                 self.current_minibatch += 1
                 if self.use_cbpw and (self.current_minibatch % self.topology_update_freq) == 0:
                     self._store_mask_update_summary(update_weights(self.weight_dict))
