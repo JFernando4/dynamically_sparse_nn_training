@@ -246,7 +246,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
                 if self.use_cbpw and (self.current_minibatch % self.topology_update_freq) == 0:
                     self._store_mask_update_summary(update_weights(self.weight_dict))
                     if self.use_cbpw_bn:
-                        for bn_layer in self.bn_list: self.norm_layer_update_func(bn_layer)
+                        for bn_layer in self.bn_list: print(bn_layer); self.norm_layer_update_func(bn_layer)
                     self.current_topology_update += 1
 
                 # store summaries
