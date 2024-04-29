@@ -185,6 +185,8 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
         if self.use_cbpw:
             self.weight_dict = initialize_weight_dict(self.net, "resnet", self.prune_method,
                                                       self.grow_method, self.drop_factor)
+        if self.reset_bn:
+            self.net.apply(init_batch_norm_module)
 
     # ------------------------------------- For running the experiment ------------------------------------- #
     def run(self):
