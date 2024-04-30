@@ -182,7 +182,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
         for k, v in self.results_dict.items():
             self.results_dict[k] = partial_results[k] if not isinstance(partial_results[k], torch.Tensor) else partial_results[k].to(self.device)
 
-        if self.use_cbp:
+        if self.use_cbp and "resgnt" in checkpoint.keys():
             self.resgnt = checkpoint["resgnt"]
 
         if self.use_cbpw:
