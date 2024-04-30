@@ -180,6 +180,8 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
 
         partial_results = checkpoint["partial_results"]
         for k, v in self.results_dict.items():
+            if k not in partial_results.keys():
+                continue
             self.results_dict[k] = partial_results[k] if not isinstance(partial_results[k], torch.Tensor) else partial_results[k].to(self.device)
 
         if self.use_cbp:
