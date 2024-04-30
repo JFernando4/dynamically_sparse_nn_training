@@ -13,13 +13,13 @@
   "use_best_network": true,
   "__comment_4__": "CBPw Parameters.",
   "use_cbpw": true,
-  "use_cbpw_bn": true,
+  "reset_bn": true,
   "exclude_downsample": true,
   "include_output_layer": true,
-  "topology_update_freq": 525,
-  "prune_method": "hess_approx",
-  "grow_method": "zero",
-  "drop_factor": 0.2,
+  "topology_update_freq": 45,
+  "prune_method": "redo",
+  "grow_method": "pm_min",
+  "drop_factor": 0.4,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
     "num_epochs",
@@ -27,7 +27,7 @@
     "prune_method",
     "grow_method",
     "drop_factor",
-    "use_cbpw_bn",
+    "reset_bn",
     "exclude_downsample",
     "include_output_layer"
   ]
