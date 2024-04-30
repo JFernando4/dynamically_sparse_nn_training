@@ -294,7 +294,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
             #     g['lr'] = current_stepsize
             self._print("\tCurrent stepsize: {0:.5f}".format(current_stepsize))
             if not self.rescaled_wd:
-                self.optim.param_groups[0]["weight_decay"] =self.weight_decay / current_stepsize
+                self.optim.param_groups[0]["weight_decay"] = self.weight_decay / current_stepsize
 
     def post_class_increase_processing(self):
         """ Performs optional operations after the number of classes has been increased """
