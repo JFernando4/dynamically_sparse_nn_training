@@ -83,7 +83,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
                                                       include_output_layer=self.include_output_layer,
                                                       include_all=self.include_all)
             if self.use_cbpw_bn:
-                self.bn_list = initialize_bn_list_resnet(self.net)
+                self.bn_list = initialize_bn_list_resnet(self.net, exclude_downsample=self.exclude_downsample)
                 self.norm_layer_update_func = setup_cbpw_layer_norm_update_function("magnitude", self.bn_drop_factor)
 
         # initialize optimizer
