@@ -15,7 +15,7 @@
   "use_cbpw": true,
   "reset_bn": true,
   "exclude_downsample": true,
-  "include_output_layer": true,
+  "include_output_layer": false,
   "topology_update_freq": 45,
   "prune_method": "redo",
   "grow_method": "pm_min",
