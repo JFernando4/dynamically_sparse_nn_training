@@ -7,7 +7,10 @@
       "prune_method",
       "grow_method",
       "drop_factor",
-      "topology_update_freq"
+      "topology_update_freq",
+      "include_output_layer",
+      "exclude_downsample",
+      "reset_bn"
     ]
   },
 
@@ -26,10 +29,13 @@
 
   "learning_params": {
     "use_cbpw": true,
-    "topology_update_freq": ["fixed", 45, 225],
+    "include_output_layer": true,
+    "exclude_downsample": true,
+    "reset_bn": true,
+    "topology_update_freq": ["fixed", 45],
     "prune_method": "redo",
     "grow_method": "pm_min",
-    "drop_factor": ["fixed", 0.01, 0.05]
+    "drop_factor": ["fixed", 0.2]
   },
 
   "slurm_parameters": {
