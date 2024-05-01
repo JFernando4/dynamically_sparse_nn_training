@@ -53,6 +53,7 @@ class PermutedMNISTExperiment(Experiment):
         # architecture parameters
         self.num_layers = exp_params["num_layers"]      # number of hidden layers
         self.num_hidden = exp_params["num_hidden"]      # number of hidden units per hidden layer
+        self.batch_size = access_dict(exp_params, "batch_size", default=1, val_type=int)
 
         # problem parameters
         self.num_permutations = exp_params["num_permutations"]      # number of permutations (1 permutation = 1 epoch)
@@ -82,7 +83,6 @@ class PermutedMNISTExperiment(Experiment):
         self.results_dir = results_dir
 
         """ Training constants """
-        self.batch_size = 1
         self.num_classes = 10
         self.num_inputs = 784
         self.max_num_images_per_permutation = 60000
@@ -107,7 +107,7 @@ class PermutedMNISTExperiment(Experiment):
         self.net.to(self.device)
 
         """ Experiment Summaries """
-        self.running_avg_window = 100
+        self.running_avg_window = 100 if self.batch_size == 1 else 10
         self.current_running_avg_step, self.running_loss, self.running_accuracy, self.current_permutation = (0, 0.0, 0.0, 0)
         self.results_dict = {}
         total_ckpts = self.steps_per_task * self.num_permutations // (self.running_avg_window * self.batch_size)
@@ -125,6 +125,8 @@ class PermutedMNISTExperiment(Experiment):
         self.experiment_checkpoints_dir_path = os.path.join(self.results_dir, "experiment_checkpoints")
         self.checkpoint_identifier_name = "current_permutation"
         self.checkpoint_save_frequency = 50     # create a checkpoint after this many task changes
+        # with batch size of 30 and num permutations of 1000, experiment take less than an hour, so why checkpoints?
+        self.store_checkpoints = False
         self.load_experiment_checkpoint()
 
     # ----------------------------- For initializing the experiment ----------------------------- #
@@ -234,7 +236,7 @@ class PermutedMNISTExperiment(Experiment):
             print("\tPermutation number: {0}".format(self.current_permutation + 1))
             self.current_task_steps = 0
             for i, sample in enumerate(mnist_data_loader):
-                if self.current_task_steps >= self.steps_per_task: break
+                if self.current_task_steps >= (self.steps_per_task // self.batch_size): break
                 self.current_task_steps += 1
                 self.current_experiment_step += 1
 
@@ -267,7 +269,7 @@ class PermutedMNISTExperiment(Experiment):
                     self._store_training_summaries()
 
             self.current_permutation += 1
-            if self.current_permutation % self.checkpoint_save_frequency == 0:    # checkpoint experiment
+            if (self.current_permutation % self.checkpoint_save_frequency == 0) and self.store_checkpoints:
                 self.save_experiment_checkpoint()
 
             final_time = time.perf_counter()
