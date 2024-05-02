@@ -62,7 +62,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
         self.drop_factor = access_dict(exp_params, "drop_factor", default=0.0, val_type=float)
 
         self.use_cbpw_bn = access_dict(exp_params, "use_cbpw_bn", default=False, val_type=bool)
-        self.bn_update_freq = access_dict(exp_params, "bn_update_freq", default=1000, val_type=int)
+        self.bn_update_freq = access_dict(exp_params, "bn_update_freq", default=2000, val_type=int)
         self.bn_drop_factor = access_dict(exp_params, "bn_drop_factor", default=0.001, val_type=float)
         self.current_topology_update = 0
 
@@ -86,7 +86,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
                                                       include_all=self.include_all)
         if self.use_cbpw_bn:
             self.bn_list = initialize_bn_list_resnet(self.net, exclude_downsample=self.exclude_downsample)
-            self.norm_layer_update_func = setup_cbpw_layer_norm_update_function("magnitude", self.bn_drop_factor)
+            self.norm_layer_update_func = setup_cbpw_layer_norm_update_function(self.prune_method, self.bn_drop_factor)
 
         # initialize optimizer
         temp_wd = self.weight_decay if self.rescaled_wd else self.weight_decay / self.stepsize
