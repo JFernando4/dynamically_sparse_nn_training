@@ -19,7 +19,7 @@
   },
 
   "learning_params": {
-    "stepsize": ["fixed", 0.01, 0.005, 0.001, 0.0005, 0.0001],
+    "stepsize": ["fixed", 0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001],
     "steps_per_task": ["fixed", 60000],
     "batch_size": 30
   },
