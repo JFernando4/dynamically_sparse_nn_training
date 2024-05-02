@@ -63,7 +63,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
 
         self.use_cbpw_bn = access_dict(exp_params, "use_cbpw_bn", default=False, val_type=bool)
         self.bn_update_freq = access_dict(exp_params, "bn_update_freq", default=1000, val_type=int)
-        self.bn_drop_factor = access_dict(exp_params, "bn_drop_factor", default=0.01, val_type=float)
+        self.bn_drop_factor = access_dict(exp_params, "bn_drop_factor", default=0.001, val_type=float)
         self.current_topology_update = 0
 
         # shrink and perturb parameters
