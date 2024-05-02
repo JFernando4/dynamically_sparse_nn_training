@@ -119,7 +119,10 @@ def redo_prune_weights(weight: torch.Tensor, drop_factor: float):
     abs_weights = weight.abs().flatten()
     prune_threshold = drop_factor * abs_weights.mean()
     prune_indices = torch.where(abs_weights < prune_threshold)[0]
-    weight.view(-1)[prune_indices] = 0.0
+    if len(prune_indices) > 0:                      # prune according to redo
+        weight.view(-1)[prune_indices] = 0.0
+    else:                                           # prune one weight according to magnitude pruning
+        magnitude_prune_weights(weight, drop_factor)
 
 
 @torch.no_grad()
