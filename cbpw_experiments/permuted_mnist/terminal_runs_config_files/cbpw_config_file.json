@@ -7,19 +7,21 @@
   "__comment_2__": "Parameters for the architecture",
   "num_layers": 3,
   "num_hidden": 10,
+  "batch_size": 30,
   "store_parameters": true,
 
   "__comment_3__": "Permuted MNIST problem parameters. Classes increase by 5 every 100 epochs.",
-  "num_permutations": 50,
+  "num_permutations": 1000,
 
   "__comment_4__": "CBPw Parameters.",
-  "topology_update_freq": 500,
+  "topology_update_freq": 30,
   "prune_method": "hess_approx",
-  "grow_method": "pm_min",
-  "drop_factor": 0.01,
+  "grow_method": "zero",
+  "drop_factor": 0.2,
 
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
+    "batch_size",
     "l1_factor",
     "l2_factor",
     "topology_update_freq",
