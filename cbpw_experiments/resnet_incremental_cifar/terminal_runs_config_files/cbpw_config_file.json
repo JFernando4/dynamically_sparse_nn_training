@@ -13,8 +13,8 @@
   "use_best_network": true,
   "__comment_4__": "CBPw Parameters.",
   "use_cbpw": true,
-  "reset_bn": false,
   "use_cbpw_bn": true,
+  "exclude_bn_bias": true,
   "exclude_downsample": true,
   "include_output_layer": true,
   "topology_update_freq": 45,
@@ -28,8 +28,8 @@
     "prune_method",
     "grow_method",
     "drop_factor",
-    "reset_bn",
     "use_cbpw_bn",
+    "exclude_bn_bias",
     "exclude_downsample",
     "include_output_layer"
   ]
