@@ -21,6 +21,7 @@ from torchvision.models._api import WeightsEnum
 from torchvision.models._utils import _ovewrite_named_param
 
 from.sequential_kw_arguments import SequentialWithKeywordArguments
+from .cbp_layer import CBPLinear
 
 class ConvStemConfig(NamedTuple):
     out_channels: int
@@ -32,7 +33,8 @@ class ConvStemConfig(NamedTuple):
 
 class CustomMLPBlock(torch.nn.Module):
 
-    def __init__(self, in_dim: int, mlp_dim: int, dropout: float) -> None:
+    def __init__(self, in_dim: int, mlp_dim: int, dropout: float, replacement_rate: float = None,
+                 maturity_threshold: int = None) -> None:
         super().__init__()
 
         self.ff_1 = torch.nn.Linear(in_dim, mlp_dim, bias=True)
@@ -41,10 +43,23 @@ class CustomMLPBlock(torch.nn.Module):
         self.ff_2 = torch.nn.Linear(mlp_dim, in_dim, bias=True)
         self.dropout_2 = torch.nn.Dropout(dropout)
 
+        self.cbp = None
+        if (replacement_rate is not None) and (maturity_threshold is not None):
+            self.cbp = CBPLinear(
+                in_layer=self.ff_1,
+                out_layer=self.ff_2,
+                act_type="linear",
+                replacement_rate=replacement_rate,
+                init="xavier",
+                maturity_threshold=maturity_threshold
+            )
+
     def forward(self, x: torch.Tensor, activations: list = None) -> torch.Tensor:
 
         x = self.ff_1(x)
         x = self.act(x)
+        if self.cbp is not None:
+            x = self.cbp(x)
 
         if activations is not None:
             activations.append(x)
@@ -109,6 +124,8 @@ class EncoderBlock(nn.Module):
         dropout: float,
         attention_dropout: float,
         norm_layer: Callable[..., torch.nn.Module] = partial(nn.LayerNorm, eps=1e-6),
+        replacement_rate: float = None,
+        maturity_threshold: int = None
     ):
         super().__init__()
         self.num_heads = num_heads
@@ -120,7 +137,8 @@ class EncoderBlock(nn.Module):
 
         # MLP block
         self.ln_2 = norm_layer(hidden_dim)
-        self.mlp = CustomMLPBlock(hidden_dim, mlp_dim, dropout)
+        self.mlp = CustomMLPBlock(hidden_dim, mlp_dim, dropout,
+                                  replacement_rate=replacement_rate, maturity_threshold=maturity_threshold)
 
     def forward(self, input: torch.Tensor, activations: list = None):
         torch._assert(input.dim() == 3, f"Expected (batch_size, seq_length, hidden_dim) got {input.shape}")
@@ -149,7 +167,9 @@ class Encoder(nn.Module):
         dropout: float,
         attention_dropout: float,
         norm_layer: Callable[..., torch.nn.Module] = partial(nn.LayerNorm, eps=1e-6),
-        skip_last_layer_norm: bool = False
+        skip_last_layer_norm: bool = False,
+        replacement_rate: float = None,
+        maturity_threshold: int = None
     ):
         super().__init__()
         # Note that batch_size is on the first dim because
@@ -165,6 +185,8 @@ class Encoder(nn.Module):
                 dropout,
                 attention_dropout,
                 norm_layer,
+                replacement_rate=replacement_rate,
+                maturity_threshold=maturity_threshold
             )
         self.layers = SequentialWithKeywordArguments(layers)
 
@@ -198,6 +220,8 @@ class VisionTransformer(nn.Module):
         representation_size: Optional[int] = None,
         norm_layer: Callable[..., torch.nn.Module] = partial(nn.LayerNorm, eps=1e-6),
         conv_stem_configs: Optional[List[ConvStemConfig]] = None,
+        replacement_rate: float = None,
+        maturity_threshold: int = None
     ):
         super().__init__()
         _log_api_usage_once(self)
@@ -253,7 +277,9 @@ class VisionTransformer(nn.Module):
             dropout,
             attention_dropout,
             norm_layer,
-            skip_last_layer_norm=skip_last_layer_norm
+            skip_last_layer_norm=skip_last_layer_norm,
+            replacement_rate=replacement_rate,
+            maturity_threshold=maturity_threshold
         )
         self.seq_length = seq_length
 
