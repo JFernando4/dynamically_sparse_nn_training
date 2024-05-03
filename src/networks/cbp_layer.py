@@ -36,14 +36,13 @@ def get_layer_bound(layer, init, gain):
 class CBPLinear(nn.Module):
     def __init__(
             self,
-            in_layer,
-            out_layer,
+            in_layer: nn.Module,
+            out_layer: nn.Module,
             act_type='relu',
             replacement_rate=0,
             init='kaiming',
             maturity_threshold=1000,
             util_type='contribution',
-            device="cpu",
             decay_rate=0,
     ):
         super().__init__()
@@ -66,12 +65,11 @@ class CBPLinear(nn.Module):
         # todo: add warning that in_layer and out_layers must be nn.Linear
         self.in_layer = in_layer
         self.out_layer = out_layer
-        self.device = device
         """
         Utility of all features/neurons
         """
-        self.util = torch.zeros(self.in_layer.out_features).to(self.device)
-        self.ages = torch.zeros(self.in_layer.out_features).to(self.device)
+        self.util = nn.Parameter(torch.zeros(self.in_layer.out_features), requires_grad=False)
+        self.ages = nn.Parameter(torch.zeros(self.in_layer.out_features), requires_grad=False)
         self.accumulated_num_features_to_replace = 0
         """
         Calculate uniform distribution's bound for random feature initialization
@@ -85,7 +83,7 @@ class CBPLinear(nn.Module):
         """
         Returns: Features to replace
         """
-        features_to_replace = torch.empty(0, dtype=torch.long).to(self.device)
+        features_to_replace = torch.empty(0, dtype=torch.long).to(self.util.device)
         self.ages += 1
         """
         Calculate number of features to replace
@@ -121,7 +119,7 @@ class CBPLinear(nn.Module):
             if num_features_to_replace == 0: return
             self.in_layer.weight.data[features_to_replace, :] *= 0.0
             self.in_layer.weight.data[features_to_replace, :] += \
-                torch.empty(num_features_to_replace, self.in_layer.in_features).uniform_(-self.bound, self.bound).to(self.device)
+                torch.empty(num_features_to_replace, self.in_layer.in_features).uniform_(-self.bound, self.bound).to(self.util.device)
             self.in_layer.bias.data[features_to_replace] *= 0
 
             self.out_layer.weight.data[:, features_to_replace] = 0
