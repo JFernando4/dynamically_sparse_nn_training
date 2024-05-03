@@ -83,7 +83,7 @@ class CBPLinear(nn.Module):
         """
         Returns: Features to replace
         """
-        features_to_replace = torch.empty(0, dtype=torch.long).to(self.util.device)
+        features_to_replace = torch.empty(0, dtype=torch.long, device=self.util.device)
         self.ages += 1
         """
         Calculate number of features to replace
@@ -100,8 +100,8 @@ class CBPLinear(nn.Module):
         """
         Calculate feature utility
         """
-        output_wight_mag = self.out_layer.weight.data.abs().mean(dim=0)
-        self.util = output_wight_mag * self.features.abs().mean(dim=0)
+        output_weight_mag = self.out_layer.weight.data.abs().mean(dim=0)
+        self.util.data = output_weight_mag * self.features.abs().mean(dim=[i for i in range(self.features.ndim - 1)])
         """
         Find features with smallest utility
         """
@@ -119,7 +119,7 @@ class CBPLinear(nn.Module):
             if num_features_to_replace == 0: return
             self.in_layer.weight.data[features_to_replace, :] *= 0.0
             self.in_layer.weight.data[features_to_replace, :] += \
-                torch.empty(num_features_to_replace, self.in_layer.in_features).uniform_(-self.bound, self.bound).to(self.util.device)
+                torch.empty(num_features_to_replace, self.in_layer.in_features, device=self.util.device).uniform_(-self.bound, self.bound)
             self.in_layer.bias.data[features_to_replace] *= 0
 
             self.out_layer.weight.data[:, features_to_replace] = 0
