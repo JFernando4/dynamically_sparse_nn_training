@@ -12,26 +12,27 @@
   },
 
   "experiment_params": {
-    "num_permutations": 500,
+    "num_permutations": 1000,
     "num_layers": 3,
     "num_hidden": 100,
-    "stepsize": 0.001,
+    "batch_size": 30,
+    "stepsize": 0.05,
     "steps_per_task": 60000,
     "store_parameters": false,
     "runs": 5
   },
 
   "learning_params": {
-    "topology_update_freq": ["fixed", 250, 500, 1000, 2000, 4000, 8000, 16000],
+    "topology_update_freq": ["fixed", 10, 20, 40, 80, 160],
     "prune_method": ["str", "redo"],
     "grow_method": ["str", "pm_min", "xavier_normal", "zero"],
-    "drop_factor": ["fixed", 0.001, 0.005, 0.01, 0.05, 0.2, 0.4]
+    "drop_factor": ["fixed", 0.05, 0.1, 0.2, 0.4]
   },
 
   "slurm_parameters": {
     "job_name": "cbpw_ps",
-    "time": "12:00:00",
-    "max_runs_per_job": 1,
+    "time": "10:00:00",
+    "max_runs_per_job": 5,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
     "output_filename": "pmnist_ps-%n-%j.out",
     "mem": "12G",
