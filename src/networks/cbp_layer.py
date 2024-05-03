@@ -70,7 +70,7 @@ class CBPLinear(nn.Module):
         """
         self.util = nn.Parameter(torch.zeros(self.in_layer.out_features), requires_grad=False)
         self.ages = nn.Parameter(torch.zeros(self.in_layer.out_features), requires_grad=False)
-        self.accumulated_num_features_to_replace = 0
+        self.accumulated_num_features_to_replace = nn.Parameter(torch.zeros(1), requires_grad=False)
         """
         Calculate uniform distribution's bound for random feature initialization
         """
