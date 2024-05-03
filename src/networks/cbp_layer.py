@@ -128,7 +128,7 @@ class CBPLinear(nn.Module):
             self.ages[features_to_replace] = 0
 
     def reinit(self):
-        self.reinitialization_ = """
+        """
         Perform selective reinitialization
         """
         features_to_replace = self.get_features_to_reinit()

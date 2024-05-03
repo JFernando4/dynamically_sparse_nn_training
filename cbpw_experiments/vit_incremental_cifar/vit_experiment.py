@@ -75,6 +75,10 @@ class IncrementalCIFARExperiment(Experiment):
         self.previously_removed_weights = None
         self.current_topology_update = 0
 
+        # CBP parameters
+        self.replacement_rate = access_dict(exp_params, "replacement_rate", default=None, val_type=float)
+        self.maturity_threshold = access_dict(exp_params, "maturity_threshold", default=None, val_type=int)
+
         """ Network Resetting Parameters
         reset_head: whether to reset the head of the network after each task
         reset_network: whether to reset the network after each task
@@ -114,7 +118,9 @@ class IncrementalCIFARExperiment(Experiment):
             mlp_dim=1536,
             num_classes=self.num_classes,
             dropout=self.dropout_prob,
-            attention_dropout=self.dropout_prob
+            attention_dropout=self.dropout_prob,
+            replacement_rate=self.replacement_rate,
+            maturity_threshold=self.maturity_threshold
         )
         initialize_vit(self.net)
         self.net.to(self.device)
