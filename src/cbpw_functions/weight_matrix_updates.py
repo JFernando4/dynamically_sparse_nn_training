@@ -64,16 +64,19 @@ def update_weights(weight_dict: dict[str, tuple]) -> dict:
 
 @torch.no_grad()
 def update_norm_layer(norm_layer: torch.nn.Module,
-                      prune_function: Callable[[torch.Tensor], None]) -> None:
+                      prune_function: Callable[[torch.Tensor], None],
+                      exclude_bn_bias: bool = False) -> None:
     assert isinstance(norm_layer, (torch.nn.LayerNorm, torch.nn.BatchNorm2d))
 
     prune_function(norm_layer.weight)
     pruned_indices = torch.where(norm_layer.weight.flatten() == 0.0)[0]
     norm_layer.weight[pruned_indices] = 1.0
-    norm_layer.bias[pruned_indices] = 0.0
+    if not exclude_bn_bias:
+        norm_layer.bias[pruned_indices] = 0.0
 
 
-def setup_cbpw_layer_norm_update_function(prune_name: str, drop_factor: float) -> Callable[[torch.nn.Module], None]:
+def setup_cbpw_layer_norm_update_function(prune_name: str, drop_factor: float, exclude_bn_bias: bool = False
+                                          ) -> Callable[[torch.nn.Module], None]:
     """ Sets up weight update function for CBP-w """
     prune_function_names = ["magnitude", "redo", "gf_redo", "gf", "hess_approx"]
     assert prune_name in prune_function_names
@@ -88,7 +91,7 @@ def setup_cbpw_layer_norm_update_function(prune_name: str, drop_factor: float) -
         prune_func = lambda w: hessian_approx_prune_weights(w, drop_factor=drop_factor)
 
     def temp_prune_and_grow_weights(w: torch.nn.Module):
-        return update_norm_layer(w, prune_func)
+        return update_norm_layer(w, prune_func, exclude_bn_bias)
 
     return temp_prune_and_grow_weights
 
