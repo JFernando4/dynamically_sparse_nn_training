@@ -9,8 +9,8 @@
       "drop_factor",
       "topology_update_freq",
       "include_output_layer",
-      "exclude_downsample",
-      "reset_bn"
+      "use_cbpw_bn",
+      "exclude_bn_bias"
     ]
   },
 
@@ -30,9 +30,9 @@
   "learning_params": {
     "use_cbpw": true,
     "include_output_layer": true,
-    "exclude_downsample": true,
-    "reset_bn": true,
-    "topology_update_freq": ["fixed", 45],
+    "use_cbpw_bn": true,
+    "exclude_bn_bias": true,
+    "topology_update_freq": ["fixed", 525],
     "prune_method": "hess_approx",
     "grow_method": ["str", "pm_min"],
     "drop_factor": ["fixed", 0.2]
