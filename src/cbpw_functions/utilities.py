@@ -2,7 +2,7 @@
 import torch
 
 from .weight_matrix_updates import setup_cbpw_weight_update_function
-from src.networks.torchvision_modified_vit import VisionTransformer
+from src.networks.torchvision_modified_vit import VisionTransformer, EncoderBlock
 from src.networks.torchvision_modified_resnet import ResNet, BasicBlock
 
 
@@ -52,6 +52,20 @@ def initialize_bn_list_resnet(net: ResNet, exclude_downsample: bool = False):
                 list_of_batch_norm_layers.append(residual_block.downsample[1])
 
     return list_of_batch_norm_layers
+
+
+def initialize_ln_list_vit(net: VisionTransformer):
+    """
+    Returns a list with all the LayerNormalization layers in a VisionTransformer model
+    """
+    list_of_layer_norm_layers = []
+
+    for encoder_block in list(net.encoder.layers):
+        assert isinstance(encoder_block, EncoderBlock)
+        list_of_layer_norm_layers.extend([encoder_block.ln_1, encoder_block.ln_2])
+    list_of_layer_norm_layers.append(net.encoder.ln)
+
+    return list_of_layer_norm_layers
 
 
 def initialize_weights_dict_vit(net: VisionTransformer,
