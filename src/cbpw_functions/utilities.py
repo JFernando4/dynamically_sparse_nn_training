@@ -75,7 +75,8 @@ def initialize_weights_dict_vit(net: VisionTransformer,
                                 include_class_token: bool,
                                 include_conv_proj: bool,
                                 include_pos_embedding: bool,
-                                include_self_attention: bool) -> dict[str, tuple]:
+                                include_self_attention: bool,
+                                include_head: bool) -> dict[str, tuple]:
     """ Initializes the weight dictionaries used in CBPw for a Vision Transformer"""
 
     update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor)
@@ -90,6 +91,8 @@ def initialize_weights_dict_vit(net: VisionTransformer,
         if "pos_embedding" in n and include_pos_embedding:
             weight_dict[n] = (p, update_func)
         if ("in_proj_weight" in n or "out_proj.weight" in n or ("mlp" in n and "weight" in n)) and include_self_attention:
+            weight_dict[n] = (p, update_func)
+        if ("head.weight" in n) and include_head:
             weight_dict[n] = (p, update_func)
 
     return weight_dict
