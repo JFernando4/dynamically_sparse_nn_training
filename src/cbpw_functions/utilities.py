@@ -61,7 +61,6 @@ def initialize_weights_dict_vit(net: VisionTransformer,
                                 include_class_token: bool,
                                 include_conv_proj: bool,
                                 include_pos_embedding: bool,
-                                include_layer_norm: bool,
                                 include_self_attention: bool) -> dict[str, tuple]:
     """ Initializes the weight dictionaries used in CBPw for a Vision Transformer"""
 
@@ -76,8 +75,6 @@ def initialize_weights_dict_vit(net: VisionTransformer,
             weight_dict[n] = (p, update_func)
         if "pos_embedding" in n and include_pos_embedding:
             weight_dict[n] = (p, update_func)
-        if ("ln" in n and "weight" in n) and include_layer_norm:
-            weight_dict[n] = (p, ln_update_func)
         if ("in_proj_weight" in n or "out_proj.weight" in n or ("mlp" in n and "weight" in n)) and include_self_attention:
             weight_dict[n] = (p, update_func)
 
