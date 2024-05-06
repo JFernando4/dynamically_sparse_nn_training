@@ -17,6 +17,7 @@ from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, 
 
 from src import initialize_vit, initialize_vit_heads, initialize_layer_norm_module
 from src.plasticity_functions import SGDL2Init, inject_noise
+from src.cbpw_functions import initialize_weight_dict
 from src.utils import get_cifar_data, compute_accuracy_from_batch
 from src.networks.torchvision_modified_vit import VisionTransformer
 from src.cbpw_functions.weight_matrix_updates import setup_cbpw_weight_update_function, update_weights
@@ -64,7 +65,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str, choices=pruning_functions_names)
         self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str, choices=grow_methods)
         assert not ((self.prune_method != "none" and self.grow_method == "none") or (self.prune_method == "none" and self.grow_method != "none"))
-        self.drop_factor = access_dict(exp_params, "drop_factor", default=float, val_type=float)
+        self.drop_factor = access_dict(exp_params, "drop_factor", default=0.0, val_type=float)
         self.use_cbpw = self.prune_method != "none" and self.grow_method != "none"
 
         self.msa_cbpw = access_dict(exp_params, "msa_cbpw", default=False, val_type=bool)       # use cbpw in self-attention
@@ -127,7 +128,10 @@ class IncrementalCIFARExperiment(Experiment):
         self.l2_init_flags, self.reg_flags = self._get_optim_flags()
 
         # initialize weight_dictionary
-        self.weight_dict = self._initialize_weight_dict()
+        self.weight_dict = initialize_weight_dict(self.net, architecture_type="vit", prune_method=self.prune_method,
+                                                  grow_method=self.grow_method, drop_factor=self.drop_factor,
+                                                  include_class_token=self.ct_cbpw, include_conv_proj=self.conv_cbpw,
+                                                  include_pos_embedding=self.pe_cbpw, include_self_attention=self.msa_cbpw)
 
         # initialize optimizer and loss function
         self.optim = self._get_optimizer()
@@ -159,29 +163,29 @@ class IncrementalCIFARExperiment(Experiment):
         self._initialize_summaries()
 
     # ------------------------------ Methods for initializing the experiment ------------------------------
-    def _initialize_weight_dict(self) -> dict:
-        """ Initializes the weight dictionary use for cbpw """
-
-        weight_dict = {}
-        if not self.use_cbpw:
-            return weight_dict
-
-        update_func = setup_cbpw_weight_update_function(self.prune_method, self.grow_method, drop_factor=self.drop_factor)
-        ln_update_func = setup_cbpw_weight_update_function(self.prune_method, "fixed",
-                                                           reinit_val=1.0, drop_factor=self.drop_factor)
-        for n, p in self.net.named_parameters():
-            if "class_token" in n and self.ct_cbpw:
-                weight_dict[n] = (p, update_func)
-            if "conv_proj.weight" in n and self.conv_cbpw:
-                weight_dict[n] = (p, update_func)
-            if "pos_embedding" in n and self.pe_cbpw:
-                weight_dict[n] = (p, update_func)
-            if ("ln" in n and "weight" in n) and self.ln_cbpw:
-                weight_dict[n] = (p, ln_update_func)
-            if ("in_proj_weight" in n or "out_proj.weight" in n or ("mlp" in n and "weight" in n)) and self.msa_cbpw:
-                weight_dict[n] = (p, update_func)
-
-        return weight_dict
+    # def _initialize_weight_dict(self) -> dict:
+    #     """ Initializes the weight dictionary use for cbpw """
+    #
+    #     weight_dict = {}
+    #     if not self.use_cbpw:
+    #         return weight_dict
+    #
+    #     update_func = setup_cbpw_weight_update_function(self.prune_method, self.grow_method, drop_factor=self.drop_factor)
+    #     ln_update_func = setup_cbpw_weight_update_function(self.prune_method, "fixed",
+    #                                                        reinit_val=1.0, drop_factor=self.drop_factor)
+    #     for n, p in self.net.named_parameters():
+    #         if "class_token" in n and self.ct_cbpw:
+    #             weight_dict[n] = (p, update_func)
+    #         if "conv_proj.weight" in n and self.conv_cbpw:
+    #             weight_dict[n] = (p, update_func)
+    #         if "pos_embedding" in n and self.pe_cbpw:
+    #             weight_dict[n] = (p, update_func)
+    #         if ("ln" in n and "weight" in n) and self.ln_cbpw:
+    #             weight_dict[n] = (p, ln_update_func)
+    #         if ("in_proj_weight" in n or "out_proj.weight" in n or ("mlp" in n and "weight" in n)) and self.msa_cbpw:
+    #             weight_dict[n] = (p, update_func)
+    #
+    #     return weight_dict
 
     def _initialize_summaries(self):
         """
@@ -269,7 +273,10 @@ class IncrementalCIFARExperiment(Experiment):
             "partial_results": partial_results
         }
 
-        self.weight_dict = self._initialize_weight_dict()
+        self.weight_dict = initialize_weight_dict(self.net, architecture_type="vit", prune_method=self.prune_method,
+                                                  grow_method=self.grow_method, drop_factor=self.drop_factor,
+                                                  include_class_token=self.ct_cbpw, include_conv_proj=self.conv_cbpw,
+                                                  include_pos_embedding=self.pe_cbpw, include_self_attention=self.msa_cbpw)
 
         return checkpoint
 
