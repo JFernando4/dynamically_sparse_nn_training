@@ -80,7 +80,6 @@ def initialize_weights_dict_vit(net: VisionTransformer,
     """ Initializes the weight dictionaries used in CBPw for a Vision Transformer"""
 
     update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor)
-    ln_update_func = setup_cbpw_weight_update_function(prune_method, "fixed", reinit_val=1.0, drop_factor=drop_factor)
 
     weight_dict = {}
     for n, p in net.named_parameters():
