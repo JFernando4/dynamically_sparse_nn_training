@@ -17,7 +17,7 @@ from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, 
 
 from src import initialize_vit, initialize_vit_heads, initialize_layer_norm_module
 from src.plasticity_functions import SGDL2Init, inject_noise
-from src.cbpw_functions import initialize_weight_dict
+from src.cbpw_functions import initialize_weight_dict, setup_cbpw_layer_norm_update_function, initialize_ln_list_vit
 from src.utils import get_cifar_data, compute_accuracy_from_batch
 from src.networks.torchvision_modified_vit import VisionTransformer
 from src.cbpw_functions.weight_matrix_updates import setup_cbpw_weight_update_function, update_weights
@@ -72,7 +72,12 @@ class IncrementalCIFARExperiment(Experiment):
         self.conv_cbpw = access_dict(exp_params, "conv_cbpw", default=False, val_type=bool)     # use cbpw in conv projection
         self.ct_cbpw = access_dict(exp_params, "ct_cbpw", default=False, val_type=bool)         # use cbpw in class token
         self.pe_cbpw = access_dict(exp_params, "pe_cbpw", default=False, val_type=bool)         # use cbpw in pos-embedding
-        self.ln_cbpw = access_dict(exp_params, "ln_cbpw", default=False, val_type=bool)         # use cbpw in layer norm
+        self.head_cbpw = access_dict(exp_params, "head_cbpw", default=False, val_type=bool)     # use cbpw in head
+
+        self.use_cbpw_ln = access_dict(exp_params, "use_cbpw_ln", default=False, val_type=bool) # use cbpw on weight of layer norm
+        self.ln_update_freq = access_dict(exp_params, "ln_update_freq", default=self.topology_update_freq, val_type=int)
+        self.ln_drop_factor = access_dict(exp_params, "ln_drop_factor", default=self.drop_factor, val_type=float)
+
         self.previously_removed_weights = None
         self.current_topology_update = 0
 
@@ -128,10 +133,17 @@ class IncrementalCIFARExperiment(Experiment):
         self.l2_init_flags, self.reg_flags = self._get_optim_flags()
 
         # initialize weight_dictionary
-        self.weight_dict = initialize_weight_dict(self.net, architecture_type="vit", prune_method=self.prune_method,
-                                                  grow_method=self.grow_method, drop_factor=self.drop_factor,
-                                                  include_class_token=self.ct_cbpw, include_conv_proj=self.conv_cbpw,
-                                                  include_pos_embedding=self.pe_cbpw, include_self_attention=self.msa_cbpw)
+        self.weight_dict, self.ln_list, self.norm_layer_update_func = None, None, None
+        if self.use_cbpw:
+            self.weight_dict = initialize_weight_dict(self.net, architecture_type="vit", prune_method=self.prune_method,
+                                                      grow_method=self.grow_method, drop_factor=self.drop_factor,
+                                                      include_class_token=self.ct_cbpw, include_conv_proj=self.conv_cbpw,
+                                                      include_pos_embedding=self.pe_cbpw, include_self_attention=self.msa_cbpw)
+
+        if self.use_cbpw_ln:
+            self.ln_list = initialize_ln_list_vit(self.net)
+            self.norm_layer_update_func = setup_cbpw_layer_norm_update_function(self.prune_method, self.ln_drop_factor,True)
+
 
         # initialize optimizer and loss function
         self.optim = self._get_optimizer()
@@ -273,11 +285,6 @@ class IncrementalCIFARExperiment(Experiment):
             "partial_results": partial_results
         }
 
-        self.weight_dict = initialize_weight_dict(self.net, architecture_type="vit", prune_method=self.prune_method,
-                                                  grow_method=self.grow_method, drop_factor=self.drop_factor,
-                                                  include_class_token=self.ct_cbpw, include_conv_proj=self.conv_cbpw,
-                                                  include_pos_embedding=self.pe_cbpw, include_self_attention=self.msa_cbpw)
-
         return checkpoint
 
     def load_checkpoint_data_and_update_experiment_variables(self, file_path):
@@ -304,6 +311,16 @@ class IncrementalCIFARExperiment(Experiment):
         partial_results = checkpoint["partial_results"]
         for k, v in self.results_dict.items():
             self.results_dict[k] = partial_results[k] if not isinstance(partial_results[k], torch.Tensor) else partial_results[k].to(self.device)
+
+        if self.use_cbpw:
+            self.weight_dict = initialize_weight_dict(self.net, architecture_type="vit", prune_method=self.prune_method,
+                                                      grow_method=self.grow_method, drop_factor=self.drop_factor,
+                                                      include_class_token=self.ct_cbpw, include_conv_proj=self.conv_cbpw,
+                                                      include_pos_embedding=self.pe_cbpw, include_self_attention=self.msa_cbpw)
+
+        if self.use_cbpw_ln:
+            self.ln_list = initialize_ln_list_vit(self.net)
+            self.norm_layer_update_func = setup_cbpw_layer_norm_update_function(self.prune_method, self.ln_drop_factor,True)
 
     # --------------------------------------- For storing summaries --------------------------------------- #
     def _store_training_summaries(self):
@@ -416,6 +433,8 @@ class IncrementalCIFARExperiment(Experiment):
                 is_time_to_update = self.time_to_update_topology(minibatch_loop=True)
                 if is_time_to_update:
                     self.update_topology()
+                if self.use_cbpw_ln and (self.current_minibatch % self.ln_update_freq) == 0:
+                    for ln_layer in self.ln_list: self.norm_layer_update_func(ln_layer)
 
             epoch_end = time.perf_counter()
 
