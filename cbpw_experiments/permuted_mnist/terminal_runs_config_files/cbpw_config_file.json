@@ -1,7 +1,7 @@
 {
   "__comment_1__": "Parameters for the optimizer.",
-  "stepsize": 0.001,
-  "l1_factor": 0.0,
+  "stepsize": 0.05,
+  "l1_factor": 1e-4,
   "l2_factor": 0.0,
 
   "__comment_2__": "Parameters for the architecture",
@@ -15,8 +15,8 @@
 
   "__comment_4__": "CBPw Parameters.",
   "topology_update_freq": 30,
-  "prune_method": "hess_approx",
-  "grow_method": "zero",
+  "prune_method": "none",
+  "grow_method": "none",
   "drop_factor": 0.2,
 
   "__comment_5__": "For creating the results directory.",

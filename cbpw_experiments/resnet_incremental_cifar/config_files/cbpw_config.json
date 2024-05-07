@@ -32,10 +32,10 @@
     "include_output_layer": true,
     "use_cbpw_bn": true,
     "exclude_bn_bias": true,
-    "topology_update_freq": ["fixed", 260, 525],
+    "topology_update_freq": ["fixed", 130, 260, 525],
     "prune_method": "hess_approx",
     "grow_method": ["str", "pm_min"],
-    "drop_factor": ["fixed", 0.1, 0.2]
+    "drop_factor": ["fixed", 0.05, 0.1]
   },
 
   "slurm_parameters": {
