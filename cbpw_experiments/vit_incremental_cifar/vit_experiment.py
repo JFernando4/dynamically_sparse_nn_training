@@ -316,8 +316,11 @@ class IncrementalCIFARExperiment(Experiment):
         if self.use_cbpw:
             self.weight_dict = initialize_weight_dict(self.net, architecture_type="vit", prune_method=self.prune_method,
                                                       grow_method=self.grow_method, drop_factor=self.drop_factor,
-                                                      include_class_token=self.ct_cbpw, include_conv_proj=self.conv_cbpw,
-                                                      include_pos_embedding=self.pe_cbpw, include_self_attention=self.msa_cbpw)
+                                                      include_class_token=self.ct_cbpw,
+                                                      include_conv_proj=self.conv_cbpw,
+                                                      include_pos_embedding=self.pe_cbpw,
+                                                      include_self_attention=self.msa_cbpw,
+                                                      include_head=self.head_cbpw)
 
         if self.use_cbpw_ln:
             self.ln_list = initialize_ln_list_vit(self.net)
