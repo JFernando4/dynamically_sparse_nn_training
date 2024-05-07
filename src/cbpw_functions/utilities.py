@@ -32,7 +32,8 @@ def initialize_weight_dict(net: torch.nn.Module,
         assert isinstance(net, torch.nn.Sequential)
         return initialize_weights_dict_sequential(net, prune_method=prune_method, grow_method=grow_method,
                                                   drop_factor=drop_factor)
-
+    elif architecture_type == "bert":
+        return initialize_weights_dict_bert(net, prune_method=prune_method, grow_method=grow_method, drop_factor=drop_factor)
     else:
         raise ValueError(f"{architecture_type} is not a valid architecture type.")
 
@@ -64,6 +65,18 @@ def initialize_ln_list_vit(net: VisionTransformer):
         assert isinstance(encoder_block, EncoderBlock)
         list_of_layer_norm_layers.extend([encoder_block.ln_1, encoder_block.ln_2])
     list_of_layer_norm_layers.append(net.encoder.ln)
+
+    return list_of_layer_norm_layers
+
+
+def initialize_ln_list_bert(net):
+    """
+    Returns a list with all the LayerNormalization layers in a pretrained BERT model
+    """
+    list_of_layer_norm_layers = [net.bert.embeddings.LayerNorm]
+
+    for i in range(4):
+        list_of_layer_norm_layers.append(net.bert.encoder.layer[i].output.LayerNorm)
 
     return list_of_layer_norm_layers
 
@@ -141,5 +154,21 @@ def initialize_weights_dict_sequential(net: torch.nn.Sequential,
         if isinstance(net[i], torch.nn.Linear):
             weight_dict[f"linear_{layer_index}"] = (net[i].weight, update_func)
             layer_index += 1
+
+    return weight_dict
+
+
+def initialize_weights_dict_bert(net, prune_method: str, grow_method: str, drop_factor: float):
+    """
+    Initializes the weight dictionary required for CBPw for a Bert model
+    """
+    update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor)
+    weight_dict = {}
+
+    for n, p in net.named_parameters():
+        is_weight_matrix = ".weight" in n
+        is_not_layer_norm = "LayerNorm" not in n
+        if is_weight_matrix and is_not_layer_norm:
+            weight_dict[n] = (p, update_func)
 
     return weight_dict
