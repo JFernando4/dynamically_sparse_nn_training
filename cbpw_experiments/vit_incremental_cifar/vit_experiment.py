@@ -313,6 +313,9 @@ class IncrementalCIFARExperiment(Experiment):
         for k, v in self.results_dict.items():
             self.results_dict[k] = partial_results[k] if not isinstance(partial_results[k], torch.Tensor) else partial_results[k].to(self.device)
 
+        if self.reset_layer_norm:
+            self.net.apply(initialize_layer_norm_module)
+
         if self.use_cbpw:
             self.weight_dict = initialize_weight_dict(self.net, architecture_type="vit", prune_method=self.prune_method,
                                                       grow_method=self.grow_method, drop_factor=self.drop_factor,
