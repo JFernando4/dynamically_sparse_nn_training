@@ -12,16 +12,16 @@
   "fixed_classes": false,
   "use_best_network": true,
   "__comment_4__": "CBPw Parameters.",
-  "topology_update_freq": 90,
+  "topology_update_freq": 525,
   "prune_method": "hess_approx",
   "grow_method": "pm_min",
-  "drop_factor": 0.1,
+  "drop_factor": 0.2,
+  "use_cbpw_ln": true,
   "msa_cbpw": true,
   "conv_cbpw": true,
   "ct_cbpw": true,
   "pe_cbpw": true,
-  "ln_cbpw": true,
-  "reset_layer_norm": false,
+  "head_cbpw": true,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
     "num_epochs",
@@ -29,7 +29,6 @@
     "prune_method",
     "grow_method",
     "drop_factor",
-    "ln_cbpw",
-    "reset_layer_norm"
+    "use_cbpw_ln"
   ]
 }
