@@ -20,6 +20,7 @@ from mlproj_manager.util import access_dict, turn_off_debugging_processes, get_r
 from src.cbpw_functions import initialize_weight_dict, initialize_ln_list_bert, setup_cbpw_layer_norm_update_function
 from src.utils import parse_terminal_arguments
 from src.utils.bert_sentiment_analysis_experiment_utils import CBPWTrainer
+from src.utils.cifar100_experiment_utils import save_model_parameters
 
 
 class BERTSentimentAnalysisExperiment(Experiment):
@@ -61,6 +62,12 @@ class BERTSentimentAnalysisExperiment(Experiment):
 
         """ Network set up """
         self.batch_size = 30
+        self.steps_per_epoch = 67350 // self.batch_size
+        self.evaluation_frequency = 5
+        self.num_evaluation_steps = self.num_epochs // self.evaluation_frequency
+        self.checkpoint_save_frequency = self.evaluation_frequency
+        self.summary_counter = 0
+        self.trainer = None
         # initialize network
         config = BertConfig.from_pretrained("prajjwal1/bert-mini")  # Using this configuration.
         self.net = BertForSequenceClassification(config)
@@ -75,59 +82,52 @@ class BERTSentimentAnalysisExperiment(Experiment):
             self.ln_list = initialize_ln_list_bert(self.net)
             self.norm_layer_update_func = setup_cbpw_layer_norm_update_function(self.prune_method, self.drop_factor, True)
 
+        self.initialize_results_dir()
+        self.load_accuracy = load_metric("accuracy", trust_remote_code=True)
+        self.load_f1 = load_metric("f1", trust_remote_code=True)
+        self.tokenizer = BertTokenizer.from_pretrained("prajjwal1/bert-mini")
+
+    def initialize_results_dir(self):
+        self.results_dict[f"{self.evaluation_dataset}_accuracy"] = torch.zeros(self.num_evaluation_steps + 1,
+                                                                               dtype=torch.float32, device=self.device)
+        self.results_dict[f"{self.evaluation_dataset}_f1"] = torch.zeros(self.num_evaluation_steps + 1,
+                                                                         dtype=torch.float32, device=self.device)
+
     # ------------------------------------- For running the experiment ------------------------------------- #
     def run(self):
 
-        load_accuracy = load_metric("accuracy", trust_remote_code=True)
-        load_f1 = load_metric("f1", trust_remote_code=True)
-
-        def compute_metrics(eval_pred):
-            logits, labels = eval_pred
-            predictions = np.argmax(logits, axis=-1)
-            accuracy = load_accuracy.compute(predictions=predictions, references=labels)["accuracy"]
-            f1 = load_f1.compute(predictions=predictions, references=labels)["f1"]
-            return {"accuracy": accuracy, "f1": f1}
-
-        tokenizer = BertTokenizer.from_pretrained("prajjwal1/bert-mini")
         dataset = load_dataset("sst2")
-        data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
-
-        def tokenize_batch(batch):
-            return tokenizer(batch['sentence'], truncation=True)
-
-        dataset = dataset.map(tokenize_batch, batched=True)
+        data_collator = DataCollatorWithPadding(tokenizer=self.tokenizer)
+        dataset = dataset.map(self.tokenize_batch, batched=True)
 
         # Define training arguments
         training_args = TrainingArguments(
-            run_name=f"index-{self.run_index}",
             learning_rate=self.stepsize,
-            lr_scheduler_type="cosine",
+            lr_scheduler_type="linear",
             warmup_ratio=0.3,
             save_strategy="steps",
+            save_steps=self.steps_per_epoch * self.checkpoint_save_frequency,
+            save_total_limit=1,
             evaluation_strategy="steps",
-            save_steps=11225,               # every 5 epochs for a batch size of 30
-            eval_steps=11225,
-            load_best_model_at_end=True,
-            metric_for_best_model="eval_accuracy",
-            greater_is_better=True,
+            eval_steps=self.steps_per_epoch * self.evaluation_frequency,
             dataloader_num_workers=12,
             per_device_train_batch_size=self.batch_size,
             per_device_eval_batch_size=self.batch_size,
             num_train_epochs=self.num_epochs,
             weight_decay=self.weight_decay,
-            output_dir=self.results_dir,
+            output_dir=os.path.join(self.results_dir, f"checkpoint_index_{self.run_index}"),
             seed=self.random_seed
         )
 
         # Define the Trainer
-        trainer = CBPWTrainer(
+        self.trainer = CBPWTrainer(
             model=self.net,
             args=training_args,
-            tokenizer=tokenizer,
+            tokenizer=self.tokenizer,
             train_dataset=dataset["train"],
             eval_dataset=dataset[self.evaluation_dataset],
             data_collator=data_collator,
-            compute_metrics=compute_metrics,
+            compute_metrics=self.compute_metrics,
             use_cbpw=self.use_cbpw,
             topology_update_freq=self.topology_update_freq,
             bert_weight_dict=self.weight_dict,
@@ -135,11 +135,31 @@ class BERTSentimentAnalysisExperiment(Experiment):
             ln_update_function=self.norm_layer_update_func
         )
 
-        trainer.train()
+        self.log_summaries()
+        self.trainer.train()
 
-        metrics = trainer.evaluate()
+    def log_summaries(self, metrics: dict = None):
+        """ Stores the accuracy and f1-measure metrics of the current network """
+        if metrics is None:
+            metrics = self.trainer.evaluate()
         self._print("Accuracy = {0:.4f}".format(metrics["eval_accuracy"]))
         self._print("F1 Measure = {0:.4f}".format(metrics["eval_f1"]))
+        self.results_dict[f"{self.evaluation_dataset}_accuracy"][self.summary_counter] += metrics["eval_accuracy"]
+        self.results_dict[f"{self.evaluation_dataset}_f1"][self.summary_counter] += metrics["eval_f1"]
+        save_model_parameters(self.results_dir, self.run_index, net=self.net,
+                              current_epoch=self.summary_counter * self.evaluation_frequency)
+        self.summary_counter += 1
+
+    def compute_metrics(self, eval_pred):
+        logits, labels = eval_pred
+        predictions = np.argmax(logits, axis=-1)
+        accuracy = self.load_accuracy.compute(predictions=predictions, references=labels)["accuracy"]
+        f1 = self.load_f1.compute(predictions=predictions, references=labels)["f1"]
+        self.log_summaries(metrics={"eval_accuracy": accuracy, "eval_f1": f1})
+        return {"accuracy": accuracy, "f1": f1}
+
+    def tokenize_batch(self, batch):
+        return self.tokenizer(batch['sentence'], truncation=True)
 
 
 def main():
