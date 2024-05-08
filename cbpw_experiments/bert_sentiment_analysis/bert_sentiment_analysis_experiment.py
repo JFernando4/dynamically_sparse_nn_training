@@ -100,6 +100,7 @@ class BERTSentimentAnalysisExperiment(Experiment):
         # Define training arguments
         training_args = TrainingArguments(
             learning_rate=self.stepsize,
+            lr_scheduler_type="cosine",
             per_device_train_batch_size=self.batch_size,
             per_device_eval_batch_size=self.batch_size,
             num_train_epochs=self.num_epochs,
