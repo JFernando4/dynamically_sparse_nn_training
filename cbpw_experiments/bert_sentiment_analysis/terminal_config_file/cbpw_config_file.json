@@ -1,7 +1,7 @@
 {
   "__comment_1__": "Parameters found in a parameter sweep on the whole CIFAR-100 data set with lr scheduler.",
-  "stepsize": 0.1,
-  "weight_decay": 0.0005,
+  "stepsize": 0.01,
+  "weight_decay": 2e-6,
   "__comment_2__": "Parameter value used in the original ResNet paper",
   "momentum": 0.9,
   "__comment_3__": "Incremental experiment parameters. Classes increase by 5 every 100 epochs.",
