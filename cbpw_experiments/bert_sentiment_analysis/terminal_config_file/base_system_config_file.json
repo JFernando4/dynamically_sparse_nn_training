@@ -10,9 +10,7 @@
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
     "num_epochs",
-    "topology_update_freq",
-    "prune_method",
-    "grow_method",
-    "drop_factor"
+    "stepsize",
+    "weight_decay"
   ]
 }
