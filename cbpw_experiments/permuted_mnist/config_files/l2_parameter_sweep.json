@@ -15,12 +15,12 @@
   "experiment_params": {
     "num_permutations": 1000,
     "num_layers": 3,
-    "num_hidden": 100,
+    "num_hidden": 10,
     "runs": 10
   },
 
   "learning_params": {
-    "stepsize": ["fixed", 0.05],
+    "stepsize": ["fixed", 0.005],
     "steps_per_task": ["fixed", 60000],
     "l2_factor": ["fixed", 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8],
     "batch_size": 30
