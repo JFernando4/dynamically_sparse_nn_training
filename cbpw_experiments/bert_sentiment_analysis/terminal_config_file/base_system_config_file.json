@@ -3,7 +3,7 @@
   "stepsize": 2e-5,
   "weight_decay": 0.01,
   "__comment_3__": "Incremental experiment parameters. Classes increase by 5 every 100 epochs.",
-  "num_epochs": 20,
+  "num_epochs": 100,
   "evaluation_dataset": "validation",
   "__comment_4__": "CBPw Parameters.",
   "use_cbpw": false,
