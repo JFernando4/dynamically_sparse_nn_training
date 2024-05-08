@@ -101,12 +101,14 @@ class BERTSentimentAnalysisExperiment(Experiment):
         training_args = TrainingArguments(
             learning_rate=self.stepsize,
             lr_scheduler_type="cosine",
+            warmup_ratio=0.3,
+            save_strategy="epoch",
             per_device_train_batch_size=self.batch_size,
             per_device_eval_batch_size=self.batch_size,
             num_train_epochs=self.num_epochs,
             weight_decay=self.weight_decay,
-            save_strategy="epoch",
             output_dir=self.results_dir,
+            seed=self.random_seed
         )
 
         # Define the Trainer
