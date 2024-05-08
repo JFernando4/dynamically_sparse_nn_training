@@ -9,6 +9,6 @@
   "cpus-per-task": 12,
   "gpus-per-node": 1,
   "max_runs_per_job": 1,
-  "main_dir": " /home/dohare/projects/def-ashique/dohare/dynamically_sparse_nn_training/",
-  "account": "def-sutton"
+  "main_dir": "/home/dohare/projects/def-ashique/dohare/dynamically_sparse_nn_training/",
+  "account": "def-ashique"
 }
