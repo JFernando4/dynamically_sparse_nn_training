@@ -52,7 +52,7 @@ class BERTSentimentAnalysisExperiment(Experiment):
 
         # CBPw parameters
         self.use_cbpw = access_dict(exp_params, "use_cbpw", default=False, val_type=bool)
-        self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
+        self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=1, val_type=int)
         pruning_functions_names = ["none", "magnitude", "redo", "gf", "hess_approx"]
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str, choices=pruning_functions_names)
         grow_methods = ["none", "pm_min", "xavier_normal", "zero"]
