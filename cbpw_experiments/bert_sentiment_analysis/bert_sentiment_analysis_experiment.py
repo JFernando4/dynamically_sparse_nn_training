@@ -140,10 +140,6 @@ class BERTSentimentAnalysisExperiment(Experiment):
 
     def log_summaries(self, metrics: dict = None):
         """ Stores the accuracy and f1-measure metrics of the current network """
-        if metrics is None:
-            metrics = self.trainer.evaluate()
-        self._print("Accuracy = {0:.4f}".format(metrics["eval_accuracy"]))
-        self._print("F1 Measure = {0:.4f}".format(metrics["eval_f1"]))
         self.results_dict[f"{self.evaluation_dataset}_accuracy"][self.summary_counter] += metrics["eval_accuracy"]
         self.results_dict[f"{self.evaluation_dataset}_f1"][self.summary_counter] += metrics["eval_f1"]
         save_model_parameters(self.results_dir, self.run_index, net=self.net,
