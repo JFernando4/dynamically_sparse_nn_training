@@ -135,6 +135,7 @@ class BERTSentimentAnalysisExperiment(Experiment):
             ln_update_function=self.norm_layer_update_func
         )
 
+        self.trainer.evaluate()
         self.trainer.train()
 
     def log_summaries(self, metrics: dict = None):
