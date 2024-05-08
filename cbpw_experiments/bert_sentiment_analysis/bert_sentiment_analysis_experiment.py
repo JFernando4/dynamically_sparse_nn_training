@@ -78,10 +78,10 @@ class BERTSentimentAnalysisExperiment(Experiment):
     # ------------------------------------- For running the experiment ------------------------------------- #
     def run(self):
 
-        def compute_metrics(eval_pred):
-            load_accuracy = load_metric("accuracy", trust_remote_code=True)
-            load_f1 = load_metric("f1", trust_remote_code=True)
+        load_accuracy = load_metric("accuracy", trust_remote_code=True)
+        load_f1 = load_metric("f1", trust_remote_code=True)
 
+        def compute_metrics(eval_pred):
             logits, labels = eval_pred
             predictions = np.argmax(logits, axis=-1)
             accuracy = load_accuracy.compute(predictions=predictions, references=labels)["accuracy"]
