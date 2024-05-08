@@ -99,10 +99,17 @@ class BERTSentimentAnalysisExperiment(Experiment):
 
         # Define training arguments
         training_args = TrainingArguments(
+            run_name=f"index-{self.run_index}",
             learning_rate=self.stepsize,
             lr_scheduler_type="cosine",
             warmup_ratio=0.3,
             save_strategy="epoch",
+            evaluation_strategy="epoch",
+            load_best_model_at_end=True,
+            metric_for_best_model="eval_accuracy",
+            greater_is_better=True,
+            save_total_limit=1,
+            dataloader_num_workers=12,
             per_device_train_batch_size=self.batch_size,
             per_device_eval_batch_size=self.batch_size,
             num_train_epochs=self.num_epochs,
