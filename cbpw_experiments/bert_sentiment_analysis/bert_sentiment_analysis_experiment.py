@@ -79,8 +79,8 @@ class BERTSentimentAnalysisExperiment(Experiment):
     def run(self):
 
         def compute_metrics(eval_pred):
-            load_accuracy = load_metric("accuracy")
-            load_f1 = load_metric("f1")
+            load_accuracy = load_metric("accuracy", trust_remote_code=True)
+            load_f1 = load_metric("f1", trust_remote_code=True)
 
             logits, labels = eval_pred
             predictions = np.argmax(logits, axis=-1)
@@ -103,12 +103,12 @@ class BERTSentimentAnalysisExperiment(Experiment):
             learning_rate=self.stepsize,
             lr_scheduler_type="cosine",
             warmup_ratio=0.3,
-            save_strategy="epoch",
-            evaluation_strategy="epoch",
+            save_strategy="steps",
+            evaluation_strategy="steps",
+            save_steps=11225,               # every 5 epochs for a batch size of 30
             load_best_model_at_end=True,
             metric_for_best_model="eval_accuracy",
             greater_is_better=True,
-            save_total_limit=1,
             dataloader_num_workers=12,
             per_device_train_batch_size=self.batch_size,
             per_device_eval_batch_size=self.batch_size,
