@@ -106,6 +106,7 @@ class BERTSentimentAnalysisExperiment(Experiment):
             save_strategy="steps",
             evaluation_strategy="steps",
             save_steps=11225,               # every 5 epochs for a batch size of 30
+            eval_steps=11225,
             load_best_model_at_end=True,
             metric_for_best_model="eval_accuracy",
             greater_is_better=True,
