@@ -63,9 +63,10 @@ class BERTSentimentAnalysisExperiment(Experiment):
         """ Network set up """
         self.batch_size = 30
         self.steps_per_epoch = 67350 // self.batch_size
-        self.evaluation_frequency = 5
+        self.evaluation_frequency = 1
         self.num_evaluation_steps = self.num_epochs // self.evaluation_frequency
-        self.checkpoint_save_frequency = self.evaluation_frequency
+        self.checkpoint_save_frequency = 5
+        self.model_parameter_save_frequency = 5
         self.summary_counter = 0
         self.trainer = None
         # initialize network
@@ -142,9 +143,10 @@ class BERTSentimentAnalysisExperiment(Experiment):
         """ Stores the accuracy and f1-measure metrics of the current network """
         self.results_dict[f"{self.evaluation_dataset}_accuracy"][self.summary_counter] += metrics["eval_accuracy"]
         self.results_dict[f"{self.evaluation_dataset}_f1"][self.summary_counter] += metrics["eval_f1"]
-        save_model_parameters(self.results_dir, self.run_index, net=self.net,
-                              current_epoch=self.summary_counter * self.evaluation_frequency)
         self.summary_counter += 1
+        if (self.summary_counter % self.model_parameter_save_frequency) == 0:
+            save_model_parameters(self.results_dir, self.run_index, net=self.net,
+                                  current_epoch=self.summary_counter * self.evaluation_frequency)
 
     def compute_metrics(self, eval_pred):
         logits, labels = eval_pred
