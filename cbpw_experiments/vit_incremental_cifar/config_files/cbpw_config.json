@@ -26,10 +26,10 @@
   },
 
   "learning_params": {
-    "topology_update_freq": ["fixed", 260],
+    "topology_update_freq": ["fixed", 130, 260],
     "prune_method": ["str", "hess_approx"],
     "grow_method": ["str", "pm_min"],
-    "drop_factor": ["fixed", 0.05],
+    "drop_factor": ["fixed", 0.01, 0.05],
     "use_cbpw_ln": true,
     "msa_cbpw": true,
     "conv_cbpw": true,
