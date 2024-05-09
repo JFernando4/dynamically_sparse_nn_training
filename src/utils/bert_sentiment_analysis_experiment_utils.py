@@ -520,6 +520,7 @@ class CBPWTrainer(Trainer):
                     # CBPw step
                     self.state.global_step += 1
                     if (self.state.global_step % self.topology_update_freq) == 0 and self.use_cbpw:
+                        print("updating")
                         update_weights(self.bert_weight_dict)
                         for ln_layer in self.bert_ln_list: self.ln_update_function(ln_layer)
 
