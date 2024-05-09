@@ -20,18 +20,18 @@
     "initial_num_classes": 5,
     "fixed_classes": false,
     "use_best_network": true,
-    "runs": 1
+    "runs": 5
   },
 
   "learning_params": {
-    "replacement_rate": ["fixed", 1e-6],
-    "maturity_threshold": ["fixed", 10000],
+    "replacement_rate": ["fixed", 1e-4, 1e-5, 1e-6],
+    "maturity_threshold": ["fixed", 100, 1000, 10000],
     "reset_layer_norm": true
   },
 
   "slurm_parameters": {
     "job_name": "cbp_vit_inc",
-    "time": "20:00:00",
+    "time": "16:00:00",
     "max_runs_per_job": 1,
     "output_dir": "/scratch/dohare/dynamically_sparse_nn_training/outputs",
     "output_filename": "vit_inc-%n-%j.out",
