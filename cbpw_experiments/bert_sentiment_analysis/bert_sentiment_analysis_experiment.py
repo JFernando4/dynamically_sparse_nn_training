@@ -53,6 +53,7 @@ class BERTSentimentAnalysisExperiment(Experiment):
 
         # CBPw parameters
         self.use_cbpw = access_dict(exp_params, "use_cbpw", default=False, val_type=bool)
+        self.use_cbpw_ln = access_dict(exp_params, "use_cbpw_ln", default=False, val_type=bool)
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=1, val_type=int)
         pruning_functions_names = ["none", "magnitude", "redo", "gf", "hess_approx"]
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str, choices=pruning_functions_names)
@@ -72,6 +73,7 @@ class BERTSentimentAnalysisExperiment(Experiment):
         self.trainer = None
         # initialize network
         config = BertConfig.from_pretrained("prajjwal1/bert-mini")  # Using this configuration.
+        self.tokenizer = BertTokenizer.from_pretrained("prajjwal1/bert-mini")
         self.net = BertForSequenceClassification(config)
         # Print the configuration of the model.
         self._print(f"Config: {config}")
@@ -87,7 +89,7 @@ class BERTSentimentAnalysisExperiment(Experiment):
         self.initialize_results_dir()
         self.load_accuracy = load_metric("accuracy", trust_remote_code=True)
         self.load_f1 = load_metric("f1", trust_remote_code=True)
-        self.tokenizer = BertTokenizer.from_pretrained("prajjwal1/bert-mini")
+
 
     def initialize_results_dir(self):
         self.results_dict[f"{self.evaluation_dataset}_accuracy"] = torch.zeros(self.num_evaluation_steps + 1,
@@ -133,6 +135,7 @@ class BERTSentimentAnalysisExperiment(Experiment):
             use_cbpw=self.use_cbpw,
             topology_update_freq=self.topology_update_freq,
             bert_weight_dict=self.weight_dict,
+            use_cbpw_ln=self.use_cbpw_ln,
             bert_ln_list=self.ln_list,
             ln_update_function=self.norm_layer_update_func,
             fixed_wd=self.fixed_wd

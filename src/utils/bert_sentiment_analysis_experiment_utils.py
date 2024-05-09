@@ -88,6 +88,7 @@ class CBPWTrainer(Trainer):
             use_cbpw: bool = False,
             topology_update_freq: int = 0,
             bert_weight_dict: dict = None,
+            use_cbpw_ln: bool = False,
             bert_ln_list: list = None,
             ln_update_function: Callable = None,
             fixed_wd: bool = False
@@ -97,6 +98,7 @@ class CBPWTrainer(Trainer):
             use_cbpw: bool, whether to use CBPW
             topology_update_freq: int, how often, in terms of mini-batches, to update the topology of the bert model
             bert_weight_dict: dict, weight dictionary of bert model
+            use_cbpw_ln: bool indicating whether to use cbpw on the weights of the layer norm modules
             bert_ln_list: list, list of layer norm modules in the bert model
             ln_update_function: function for updating the layer norm modules when the topology is updated
             fixed_wd: bool indicating whether to use a fixed weight decay (current_weight_decay / learning_rate) or not
@@ -110,6 +112,7 @@ class CBPWTrainer(Trainer):
         self.use_cbpw = use_cbpw
         self.topology_update_freq = topology_update_freq
         self.bert_weight_dict = bert_weight_dict
+        self.use_cbpw_ln = use_cbpw_ln
         self.bert_ln_list = bert_ln_list
         self.ln_update_function = ln_update_function
         self.fixed_wd = fixed_wd
@@ -521,7 +524,8 @@ class CBPWTrainer(Trainer):
                     self.state.global_step += 1
                     if (self.state.global_step % self.topology_update_freq) == 0 and self.use_cbpw:
                         update_weights(self.bert_weight_dict)
-                        for ln_layer in self.bert_ln_list: self.ln_update_function(ln_layer)
+                        if self.use_cbpw_ln:
+                            for ln_layer in self.bert_ln_list: self.ln_update_function(ln_layer)
 
                     model.zero_grad()
                     self.state.epoch = epoch + (step + 1 + steps_skipped) / steps_in_epoch
