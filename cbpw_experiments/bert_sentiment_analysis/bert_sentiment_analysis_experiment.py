@@ -14,6 +14,7 @@ from transformers import DataCollatorWithPadding
 from transformers import BertTokenizer, BertForSequenceClassification, BertConfig
 from datasets import load_dataset
 
+from torch.optim import AdamW
 # from ml project manager
 from mlproj_manager.experiments import Experiment
 from mlproj_manager.util import access_dict, turn_off_debugging_processes, get_random_seeds
@@ -49,6 +50,7 @@ class BERTSentimentAnalysisExperiment(Experiment):
         # optimization parameters
         self.stepsize = exp_params["stepsize"]
         self.weight_decay = exp_params["weight_decay"]
+        self.fixed_wd = access_dict(exp_params, "fixed_wd", default=False, val_type=bool)
 
         # CBPw parameters
         self.use_cbpw = access_dict(exp_params, "use_cbpw", default=False, val_type=bool)
@@ -133,7 +135,8 @@ class BERTSentimentAnalysisExperiment(Experiment):
             topology_update_freq=self.topology_update_freq,
             bert_weight_dict=self.weight_dict,
             bert_ln_list=self.ln_list,
-            ln_update_function=self.norm_layer_update_func
+            ln_update_function=self.norm_layer_update_func,
+            fixed_wd=self.fixed_wd
         )
 
         self.trainer.evaluate()

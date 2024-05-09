@@ -89,7 +89,8 @@ class CBPWTrainer(Trainer):
             topology_update_freq: int = 0,
             bert_weight_dict: dict = None,
             bert_ln_list: list = None,
-            ln_update_function: Callable = None
+            ln_update_function: Callable = None,
+            fixed_wd: bool = False
     ):
         """
         Parameters:
@@ -98,6 +99,7 @@ class CBPWTrainer(Trainer):
             bert_weight_dict: dict, weight dictionary of bert model
             bert_ln_list: list, list of layer norm modules in the bert model
             ln_update_function: function for updating the layer norm modules when the topology is updated
+            fixed_wd: bool indicating whether to use a fixed weight decay (current_weight_decay / learning_rate) or not
 
         Note: All the other parameters correspond to the Trainer parent class
         """
@@ -110,6 +112,7 @@ class CBPWTrainer(Trainer):
         self.bert_weight_dict = bert_weight_dict
         self.bert_ln_list = bert_ln_list
         self.ln_update_function = ln_update_function
+        self.fixed_wd = fixed_wd
 
     def _inner_training_loop(
             self, batch_size=None, args=None, resume_from_checkpoint=None, trial=None, ignore_keys_for_eval=None
@@ -512,6 +515,7 @@ class CBPWTrainer(Trainer):
                         # Delay optimizer scheduling until metrics are generated
                         if not isinstance(self.lr_scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
                             self.lr_scheduler.step()
+                            self.rescale_weight_decay()
 
                     # CBPw step
                     self.state.global_step += 1
@@ -616,3 +620,29 @@ class CBPWTrainer(Trainer):
             self._deactivate_neftune(self.model)
 
         return TrainOutput(self.state.global_step, train_loss, metrics)
+
+    def rescale_weight_decay(self):
+        """
+        Rescales the weight decay so that when the optimizer performs an update the weight decay stays constant.
+        Explanation:
+            Usually an optimizer would apply something along the lines of:
+                new_weights -= learning_rate * weight_decay * weight
+            when using weight decay. However, if the learning rate is decreasing towards 0 because a learning rate
+            scheduler is being used, then the weight decay will slowly decrease towards 0, meaning that the model is
+            allowed to overfit more. That may be undesirable.
+
+            What this function does is rescale the weight decay by 1/learning_rate, so that the update is
+                new_weights -= learning_rate * (weight_decay / learning_rate) * weight
+                or
+                new_weights -= weight_decay * weight
+            which effectively makes the weight decay constant.
+        """
+
+        if not self.fixed_wd:
+            return
+
+        num_parameter_groups = len(self.optimizer.param_groups)
+        for i in range(num_parameter_groups):
+            last_stepsize = self.lr_scheduler.get_last_lr()[i]
+            if last_stepsize > 0.0:
+                self.optimizer.param_groups[i]["weight_decay"] = self.args.weight_decay / last_stepsize
