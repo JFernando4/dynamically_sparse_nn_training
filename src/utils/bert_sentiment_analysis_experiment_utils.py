@@ -525,8 +525,8 @@ class CBPWTrainer(Trainer):
                     if (self.state.global_step % self.topology_update_freq) == 0 and self.use_cbpw:
                         p_val, total = 0.0, 0.0
                         for lnorm in self.bert_ln_list:
-                            p_val += lnorm.weigth.abs().sum()
-                            total += lnorm.weigth.numel()
+                            p_val += lnorm.weight.abs().sum()
+                            total += lnorm.weight.numel()
                         print(f"Average layer norm weight magnitude: {p_val / total}")
                         update_weights(self.bert_weight_dict)
                         if self.use_cbpw_ln:
