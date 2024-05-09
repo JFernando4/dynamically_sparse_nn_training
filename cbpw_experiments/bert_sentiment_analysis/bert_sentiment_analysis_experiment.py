@@ -14,7 +14,6 @@ from transformers import DataCollatorWithPadding
 from transformers import BertTokenizer, BertForSequenceClassification, BertConfig
 from datasets import load_dataset
 
-from torch.optim import AdamW
 # from ml project manager
 from mlproj_manager.experiments import Experiment
 from mlproj_manager.util import access_dict, turn_off_debugging_processes, get_random_seeds
