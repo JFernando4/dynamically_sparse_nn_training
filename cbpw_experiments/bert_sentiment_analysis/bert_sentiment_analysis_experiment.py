@@ -106,7 +106,7 @@ class BERTSentimentAnalysisExperiment(Experiment):
         training_args = TrainingArguments(
             learning_rate=self.stepsize,
             lr_scheduler_type="linear",
-            warmup_ratio=0.3,
+            warmup_ratio=0.1,
             save_strategy="steps",
             save_steps=self.steps_per_epoch * self.checkpoint_save_frequency,
             save_total_limit=1,
