@@ -74,7 +74,8 @@ class BERTSentimentAnalysisExperiment(Experiment):
         # initialize network
         config = BertConfig.from_pretrained("prajjwal1/bert-mini")  # Using this configuration.
         self.tokenizer = BertTokenizer.from_pretrained("prajjwal1/bert-mini")
-        self.net = BertForSequenceClassification(config)
+        self.net = BertForSequenceClassification.from_pretrained("prajjwal1/bert-mini")
+        # self.net = BertForSequenceClassification(config)
         # Print the configuration of the model.
         self._print(f"Config: {config}")
         self.net.to(self.device)
