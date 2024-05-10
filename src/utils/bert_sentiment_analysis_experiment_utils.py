@@ -526,6 +526,7 @@ class CBPWTrainer(Trainer):
                         update_weights(self.bert_weight_dict)
                         if self.use_cbpw_ln:
                             for ln_layer in self.bert_ln_list: self.ln_update_function(ln_layer)
+                        self.reset_optimizer_buffers()
 
                     model.zero_grad()
                     self.state.epoch = epoch + (step + 1 + steps_skipped) / steps_in_epoch
@@ -650,3 +651,10 @@ class CBPWTrainer(Trainer):
             last_stepsize = self.lr_scheduler.get_last_lr()[i]
             if last_stepsize > 0.0:
                 self.optimizer.param_groups[i]["weight_decay"] = self.args.weight_decay / last_stepsize
+
+    def reset_optimizer_buffers(self):
+
+        for k, v in self.optimizer.state.items():
+            v["step"] *= 0.0
+            v["exp_avg"] *= 0.0
+            v["exp_avg_sq"] *= 0.0
