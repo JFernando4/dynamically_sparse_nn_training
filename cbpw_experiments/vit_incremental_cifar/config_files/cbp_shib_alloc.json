@@ -24,7 +24,7 @@
   },
 
   "learning_params": {
-    "replacement_rate": ["fixed", 1e-4, 1e-5, 1e-6],
+    "replacement_rate": ["fixed", 1e-4, 1e-5, 1e-6, 1e-7],
     "maturity_threshold": ["fixed", 100, 1000, 10000],
     "reset_layer_norm": true
   },
