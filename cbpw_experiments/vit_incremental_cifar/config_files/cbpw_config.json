@@ -22,14 +22,14 @@
     "initial_num_classes": 5,
     "fixed_classes": false,
     "use_best_network": true,
-    "runs": 2
+    "runs": 10
   },
 
   "learning_params": {
-    "topology_update_freq": ["fixed", 65, 130],
+    "topology_update_freq": ["fixed", 65],
     "prune_method": ["str", "hess_approx"],
     "grow_method": ["str", "pm_min"],
-    "drop_factor": ["fixed", 0.01, 0.005],
+    "drop_factor": ["fixed", 0.01],
     "use_cbpw_ln": true,
     "msa_cbpw": true,
     "conv_cbpw": true,
