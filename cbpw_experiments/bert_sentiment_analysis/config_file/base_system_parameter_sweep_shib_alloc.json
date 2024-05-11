@@ -1,0 +1,41 @@
+{
+  "file_management": {
+    "experiment_name": "bert_sa_sweep",
+    "results_path": "/scratch/dohare/dynamically_sparse_nn_training/results",
+    "relevant_parameters": [
+      "stepsize",
+      "weight_decay"
+    ]
+  },
+
+  "experiment_params": {
+    "num_epochs": 20,
+    "evaluation_dataset": "validation",
+    "runs": 1
+  },
+
+  "learning_params": {
+    "stepsize": ["fixed", 2e-5],
+    "weight_decay": ["fixed", 0.1]
+  },
+
+  "slurm_parameters": {
+    "job_name": "bsa_ps",
+    "time": "00:30:00",
+    "max_runs_per_job": 1,
+    "output_filename": "vit_inc-%n-%j.out",
+    "output_dir": "/scratch/dohare/dynamically_sparse_nn_training/outputs",
+    "mem": "12G",
+    "mail-type": "BEGIN,END,FAIL",
+    "mail-user":"jfhernan@ualberta.ca",
+    "cpus-per-task": 12,
+    "gpus-per-node": 1,
+    "main_dir": "/home/dohare/projects/def-ashique/dohare/dynamically_sparse_nn_training/",
+    "account": "rrg-ashique",
+    "load_modules": [
+      "export PYTHONPATH=.",
+      "module load StdEnv/2023  gcc/12.3  openmpi/4.1.5",
+      "module load arrow/14.0.1 cuda/12.2",
+      "module load python/3.10"]
+  }
+}
