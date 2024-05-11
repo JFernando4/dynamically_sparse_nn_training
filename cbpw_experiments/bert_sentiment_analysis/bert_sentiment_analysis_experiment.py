@@ -68,7 +68,7 @@ class BERTSentimentAnalysisExperiment(Experiment):
         self.evaluation_frequency = 1
         self.num_evaluation_steps = self.num_epochs // self.evaluation_frequency
         self.checkpoint_save_frequency = 5
-        self.model_parameter_save_frequency = 5
+        self.model_parameter_save_frequency = self.num_epochs
         self.summary_counter = 0
         self.trainer = None
         # initialize network
