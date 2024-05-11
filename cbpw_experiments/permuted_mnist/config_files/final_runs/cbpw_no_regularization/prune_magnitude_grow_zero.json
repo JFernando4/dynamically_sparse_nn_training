@@ -1,6 +1,6 @@
 {
   "file_management": {
-    "experiment_name": "cbpw_parameters_sweep",
+    "experiment_name": "permuted_mnist",
     "data_path": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/dst_lop_experiments/permuted_mnist/data/",
     "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
     "relevant_parameters": [
@@ -19,20 +19,20 @@
     "batch_size": 30,
     "stepsize": 0.005,
     "steps_per_task": 60000,
-    "store_parameters": false,
-    "runs": 10
+    "store_parameters": true,
+    "runs": 100
   },
 
   "learning_params": {
-    "topology_update_freq": ["fixed", 5, 10, 20, 40, 80, 160, 320],
-    "prune_method": ["str", "magnitude", "gf", "hess_approx"],
-    "grow_method": ["str", "pm_min", "xavier_normal", "zero"],
-    "drop_factor": ["fixed", 0.01, 0.05, 0.1, 0.2, 0.4, 0.6, 0.8]
+    "topology_update_freq": 40,
+    "prune_method": "magnitude",
+    "grow_method": "zero",
+    "drop_factor": 0.8
   },
 
   "slurm_parameters": {
-    "job_name": "cbpw_ps",
-    "time": "11:00:00",
+    "job_name": "pmnist",
+    "time": "10:00:00",
     "max_runs_per_job": 5,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
     "output_filename": "pmnist_ps-%n-%j.out",
