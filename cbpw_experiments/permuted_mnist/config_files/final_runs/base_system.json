@@ -16,7 +16,7 @@
     "num_layers": 3,
     "num_hidden": 10,
     "store_parameters": true,
-    "runs": 5
+    "runs": 100
   },
 
   "learning_params": {
