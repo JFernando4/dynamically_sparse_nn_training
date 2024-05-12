@@ -11,7 +11,7 @@
   "experiment_params": {
     "num_epochs": 20,
     "evaluation_dataset": "validation",
-    "runs": 1
+    "runs": 5
   },
 
   "learning_params": {
@@ -21,7 +21,7 @@
 
   "slurm_parameters": {
     "job_name": "bsa_ps",
-    "time": "00:30:00",
+    "time": "02:00:00",
     "max_runs_per_job": 1,
     "output_filename": "bert_sa-%n-%j.out",
     "output_dir": "/scratch/dohare/dynamically_sparse_nn_training/outputs",
