@@ -1,0 +1,54 @@
+{
+  "file_management": {
+    "experiment_name": "vit_cbpw_cifar",
+    "data_path": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/cbpw_experiments/vit_incremental_cifar/data/",
+    "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results/",
+    "relevant_parameters": [
+      "topology_update_freq",
+      "prune_method",
+      "grow_method",
+      "drop_factor",
+      "use_cbpw_ln",
+      "ln_update_freq"
+    ]
+  },
+
+  "experiment_params": {
+    "stepsize": 0.01,
+    "weight_decay": 2e-6,
+    "dropout_prob": 0.1,
+    "use_lr_schedule": true,
+    "momentum": 0.9,
+    "num_epochs": 2000,
+    "initial_num_classes": 5,
+    "fixed_classes": false,
+    "use_best_network": true,
+    "runs": 2
+  },
+
+  "learning_params": {
+    "topology_update_freq": ["fixed", 65],
+    "prune_method": ["str", "hess_approx"],
+    "grow_method": ["str", "pm_min"],
+    "drop_factor": ["fixed", 0.01],
+    "use_cbpw_ln": true,
+    "ln_update_freq": 650,
+    "msa_cbpw": true,
+    "conv_cbpw": true,
+    "ct_cbpw": true,
+    "pe_cbpw": true,
+    "head_cbpw": true
+  },
+
+  "slurm_parameters": {
+    "job_name": "cbpw_vit_inc",
+    "time": "16:30:00",
+    "max_runs_per_job": 1,
+    "output_filename": "vit_inc-%n-%j.out",
+    "mem": "12G",
+    "mail-type": "BEGIN,END,FAIL",
+    "mail-user":"jfhernan@ualberta.ca",
+    "cpus-per-task": 12,
+    "gpus-per-node": 1
+  }
+}
