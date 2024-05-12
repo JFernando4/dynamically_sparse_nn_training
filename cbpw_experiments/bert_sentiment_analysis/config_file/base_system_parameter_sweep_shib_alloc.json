@@ -33,8 +33,8 @@
     "main_dir": "/home/dohare/projects/def-ashique/dohare/dynamically_sparse_nn_training/",
     "account": "rrg-ashique",
     "load_modules": [
-      "module load StdEnv/2023  gcc/12.3  openmpi/4.1.5",
-      "module load arrow/14.0.1 cuda/12.2",
-      "module load python/3.10"]
+      "module load StdEnv/2023  gcc/12.3  openmpi/4.1.5\n",
+      "module load arrow/14.0.1 cuda/12.2\n",
+      "module load python/3.10\n"]
   }
 }
