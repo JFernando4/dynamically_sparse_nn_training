@@ -23,7 +23,7 @@
     "job_name": "bsa_ps",
     "time": "00:30:00",
     "max_runs_per_job": 1,
-    "output_filename": "vit_inc-%n-%j.out",
+    "output_filename": "bert_sa-%n-%j.out",
     "output_dir": "/scratch/dohare/dynamically_sparse_nn_training/outputs",
     "mem": "12G",
     "mail-type": "BEGIN,END,FAIL",
@@ -33,7 +33,6 @@
     "main_dir": "/home/dohare/projects/def-ashique/dohare/dynamically_sparse_nn_training/",
     "account": "rrg-ashique",
     "load_modules": [
-      "export PYTHONPATH=.",
       "module load StdEnv/2023  gcc/12.3  openmpi/4.1.5",
       "module load arrow/14.0.1 cuda/12.2",
       "module load python/3.10"]
