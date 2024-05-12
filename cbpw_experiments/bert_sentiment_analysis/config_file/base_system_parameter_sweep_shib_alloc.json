@@ -22,7 +22,7 @@
   "slurm_parameters": {
     "job_name": "bsa_ps",
     "time": "02:00:00",
-    "max_runs_per_job": 1,
+    "max_runs_per_job": 5,
     "output_filename": "bert_sa-%n-%j.out",
     "output_dir": "/scratch/dohare/dynamically_sparse_nn_training/outputs",
     "mem": "12G",
