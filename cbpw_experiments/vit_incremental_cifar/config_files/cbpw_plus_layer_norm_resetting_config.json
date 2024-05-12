@@ -29,7 +29,7 @@
     "topology_update_freq": ["fixed", 65],
     "prune_method": ["str", "hess_approx"],
     "grow_method": ["str", "pm_min"],
-    "drop_factor": ["fixed", 0.05, 0.1, 0.2],
+    "drop_factor": ["fixed", 0.01, 0.05, 0.1, 0.2],
     "msa_cbpw": true,
     "conv_cbpw": true,
     "ct_cbpw": true,
