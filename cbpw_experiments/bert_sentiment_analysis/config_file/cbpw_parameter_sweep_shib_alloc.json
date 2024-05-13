@@ -22,8 +22,8 @@
 
   "learning_params": {
     "use_cbpw": true,
-    "use_cbpw_ln": false,
-    "exclude_embeddings": true,
+    "use_cbpw_ln": true,
+    "exclude_embeddings": false,
     "prune_method": "hess_approx",
     "grow_method": "pm_min",
     "topology_update_freq": ["fixed", 50, 100, 250, 500, 1000],
