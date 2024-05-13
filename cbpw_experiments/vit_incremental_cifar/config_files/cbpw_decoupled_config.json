@@ -32,7 +32,7 @@
     "grow_method": ["str", "pm_min"],
     "drop_factor": ["fixed", 0.01],
     "use_cbpw_ln": true,
-    "ln_update_freq": 650,
+    "ln_update_freq": ["fixed", 130, 325],
     "msa_cbpw": true,
     "conv_cbpw": true,
     "ct_cbpw": true,
