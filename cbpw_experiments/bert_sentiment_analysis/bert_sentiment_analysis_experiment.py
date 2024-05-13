@@ -53,6 +53,7 @@ class BERTSentimentAnalysisExperiment(Experiment):
 
         # CBPw parameters
         self.use_cbpw = access_dict(exp_params, "use_cbpw", default=False, val_type=bool)
+        self.exclude_embeddings = access_dict(exp_params, "exclude_embeddings", default=False, val_type=bool)
         self.use_cbpw_ln = access_dict(exp_params, "use_cbpw_ln", default=False, val_type=bool)
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=1, val_type=int)
         pruning_functions_names = ["none", "magnitude", "redo", "gf", "hess_approx"]
@@ -83,7 +84,8 @@ class BERTSentimentAnalysisExperiment(Experiment):
         # initializes weight dictionary for CBPw
         self.weight_dict, self.ln_list, self.norm_layer_update_func = None, None, None
         if self.use_cbpw:
-            self.weight_dict = initialize_weight_dict(self.net, "bert", self.prune_method, self.grow_method, self.drop_factor)
+            self.weight_dict = initialize_weight_dict(self.net, "bert", self.prune_method, self.grow_method, self.drop_factor,
+                                                      exclude_embeddings=self.exclude_embeddings)
             self.ln_list = initialize_ln_list_bert(self.net)
             self.norm_layer_update_func = setup_cbpw_layer_norm_update_function(self.prune_method, self.drop_factor, True)
 

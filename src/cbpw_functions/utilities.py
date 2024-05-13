@@ -33,7 +33,9 @@ def initialize_weight_dict(net: torch.nn.Module,
         return initialize_weights_dict_sequential(net, prune_method=prune_method, grow_method=grow_method,
                                                   drop_factor=drop_factor)
     elif architecture_type == "bert":
-        return initialize_weights_dict_bert(net, prune_method=prune_method, grow_method=grow_method, drop_factor=drop_factor)
+        exclude_embeddings = False if "exclude_embeddings" not in kwargs.keys() else kwargs["exclude_embeddings"]
+        return initialize_weights_dict_bert(net, prune_method=prune_method, grow_method=grow_method, drop_factor=drop_factor,
+                                            exclude_embeddings=exclude_embeddings)
     else:
         raise ValueError(f"{architecture_type} is not a valid architecture type.")
 
@@ -158,14 +160,23 @@ def initialize_weights_dict_sequential(net: torch.nn.Sequential,
     return weight_dict
 
 
-def initialize_weights_dict_bert(net, prune_method: str, grow_method: str, drop_factor: float):
+def initialize_weights_dict_bert(net, prune_method: str, grow_method: str, drop_factor: float,  exclude_embeddings:bool):
     """
     Initializes the weight dictionary required for CBPw for a Bert model
+
+    params:
+        exclude_embeddings: bool indicating whether to omit the word, position, and token_type embeddings
     """
     update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor)
     weight_dict = {}
 
     for n, p in net.named_parameters():
+        if exclude_embeddings:
+            is_word_embedding = "word_embeddings" in n
+            is_position_embedding = "position_embeddings" in n
+            is_token_type_embedding = "token_type_embeddings" in n
+            if is_word_embedding or is_position_embedding or is_token_type_embedding: continue
+
         is_weight_matrix = ".weight" in n
         is_not_layer_norm = "LayerNorm" not in n
         if is_weight_matrix and is_not_layer_norm:

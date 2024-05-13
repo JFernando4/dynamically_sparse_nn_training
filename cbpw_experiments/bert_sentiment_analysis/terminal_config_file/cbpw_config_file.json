@@ -8,6 +8,7 @@
   "__comment_4__": "CBPw Parameters.",
   "use_cbpw": true,
   "use_cbpw_ln": true,
+  "exclude_embeddings": true,
   "topology_update_freq": 260,
   "prune_method": "hess_approx",
   "grow_method": "pm_min",
