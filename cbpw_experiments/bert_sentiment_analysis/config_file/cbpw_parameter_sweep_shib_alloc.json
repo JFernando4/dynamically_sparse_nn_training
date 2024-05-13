@@ -7,7 +7,8 @@
       "grow_method",
       "topology_update_freq",
       "drop_factor",
-      "use_cbpw_ln"
+      "use_cbpw_ln",
+      "exclude_embeddings"
     ]
   },
 
@@ -22,6 +23,7 @@
   "learning_params": {
     "use_cbpw": true,
     "use_cbpw_ln": false,
+    "exclude_embeddings": true,
     "prune_method": "hess_approx",
     "grow_method": "pm_min",
     "topology_update_freq": ["fixed", 50, 100, 250, 500, 1000],
