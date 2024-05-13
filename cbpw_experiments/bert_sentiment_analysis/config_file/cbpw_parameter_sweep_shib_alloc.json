@@ -3,8 +3,11 @@
     "experiment_name": "bert_sa_sweep",
     "results_path": "/scratch/dohare/dynamically_sparse_nn_training/results",
     "relevant_parameters": [
-      "stepsize",
-      "weight_decay"
+      "prune_method",
+      "grow_method",
+      "topology_update_freq",
+      "drop_factor",
+      "use_cbpw_ln"
     ]
   },
 
