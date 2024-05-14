@@ -4,6 +4,7 @@
     "data_path": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/dst_lop_experiments/permuted_mnist/data/",
     "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
     "relevant_parameters": [
+      "num_hidden",
       "prune_method",
       "grow_method"
     ]
