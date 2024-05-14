@@ -7,8 +7,7 @@
       "grow_method",
       "topology_update_freq",
       "drop_factor",
-      "use_cbpw_ln",
-      "exclude_embeddings"
+      "weight_decay"
     ]
   },
 
@@ -16,16 +15,15 @@
     "num_epochs": 20,
     "evaluation_dataset": "validation",
     "stepsize": 2e-5,
-    "weight_decay": 0.05,
+
     "runs": 5
   },
 
   "learning_params": {
     "use_cbpw": true,
-    "use_cbpw_ln": true,
-    "exclude_embeddings": false,
     "prune_method": "hess_approx",
     "grow_method": "pm_min",
+    "weight_decay": ["fixed", 0.1, 0.01],
     "topology_update_freq": ["fixed", 50, 100, 250, 500, 1000],
     "drop_factor": ["fixed", 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05]
   },
