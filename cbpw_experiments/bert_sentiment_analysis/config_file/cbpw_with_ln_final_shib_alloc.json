@@ -13,7 +13,7 @@
 
   "experiment_params": {
     "num_epochs": 20,
-    "evaluation_dataset": "test",
+    "evaluation_dataset": "validation",
     "stepsize": 2e-5,
     "weight_decay": 0.05,
     "runs": 30

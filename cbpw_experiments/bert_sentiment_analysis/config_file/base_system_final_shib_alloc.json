@@ -10,7 +10,7 @@
 
   "experiment_params": {
     "num_epochs": 20,
-    "evaluation_dataset": "test",
+    "evaluation_dataset": "validation",
     "runs": 30
   },
 
