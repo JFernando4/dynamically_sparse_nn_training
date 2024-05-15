@@ -34,8 +34,8 @@
 
   "slurm_parameters": {
     "job_name": "cbpw_ps",
-    "time": "12:00:00",
-    "max_runs_per_job": 1,
+    "time": "10:00:00",
+    "max_runs_per_job": 5,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
     "output_filename": "pmnist_ps-%n-%j.out",
     "mem": "12G",
