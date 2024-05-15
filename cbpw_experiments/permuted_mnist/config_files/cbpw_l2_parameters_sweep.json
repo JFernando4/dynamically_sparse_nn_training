@@ -5,6 +5,7 @@
     "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
     "relevant_parameters": [
       "num_hidden",
+      "l2_factor",
       "topology_update_freq",
       "prune_method",
       "grow_method",
