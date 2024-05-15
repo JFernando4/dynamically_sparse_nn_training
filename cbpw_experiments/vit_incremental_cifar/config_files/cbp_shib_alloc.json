@@ -26,7 +26,7 @@
   "learning_params": {
     "replacement_rate": ["fixed", 1e-6],
     "maturity_threshold": ["fixed", 100],
-    "reset_layer_norm": true
+    "reset_layer_norm": ["fixed", true, false]
   },
 
   "slurm_parameters": {
