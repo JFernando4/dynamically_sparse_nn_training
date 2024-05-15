@@ -50,6 +50,7 @@ class BERTSentimentAnalysisExperiment(Experiment):
         self.stepsize = exp_params["stepsize"]
         self.weight_decay = exp_params["weight_decay"]
         self.fixed_wd = access_dict(exp_params, "fixed_wd", default=False, val_type=bool)
+        self.from_scratch = access_dict(exp_params, "from_scratch", default=False, val_type=bool)
 
         # CBPw parameters
         self.use_cbpw = access_dict(exp_params, "use_cbpw", default=False, val_type=bool)
@@ -75,8 +76,10 @@ class BERTSentimentAnalysisExperiment(Experiment):
         # initialize network
         config = BertConfig.from_pretrained("prajjwal1/bert-mini")  # Using this configuration.
         self.tokenizer = BertTokenizer.from_pretrained("prajjwal1/bert-mini")
-        self.net = BertForSequenceClassification.from_pretrained("prajjwal1/bert-mini")
-        # self.net = BertForSequenceClassification(config)
+        if self.from_scratch:
+            self.net = BertForSequenceClassification(config)
+        else:
+            self.net = BertForSequenceClassification.from_pretrained("prajjwal1/bert-mini")
         # Print the configuration of the model.
         self._print(f"Config: {config}")
         self.net.to(self.device)
