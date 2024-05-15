@@ -91,7 +91,8 @@ class CBPWTrainer(Trainer):
             use_cbpw_ln: bool = False,
             bert_ln_list: list = None,
             ln_update_function: Callable = None,
-            fixed_wd: bool = False
+            fixed_wd: bool = False,
+            reset_adamw_buffers: bool = False
     ):
         """
         Parameters:
@@ -116,6 +117,7 @@ class CBPWTrainer(Trainer):
         self.bert_ln_list = bert_ln_list
         self.ln_update_function = ln_update_function
         self.fixed_wd = fixed_wd
+        self.reset_adamw_buffers = reset_adamw_buffers
 
     def _inner_training_loop(
             self, batch_size=None, args=None, resume_from_checkpoint=None, trial=None, ignore_keys_for_eval=None
@@ -526,6 +528,9 @@ class CBPWTrainer(Trainer):
                         update_weights(self.bert_weight_dict)
                         if self.use_cbpw_ln:
                             for ln_layer in self.bert_ln_list: self.ln_update_function(ln_layer)
+                        self.reset_optimizer_buffers()
+
+                    if self.reset_adamw_buffers and (self.state.global_step % self.topology_update_freq) == 0:
                         self.reset_optimizer_buffers()
 
                     model.zero_grad()

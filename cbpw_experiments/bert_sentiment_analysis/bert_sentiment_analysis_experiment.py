@@ -51,6 +51,7 @@ class BERTSentimentAnalysisExperiment(Experiment):
         self.weight_decay = exp_params["weight_decay"]
         self.fixed_wd = access_dict(exp_params, "fixed_wd", default=False, val_type=bool)
         self.from_scratch = access_dict(exp_params, "from_scratch", default=False, val_type=bool)
+        self.reset_adamw_buffers = access_dict(exp_params, "reset_adamw_buffers", default=False, val_type=bool)
 
         # CBPw parameters
         self.use_cbpw = access_dict(exp_params, "use_cbpw", default=False, val_type=bool)
@@ -143,7 +144,8 @@ class BERTSentimentAnalysisExperiment(Experiment):
             use_cbpw_ln=self.use_cbpw_ln,
             bert_ln_list=self.ln_list,
             ln_update_function=self.norm_layer_update_func,
-            fixed_wd=self.fixed_wd
+            fixed_wd=self.fixed_wd,
+            reset_adamw_buffers=self.reset_adamw_buffers
         )
 
         self.trainer.evaluate()
