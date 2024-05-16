@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 from typing import Callable
 
 
@@ -75,8 +76,8 @@ def update_norm_layer(norm_layer: torch.nn.Module,
         norm_layer.bias[pruned_indices] = 0.0
 
 
-def setup_cbpw_layer_norm_update_function(prune_name: str, drop_factor: float, exclude_layer_bias: bool = False
-                                          ) -> Callable[[torch.nn.Module], None]:
+def setup_cbpw_layer_norm_update_function(prune_name: str, drop_factor: float, exclude_layer_bias: bool = False,
+                                          as_rate: bool = False) -> Callable[[torch.nn.Module], None]:
     """ Sets up weight update function for CBP-w for layer or batch norm """
     prune_function_names = ["magnitude", "redo", "gf_redo", "gf", "hess_approx"]
     assert prune_name in prune_function_names
@@ -88,7 +89,7 @@ def setup_cbpw_layer_norm_update_function(prune_name: str, drop_factor: float, e
     elif prune_name == "gf":
         prune_func = lambda w: gradient_flow_prune_weights(w, drop_factor=drop_factor)
     elif prune_name == "hess_approx":
-        prune_func = lambda w: hessian_approx_prune_weights(w, drop_factor=drop_factor)
+        prune_func = lambda w: hessian_approx_prune_weights(w, drop_factor=drop_factor, as_rate=as_rate)
 
     def temp_prune_and_grow_weights(w: torch.nn.Module):
         return update_norm_layer(w, prune_func, exclude_layer_bias)
@@ -149,13 +150,17 @@ def gradient_flow_prune_weights(weight: torch.Tensor, drop_factor: float):
 
 
 @torch.no_grad()
-def hessian_approx_prune_weights(weight: torch.Tensor, drop_factor: float):
+def hessian_approx_prune_weights(weight: torch.Tensor, drop_factor: float, as_rate: bool = False):
     """
     Prunes using redo criteria but using gradient flow instead of magnitude pruning
     """
 
     hess_approx = torch.abs(weight.flatten().square() * weight.grad.flatten().square())
-    drop_num = max(int(weight.numel() * drop_factor), 1)    # drop at least one weight
+    if as_rate:
+        fraction_to_prune = weight.numel() * drop_factor
+        drop_num = int(fraction_to_prune) + np.random.binomial(1, fraction_to_prune % 1)
+    else:
+        drop_num = max(int(weight.numel() * drop_factor), 1)    # drop at least one weight
     indices = torch.argsort(hess_approx)
     weight.view(-1)[indices[:drop_num]] = 0.0
 
