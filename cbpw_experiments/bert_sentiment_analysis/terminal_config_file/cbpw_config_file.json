@@ -1,6 +1,6 @@
 {
   "__comment_1__": "Parameters found in a parameter sweep on the whole CIFAR-100 data set with lr scheduler.",
-  "stepsize": 2e-5,
+  "stepsize": 0.002,
   "weight_decay": 1e-7,
   "fixed_wd": true,
   "optimizer": "sgd",
