@@ -126,7 +126,8 @@ class BERTSentimentAnalysisExperiment(Experiment):
             num_train_epochs=self.num_epochs,
             weight_decay=self.weight_decay,
             output_dir=os.path.join(self.results_dir, f"checkpoint_index_{self.run_index}"),
-            seed=self.random_seed
+            seed=self.random_seed,
+            optim="sgd"
         )
 
         # Define the Trainer
@@ -148,7 +149,7 @@ class BERTSentimentAnalysisExperiment(Experiment):
             reset_adamw_buffers=self.reset_adamw_buffers
         )
 
-        self.trainer.evaluate()
+        # self.trainer.evaluate()
         self.trainer.train()
 
     def log_summaries(self, metrics: dict = None):
