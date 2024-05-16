@@ -36,7 +36,8 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     elif prune_name == "gf":
         prune_func = lambda w: gradient_flow_prune_weights(w, drop_factor=kwargs["drop_factor"])
     elif prune_name == "hess_approx":
-        prune_func = lambda w: hessian_approx_prune_weights(w, drop_factor=kwargs["drop_factor"])
+        as_rate = False if "as_rate" not in kwargs.keys() else kwargs["as_rate"]
+        prune_func = lambda w: hessian_approx_prune_weights(w, drop_factor=kwargs["drop_factor"], as_rate=as_rate)
 
     if grow_name == "pm_min":
         grow_func = lambda w: pm_min_reinit_weights(w)
