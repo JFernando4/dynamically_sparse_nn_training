@@ -160,6 +160,7 @@ def hessian_approx_prune_weights(weight: torch.Tensor, drop_factor: float, as_ra
     if as_rate:
         fraction_to_prune = weight.numel() * drop_factor
         drop_num = int(fraction_to_prune) + np.random.binomial(1, fraction_to_prune % 1)
+        if drop_num == 0: return
     else:
         drop_num = max(int(weight.numel() * drop_factor), 1)    # drop at least one weight
     indices = torch.argsort(hess_approx)
