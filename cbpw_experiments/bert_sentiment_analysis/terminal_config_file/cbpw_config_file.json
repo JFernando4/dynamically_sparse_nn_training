@@ -2,7 +2,7 @@
   "__comment_1__": "Parameters found in a parameter sweep on the whole CIFAR-100 data set with lr scheduler.",
   "stepsize": 0.002,
   "weight_decay": 1e-7,
-  "fixed_wd": true,
+  "fixed_wd": false,
   "optimizer": "sgd",
   "__comment_3__": "Incremental experiment parameters. Classes increase by 5 every 100 epochs.",
   "num_epochs": 25,
