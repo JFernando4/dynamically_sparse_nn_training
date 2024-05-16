@@ -49,6 +49,7 @@ class BERTSentimentAnalysisExperiment(Experiment):
         # optimization parameters
         self.stepsize = exp_params["stepsize"]
         self.weight_decay = exp_params["weight_decay"]
+        self.optimizer = access_dict(exp_params, "optimizer", default="adamw", val_type=str, choices=["adamw", "sgd"])
         self.fixed_wd = access_dict(exp_params, "fixed_wd", default=False, val_type=bool)
         self.from_scratch = access_dict(exp_params, "from_scratch", default=False, val_type=bool)
         self.reset_adamw_buffers = access_dict(exp_params, "reset_adamw_buffers", default=False, val_type=bool)
@@ -127,7 +128,7 @@ class BERTSentimentAnalysisExperiment(Experiment):
             weight_decay=self.weight_decay,
             output_dir=os.path.join(self.results_dir, f"checkpoint_index_{self.run_index}"),
             seed=self.random_seed,
-            optim="sgd"
+            optim=self.optimizer
         )
 
         # Define the Trainer
@@ -149,7 +150,7 @@ class BERTSentimentAnalysisExperiment(Experiment):
             reset_adamw_buffers=self.reset_adamw_buffers
         )
 
-        # self.trainer.evaluate()
+        self.trainer.evaluate()
         self.trainer.train()
 
     def log_summaries(self, metrics: dict = None):
