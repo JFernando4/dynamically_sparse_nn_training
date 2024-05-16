@@ -417,6 +417,7 @@ class CBPWTrainer(Trainer):
                 steps_trained_in_current_epoch = 0
                 rng_to_sync = True
 
+            self.setup_sgd()
             step = -1
             for step, inputs in enumerate(epoch_iterator):
                 total_batched_samples += 1
@@ -664,3 +665,13 @@ class CBPWTrainer(Trainer):
             v["step"] *= 0.0
             v["exp_avg"] *= 0.0
             v["exp_avg_sq"] *= 0.0
+
+    def setup_sgd(self):
+        if self.args.optim != "sgd":
+            return
+
+        num_parameter_groups = len(self.optimizer.param_groups)
+        for i in range(num_parameter_groups):
+            self.optimizer.param_groups[i]["weight_decay"] = self.args.weight_decay
+            self.optimizer.param_groups[i]["momentum"] = self.args.adam_beta1
+
