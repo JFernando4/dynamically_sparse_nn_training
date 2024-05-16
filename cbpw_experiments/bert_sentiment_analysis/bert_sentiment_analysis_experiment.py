@@ -92,7 +92,7 @@ class BERTSentimentAnalysisExperiment(Experiment):
             self.weight_dict = initialize_weight_dict(self.net, "bert", self.prune_method, self.grow_method, self.drop_factor,
                                                       exclude_embeddings=self.exclude_embeddings)
             self.ln_list = initialize_ln_list_bert(self.net)
-            self.norm_layer_update_func = setup_cbpw_layer_norm_update_function(self.prune_method, self.drop_factor, True)
+            self.norm_layer_update_func = setup_cbpw_layer_norm_update_function(self.prune_method, self.drop_factor, True, True)
 
         self.initialize_results_dir()
         self.load_accuracy = load_metric("accuracy", trust_remote_code=True)
