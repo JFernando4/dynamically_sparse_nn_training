@@ -34,8 +34,9 @@ def initialize_weight_dict(net: torch.nn.Module,
                                                   drop_factor=drop_factor)
     elif architecture_type == "bert":
         exclude_embeddings = False if "exclude_embeddings" not in kwargs.keys() else kwargs["exclude_embeddings"]
-        return initialize_weights_dict_bert(net, prune_method=prune_method, grow_method=grow_method, drop_factor=drop_factor,
-                                            exclude_embeddings=exclude_embeddings)
+        # return initialize_weights_dict_bert(net, prune_method=prune_method, grow_method=grow_method, drop_factor=drop_factor,
+        #                                     exclude_embeddings=exclude_embeddings)
+        return initialize_weights_dict_bert_all(net, prune_method=prune_method, grow_method=grow_method, drop_factor=drop_factor)
     else:
         raise ValueError(f"{architecture_type} is not a valid architecture type.")
 
@@ -181,5 +182,31 @@ def initialize_weights_dict_bert(net, prune_method: str, grow_method: str, drop_
         is_not_layer_norm = "LayerNorm" not in n
         if is_weight_matrix and is_not_layer_norm:
             weight_dict[n] = (p, update_func)
+
+    return weight_dict
+
+
+def initialize_weights_dict_bert_all(net, prune_method: str, grow_method: str, drop_factor: float):
+    """
+    Initializes the weight dictionary required for CBPw for a Bert model
+    """
+    update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor, as_rate=True)
+    bias_func = setup_cbpw_weight_update_function(prune_method, grow_name="fixed", reinit_val=0.0, as_rate=True)
+    layer_norm_weight_func = setup_cbpw_weight_update_function(prune_method, grow_name="fixed", reinit_val=1.0, as_rate=True)
+    weight_dict = {}
+
+    for n, p in net.named_parameters():
+        is_layer_norm = "LayerNorm" in n
+        is_bias = "bias" in n
+        is_weight = "weight" in n
+
+        if is_layer_norm and is_weight:
+            temp_update_func = layer_norm_weight_func
+        elif is_bias:
+            temp_update_func = bias_func
+        else:
+            temp_update_func = update_func
+
+        weight_dict[n] = (p, temp_update_func)
 
     return weight_dict
