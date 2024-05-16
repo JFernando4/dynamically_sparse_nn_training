@@ -658,7 +658,8 @@ class CBPWTrainer(Trainer):
                 self.optimizer.param_groups[i]["weight_decay"] = self.args.weight_decay / last_stepsize
 
     def reset_optimizer_buffers(self):
-
+        if self.args.optim != "adamw":
+            return
         for k, v in self.optimizer.state.items():
             v["step"] *= 0.0
             v["exp_avg"] *= 0.0
