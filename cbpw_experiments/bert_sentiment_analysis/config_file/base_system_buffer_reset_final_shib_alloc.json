@@ -19,7 +19,7 @@
   "learning_params": {
     "stepsize": ["fixed", 2e-5],
     "weight_decay": ["fixed", 0.05],
-    "topology_update_freq": ["fixed", 100],
+    "topology_update_freq": ["fixed", 1],
     "reset_adamw_buffers": true
   },
 
