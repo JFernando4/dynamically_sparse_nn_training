@@ -9,7 +9,7 @@
   "evaluation_dataset": "validation",
   "__comment_4__": "CBPw Parameters.",
   "use_cbpw": true,
-  "use_cbpw_ln": false,
+  "use_cbpw_ln": true,
   "topology_update_freq": 100,
   "prune_method": "hess_approx",
   "grow_method": "pm_min",
