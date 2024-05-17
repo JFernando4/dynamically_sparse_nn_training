@@ -36,8 +36,9 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     elif prune_name == "gf":
         prune_func = lambda w: gradient_flow_prune_weights(w, drop_factor=kwargs["drop_factor"])
     elif prune_name == "hess_approx":
+        mb_size = 1.0 if "mb_size" not in kwargs.keys() else kwargs["mb_size"]
         as_rate = False if "as_rate" not in kwargs.keys() else kwargs["as_rate"]
-        prune_func = lambda w: hessian_approx_prune_weights(w, drop_factor=kwargs["drop_factor"], as_rate=as_rate)
+        prune_func = lambda w: hessian_approx_prune_weights(w, drop_factor=kwargs["drop_factor"], mb_size=mb_size, as_rate=as_rate)
 
     if grow_name == "pm_min":
         grow_func = lambda w: pm_min_reinit_weights(w)
@@ -151,12 +152,12 @@ def gradient_flow_prune_weights(weight: torch.Tensor, drop_factor: float):
 
 
 @torch.no_grad()
-def hessian_approx_prune_weights(weight: torch.Tensor, drop_factor: float, as_rate: bool = False):
+def hessian_approx_prune_weights(weight: torch.Tensor, drop_factor: float, mb_size: float = 1.0, as_rate: bool = False):
     """
     Prunes using redo criteria but using gradient flow instead of magnitude pruning
     """
 
-    hess_approx = torch.abs(weight.flatten().square() * weight.grad.flatten().square())
+    hess_approx = torch.abs(weight.flatten().square() * (weight.grad.flatten() * mb_size).square())
     if as_rate:
         fraction_to_prune = weight.numel() * drop_factor
         drop_num = int(fraction_to_prune) + np.random.binomial(1, fraction_to_prune % 1)
