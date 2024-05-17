@@ -20,7 +20,7 @@
     "fixed_wd": true,
     "optimizer": "sgd",
     "stepsize": ["fixed", 0.005, 0.002, 0.0005, 0.0002],
-    "weight_decay": ["fixed", 1e-6, 1e-7, 1e-8]
+    "weight_decay": ["fixed", 1e-6, 1e-7, 1e-8, 1e-9]
   },
 
   "slurm_parameters": {
