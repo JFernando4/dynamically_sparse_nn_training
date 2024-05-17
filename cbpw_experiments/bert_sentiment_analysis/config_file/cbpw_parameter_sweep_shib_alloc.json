@@ -7,15 +7,18 @@
       "grow_method",
       "topology_update_freq",
       "drop_factor",
-      "weight_decay"
+      "weight_decay",
+      "fixed_wd",
+      "optimizer"
     ]
   },
 
   "experiment_params": {
-    "num_epochs": 20,
+    "num_epochs": 25,
     "evaluation_dataset": "validation",
-    "stepsize": 2e-5,
-
+    "stepsize": 0.002,
+    "fixed_wd": true,
+    "optimizer": "sgd",
     "runs": 5
   },
 
@@ -23,14 +26,14 @@
     "use_cbpw": true,
     "prune_method": "hess_approx",
     "grow_method": "pm_min",
-    "weight_decay": ["fixed", 0.5, 0.2, 0.1, 0.01],
-    "topology_update_freq": ["fixed", 50, 100, 250, 500, 1000],
-    "drop_factor": ["fixed", 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05]
+    "weight_decay": ["fixed", 1e-9],
+    "topology_update_freq": ["fixed", 50, 100, 250, 500],
+    "drop_factor": ["fixed", 0.0001, 0.0005, 0.001, 0.005, 0.01]
   },
 
   "slurm_parameters": {
     "job_name": "bsa_ps",
-    "time": "02:00:00",
+    "time": "02:10:00",
     "max_runs_per_job": 5,
     "output_filename": "bert_sa-%n-%j.out",
     "output_dir": "/scratch/dohare/dynamically_sparse_nn_training/outputs",
