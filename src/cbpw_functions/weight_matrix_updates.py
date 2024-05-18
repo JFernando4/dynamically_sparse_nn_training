@@ -196,7 +196,6 @@ def pm_min_reinit_weights(weight: torch.Tensor) -> None:
         return
 
     min_abs_active = weight.flatten().abs()[active_indices].min()
-    print(min_abs_active)
     random_sign = -1.0 if torch.rand(1) > 0.5 else 1.0
     weight.view(-1)[pruned_indices[len(pruned_indices) // 2:]] = random_sign * min_abs_active
     weight.view(-1)[pruned_indices[:len(pruned_indices) // 2]] = - random_sign * min_abs_active
