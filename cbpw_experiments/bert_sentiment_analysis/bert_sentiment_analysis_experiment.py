@@ -76,7 +76,7 @@ class BERTSentimentAnalysisExperiment(Experiment):
         # initialize network
         config = BertConfig.from_pretrained("prajjwal1/bert-mini")  # Using this configuration.
         self.tokenizer = BertTokenizer.from_pretrained("prajjwal1/bert-mini")
-        if self.from_scratch:
+        if self.from_scratch or self.pretraining:
             self.net = BertForSequenceClassification(config)
         else:
             self.net = BertForSequenceClassification.from_pretrained("prajjwal1/bert-mini")
