@@ -33,9 +33,6 @@ def initialize_weight_dict(net: torch.nn.Module,
         return initialize_weights_dict_sequential(net, prune_method=prune_method, grow_method=grow_method,
                                                   drop_factor=drop_factor)
     elif architecture_type == "bert":
-        exclude_embeddings = False if "exclude_embeddings" not in kwargs.keys() else kwargs["exclude_embeddings"]
-        # return initialize_weights_dict_bert(net, prune_method=prune_method, grow_method=grow_method, drop_factor=drop_factor,
-        #                                     exclude_embeddings=exclude_embeddings)
         return initialize_weights_dict_bert_all(net, prune_method=prune_method, grow_method=grow_method, drop_factor=drop_factor)
     else:
         raise ValueError(f"{architecture_type} is not a valid architecture type.")
