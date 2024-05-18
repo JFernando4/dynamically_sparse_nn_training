@@ -106,6 +106,7 @@ class BERTSentimentAnalysisExperiment(Experiment):
 
         if self.pretraining:
             dataset = load_dataset("amazon_polarity")
+            dataset = dataset.rename_column("content", "sentence")
         else:
             dataset = load_dataset("sst2")
         data_collator = DataCollatorWithPadding(tokenizer=self.tokenizer)
