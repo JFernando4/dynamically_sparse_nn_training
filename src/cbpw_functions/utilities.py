@@ -190,9 +190,9 @@ def initialize_weights_dict_bert_all(net, prune_method: str, grow_method: str, d
     """
     Initializes the weight dictionary required for CBPw for a Bert model
     """
-    update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor, mb_size=30.0, as_rate=True)
-    bias_func = setup_cbpw_weight_update_function(prune_method, grow_name="fixed", drop_factor=drop_factor, mb_size=30.0, reinit_val=0.0, as_rate=True)
-    layer_norm_weight_func = setup_cbpw_weight_update_function(prune_method, grow_name="fixed", drop_factor=drop_factor, mb_size=30.0, reinit_val=1.0, as_rate=True)
+    update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor, as_rate=True)
+    bias_func = setup_cbpw_weight_update_function(prune_method, grow_name="fixed", drop_factor=drop_factor, reinit_val=0.0, as_rate=True)
+    layer_norm_weight_func = setup_cbpw_weight_update_function(prune_method, grow_name="fixed", drop_factor=drop_factor, reinit_val=1.0, as_rate=True)
     weight_dict = {}
 
     for n, p in net.named_parameters():
