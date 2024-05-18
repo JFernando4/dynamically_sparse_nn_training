@@ -210,8 +210,8 @@ def random_reinit_weights(weight: torch.Tensor, reinit) -> None:
         reinit: name of reinitialization function. Should be in reinit_functions.key()
     """
     random_reinit_functions = {
-        "kaiming_normal": torch.nn.init.kaiming_normal_,
-        "kaiming_uniform_": torch.nn.init.kaiming_uniform,
+        "kaiming_normal": lambda m: torch.nn.init.kaiming_normal_(m, nonlinearity="relu"),
+        "kaiming_uniform_": lambda m: torch.nn.init.kaiming_uniform(m, nonlinearity="relu"),
         "xavier_normal": torch.nn.init.xavier_normal_,
         "xavier_uniform_": torch.nn.init.xavier_uniform_
     }
