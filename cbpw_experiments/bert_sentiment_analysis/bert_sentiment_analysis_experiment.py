@@ -51,8 +51,8 @@ class BERTSentimentAnalysisExperiment(Experiment):
         self.weight_decay = exp_params["weight_decay"]
         self.optimizer = access_dict(exp_params, "optimizer", default="adamw", val_type=str, choices=["adamw", "sgd"])
         self.fixed_wd = access_dict(exp_params, "fixed_wd", default=False, val_type=bool)
+        self.pretraining = access_dict(exp_params, "pretraining", default=False, val_type=bool)
         self.from_scratch = access_dict(exp_params, "from_scratch", default=False, val_type=bool)
-        self.reset_adamw_buffers = access_dict(exp_params, "reset_adamw_buffers", default=False, val_type=bool)
 
         # CBPw parameters
         self.use_cbpw = access_dict(exp_params, "use_cbpw", default=False, val_type=bool)
@@ -66,7 +66,7 @@ class BERTSentimentAnalysisExperiment(Experiment):
 
         """ Network set up """
         self.batch_size = 30
-        self.steps_per_epoch = 67350 // self.batch_size
+        self.steps_per_epoch = 67350 // self.batch_size if not self.pretraining else 3600000 // self.batch_size
         self.evaluation_frequency = 1
         self.num_evaluation_steps = self.num_epochs // self.evaluation_frequency
         self.checkpoint_save_frequency = 5
@@ -104,7 +104,10 @@ class BERTSentimentAnalysisExperiment(Experiment):
     # ------------------------------------- For running the experiment ------------------------------------- #
     def run(self):
 
-        dataset = load_dataset("sst2")
+        if self.pretraining:
+            dataset = load_dataset("amazon_polarity")
+        else:
+            dataset = load_dataset("sst2")
         data_collator = DataCollatorWithPadding(tokenizer=self.tokenizer)
         dataset = dataset.map(self.tokenize_batch, batched=True)
 
@@ -139,8 +142,7 @@ class BERTSentimentAnalysisExperiment(Experiment):
             use_cbpw=self.use_cbpw,
             topology_update_freq=self.topology_update_freq,
             bert_weight_dict=self.weight_dict,
-            fixed_wd=self.fixed_wd,
-            reset_adamw_buffers=self.reset_adamw_buffers
+            fixed_wd=self.fixed_wd
         )
 
         self.trainer.evaluate()
@@ -154,6 +156,8 @@ class BERTSentimentAnalysisExperiment(Experiment):
         if (self.summary_counter % self.model_parameter_save_frequency) == 0:
             save_model_parameters(self.results_dir, self.run_index, net=self.net,
                                   current_epoch=self.summary_counter * self.evaluation_frequency)
+        if metrics["eval_accuracy"] == np.max(self.results_dict[f"{self.evaluation_dataset}_accuracy"]):
+            save_model_parameters(self.results_dir, self.run_index, net=self.net, current_epoch="best")
 
     def compute_metrics(self, eval_pred):
         logits, labels = eval_pred
