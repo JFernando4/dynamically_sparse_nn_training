@@ -29,15 +29,15 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     assert prune_name in prune_function_names and grow_name in grow_function_names
     assert "drop_factor" in kwargs.keys()
 
+    as_rate = False if "as_rate" not in kwargs.keys() else kwargs["as_rate"]
     if prune_name == "magnitude":
-        prune_func = lambda w: magnitude_prune_weights(w, drop_factor=kwargs["drop_factor"])
+        prune_func = lambda w: magnitude_prune_weights(w, drop_factor=kwargs["drop_factor"], as_rate=as_rate)
     elif prune_name == "redo":
         prune_func = lambda w: redo_prune_weights(w, drop_factor=kwargs["drop_factor"])
     elif prune_name == "gf":
         prune_func = lambda w: gradient_flow_prune_weights(w, drop_factor=kwargs["drop_factor"])
     elif prune_name == "hess_approx":
         mb_size = 1.0 if "mb_size" not in kwargs.keys() else kwargs["mb_size"]
-        as_rate = False if "as_rate" not in kwargs.keys() else kwargs["as_rate"]
         prune_func = lambda w: hessian_approx_prune_weights(w, drop_factor=kwargs["drop_factor"], mb_size=mb_size, as_rate=as_rate)
 
     if grow_name == "pm_min":
@@ -132,11 +132,16 @@ def redo_prune_weights(weight: torch.Tensor, drop_factor: float):
 
 
 @torch.no_grad()
-def magnitude_prune_weights(weight: torch.Tensor, drop_factor: float):
+def magnitude_prune_weights(weight: torch.Tensor, drop_factor: float, as_rate: bool = False):
     """ Creates a mask by dropping the weights with the smallest magnitude """
 
     abs_weight = torch.abs(weight).flatten()
-    drop_num = max(int(weight.numel() * drop_factor), 1)    # drop at least one weight
+    if as_rate:
+        fraction_to_prune = weight.numel() * drop_factor
+        drop_num = int(fraction_to_prune) + np.random.binomial(1, fraction_to_prune % 1)
+        if drop_num == 0: return
+    else:
+        drop_num = max(int(weight.numel() * drop_factor), 1)    # drop at least one weight
     indices = torch.argsort(abs_weight)
     weight.view(-1)[indices[:drop_num]] = 0.0
 
