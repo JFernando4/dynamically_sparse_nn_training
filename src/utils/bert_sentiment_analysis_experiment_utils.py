@@ -88,9 +88,6 @@ class CBPWTrainer(Trainer):
             use_cbpw: bool = False,
             topology_update_freq: int = 0,
             bert_weight_dict: dict = None,
-            use_cbpw_ln: bool = False,
-            bert_ln_list: list = None,
-            ln_update_function: Callable = None,
             fixed_wd: bool = False,
             reset_adamw_buffers: bool = False
     ):
@@ -113,9 +110,6 @@ class CBPWTrainer(Trainer):
         self.use_cbpw = use_cbpw
         self.topology_update_freq = topology_update_freq
         self.bert_weight_dict = bert_weight_dict
-        self.use_cbpw_ln = use_cbpw_ln
-        self.bert_ln_list = bert_ln_list
-        self.ln_update_function = ln_update_function
         self.fixed_wd = fixed_wd
         self.reset_adamw_buffers = reset_adamw_buffers
 
@@ -527,8 +521,6 @@ class CBPWTrainer(Trainer):
                     self.state.global_step += 1
                     if (self.state.global_step % self.topology_update_freq) == 0 and self.use_cbpw:
                         update_weights(self.bert_weight_dict)
-                        if self.use_cbpw_ln:
-                            for ln_layer in self.bert_ln_list: self.ln_update_function(ln_layer)
                         self.reset_optimizer_buffers()
 
                     if self.reset_adamw_buffers and (self.state.global_step % self.topology_update_freq) == 0:

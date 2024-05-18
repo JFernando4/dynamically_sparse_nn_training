@@ -56,8 +56,6 @@ class BERTSentimentAnalysisExperiment(Experiment):
 
         # CBPw parameters
         self.use_cbpw = access_dict(exp_params, "use_cbpw", default=False, val_type=bool)
-        self.exclude_embeddings = access_dict(exp_params, "exclude_embeddings", default=False, val_type=bool)
-        self.use_cbpw_ln = access_dict(exp_params, "use_cbpw_ln", default=False, val_type=bool)
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=1, val_type=int)
         pruning_functions_names = ["none", "magnitude", "redo", "gf", "hess_approx"]
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str, choices=pruning_functions_names)
@@ -87,12 +85,10 @@ class BERTSentimentAnalysisExperiment(Experiment):
         self.net.to(self.device)
 
         # initializes weight dictionary for CBPw
-        self.weight_dict, self.ln_list, self.norm_layer_update_func = None, None, None
+        self.weight_dict = None
         if self.use_cbpw:
-            self.weight_dict = initialize_weight_dict(self.net, "bert", self.prune_method, self.grow_method, self.drop_factor,
-                                                      exclude_embeddings=self.exclude_embeddings)
-            self.ln_list = initialize_ln_list_bert(self.net)
-            self.norm_layer_update_func = setup_cbpw_layer_norm_update_function(self.prune_method, self.drop_factor, True, True)
+            self.weight_dict = initialize_weight_dict(self.net, "bert", self.prune_method,
+                                                      self.grow_method, self.drop_factor)
 
         self.initialize_results_dir()
         self.load_accuracy = load_metric("accuracy", trust_remote_code=True)
@@ -143,9 +139,6 @@ class BERTSentimentAnalysisExperiment(Experiment):
             use_cbpw=self.use_cbpw,
             topology_update_freq=self.topology_update_freq,
             bert_weight_dict=self.weight_dict,
-            use_cbpw_ln=self.use_cbpw_ln,
-            bert_ln_list=self.ln_list,
-            ln_update_function=self.norm_layer_update_func,
             fixed_wd=self.fixed_wd,
             reset_adamw_buffers=self.reset_adamw_buffers
         )
