@@ -63,16 +63,14 @@ class PermutedMNISTExperiment(Experiment):
         self.current_experiment_step = 0
 
         # CBPw parameters
+        self.use_cbpw = access_dict(exp_params, "use_cbpw", default=False, val_type=bool)
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
         self.epoch_freq = access_dict(exp_params, "epoch_freq", default=False, val_type=bool)
-        pruning_functions_names = ["none", "magnitude", "gf"]
-        grow_methods = ["none", "pm_min", "kaiming_normal", "zero"]
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str,
-                                        choices=pruning_functions_names)
-        self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str, choices=grow_methods)
-        assert not ((self.prune_method != "none" and self.grow_method == "none") or (self.prune_method == "none" and self.grow_method != "none"))
+                                        choices=["none", "magnitude", "gf"])
+        self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str,
+                                       choices=["none", "pm_min", "kaiming_normal", "zero"])
         self.drop_factor = access_dict(exp_params, "drop_factor", default=float, val_type=float)
-        self.use_cbpw = self.prune_method != "none" and self.grow_method != "none"
         self.previously_removed_weights = None
         self.current_topology_update = 0
 
