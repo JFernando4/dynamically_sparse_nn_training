@@ -145,15 +145,17 @@ def initialize_weights_dict_sequential(net: torch.nn.Sequential,
                                        grow_method: str,
                                        drop_factor: float) -> dict[str, tuple]:
     """ Initializes the weight dictionaries used in CBPw for a Sequential Network """
-    update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor)
+    weights_update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor, as_rate=True)
+    bias_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="zero", drop_factor=drop_factor, as_rate=True)
 
     weight_dict = {}
 
-    layer_index = 0
-    for i in range(len(net) - 1):
-        if isinstance(net[i], torch.nn.Linear):
-            weight_dict[f"linear_{layer_index}"] = (net[i].weight, update_func)
-            layer_index += 1
+    for n, p in net.named_parameters():
+        if "bias" in n:
+            temp_update_func = bias_update_func
+        else:
+            temp_update_func = weights_update_func
+        weight_dict[n] = (p, temp_update_func)
 
     return weight_dict
 
