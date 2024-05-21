@@ -8,10 +8,12 @@ def prune_and_grow_weights(weight: torch.Tensor,
                            grow_function: Callable[[torch.Tensor], None]) -> tuple[torch.Tensor, int]:
     """ Prunes and grows weight in a weight matrix"""
 
-    prune_function(weight)
+    was_pruned = prune_function(weight)
 
     # get mask of pruned weights and compute number of pruned weights
     mask = torch.ones_like(weight, requires_grad=False)
+    if not was_pruned:
+        return mask, 0
     pruned_indices = torch.where(weight.flatten() == 0.0)[0]
     mask.view(-1)[pruned_indices] = 0.0
     num_pruned = len(pruned_indices)
@@ -35,7 +37,7 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     elif prune_name == "redo":
         prune_func = lambda w: redo_prune_weights(w, drop_factor=kwargs["drop_factor"])
     elif prune_name == "gf":
-        prune_func = lambda w: gradient_flow_prune_weights(w, drop_factor=kwargs["drop_factor"])
+        prune_func = lambda w: gradient_flow_prune_weights(w, drop_factor=kwargs["drop_factor"], as_rate=as_rate)
     elif prune_name == "hess_approx":
         mb_size = 1.0 if "mb_size" not in kwargs.keys() else kwargs["mb_size"]
         prune_func = lambda w: hessian_approx_prune_weights(w, drop_factor=kwargs["drop_factor"], mb_size=mb_size, as_rate=as_rate)
@@ -132,28 +134,29 @@ def redo_prune_weights(weight: torch.Tensor, drop_factor: float):
 
 
 @torch.no_grad()
-def magnitude_prune_weights(weight: torch.Tensor, drop_factor: float, as_rate: bool = False):
+def magnitude_prune_weights(weight: torch.Tensor, drop_factor: float, as_rate: bool = False) -> bool:
     """ Creates a mask by dropping the weights with the smallest magnitude """
 
+    drop_num = compute_drop_num(weight.numel(), drop_factor, as_rate)
+    if drop_num == 0: return False
+
     abs_weight = torch.abs(weight).flatten()
-    if as_rate:
-        fraction_to_prune = weight.numel() * drop_factor
-        drop_num = int(fraction_to_prune) + np.random.binomial(1, fraction_to_prune % 1)
-        if drop_num == 0: return
-    else:
-        drop_num = max(int(weight.numel() * drop_factor), 1)    # drop at least one weight
     indices = torch.argsort(abs_weight)
     weight.view(-1)[indices[:drop_num]] = 0.0
+    return True
 
 
 @torch.no_grad()
-def gradient_flow_prune_weights(weight: torch.Tensor, drop_factor: float):
+def gradient_flow_prune_weights(weight: torch.Tensor, drop_factor: float, as_rate: bool = False) -> bool:
     """ Creates a mask by dropping the weights with the smallest gradient flow """
 
+    drop_num = compute_drop_num(weight.numel(), drop_factor, as_rate)
+    if drop_num == 0: return False
+
     gradient_flow = torch.abs(weight * weight.grad).flatten()
-    drop_num = max(int(weight.numel() * drop_factor), 1)    # drop at least one weight
     indices = torch.argsort(gradient_flow)
     weight.view(-1)[indices[:drop_num]] = 0.0
+    return True
 
 
 @torch.no_grad()
@@ -162,15 +165,13 @@ def hessian_approx_prune_weights(weight: torch.Tensor, drop_factor: float, mb_si
     Prunes using redo criteria but using gradient flow instead of magnitude pruning
     """
 
+    drop_num = compute_drop_num(weight.numel(), drop_factor, as_rate)
+    if drop_num == 0: return False
+
     hess_approx = torch.abs(weight.flatten().square() * (weight.grad.flatten() * mb_size).square())
-    if as_rate:
-        fraction_to_prune = weight.numel() * drop_factor
-        drop_num = int(fraction_to_prune) + np.random.binomial(1, fraction_to_prune % 1)
-        if drop_num == 0: return
-    else:
-        drop_num = max(int(weight.numel() * drop_factor), 1)    # drop at least one weight
     indices = torch.argsort(hess_approx)
     weight.view(-1)[indices[:drop_num]] = 0.0
+    return True
 
 
 @torch.no_grad()
@@ -182,6 +183,15 @@ def threshold_prune_weights(weight: torch, drop_factor: float) -> None:
     indices = torch.where(abs_weight < drop_factor)[0]
     weight.view(-1)[indices] = 0.0
 
+
+def compute_drop_num(num_weights: int, drop_factor: float, as_rate: bool = False) -> int:
+    """ Computes the number of weights dropped """
+    fraction_to_prune = num_weights * drop_factor
+    if as_rate:
+        drop_num = int(fraction_to_prune) + np.random.binomial(n=1, p=fraction_to_prune % 1, size=None)
+    else:
+        drop_num = max(int(fraction_to_prune), 1)   # drop at least one weight
+    return drop_num
 
 # ----- ----- ----- ----- Growing Functions ----- ----- ----- ----- #
 @torch.no_grad()
