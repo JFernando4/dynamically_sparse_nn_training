@@ -200,11 +200,9 @@ def initialize_weights_dict_bert_all(net, prune_method: str, grow_method: str, d
         is_weight = "weight" in n
 
         if is_layer_norm and is_weight:
-            continue
-            # temp_update_func = layer_norm_weight_func
+            temp_update_func = layer_norm_weight_func
         elif is_bias:
-            continue
-            # temp_update_func = bias_func
+            temp_update_func = bias_func
         else:
             temp_update_func = update_func
 
