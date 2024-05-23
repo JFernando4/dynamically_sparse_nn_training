@@ -1,9 +1,7 @@
 # built-in libraries
 import time
 import os
-import argparse
 import pickle
-from copy import deepcopy
 
 # third party libraries
 import torch
@@ -19,7 +17,7 @@ from mlproj_manager.file_management import store_object_with_several_attempts
 
 # from src
 from src.cbpw_functions import initialize_weight_dict
-from src.networks import RegularizedSGD
+from src.networks import RegularizedSGD, ThreeHiddenLayerNetwork
 from src.cbpw_functions.weight_matrix_updates import update_weights
 from src.utils.experiment_utils import parse_terminal_arguments
 
@@ -51,7 +49,6 @@ class PermutedMNISTExperiment(Experiment):
         self.l2_factor = access_dict(exp_params, "l2_factor", default=0.0, val_type=float)
 
         # architecture parameters
-        self.num_layers = exp_params["num_layers"]      # number of hidden layers
         self.num_hidden = exp_params["num_hidden"]      # number of hidden units per hidden layer
         self.batch_size = access_dict(exp_params, "batch_size", default=1, val_type=int)
 
@@ -91,7 +88,11 @@ class PermutedMNISTExperiment(Experiment):
         self.max_num_images_per_permutation = 60000
 
         """ Network set up """
-        self.net = self.initialize_network()
+        # self.net = self.initialize_network()
+        self.net = ThreeHiddenLayerNetwork(hidden_dim=self.num_hidden,
+                                           use_cbp=self.use_cbp,
+                                           maturity_threshold=self.maturity_threshold,
+                                           replacement_rate=self.replacement_rate)
         self.net.apply(lambda z: init_weights_kaiming(z, nonlinearity="relu", normal=True)) # initialize weights
         # initialize CBPw dictionary
         self.weight_dict = None
@@ -133,22 +134,6 @@ class PermutedMNISTExperiment(Experiment):
         # with batch size of 30 and num permutations of 1000, experiment take less than an hour, so why checkpoints?
         self.store_checkpoints = False
         self.load_experiment_checkpoint()
-
-    # ----------------------------- For initializing the experiment ----------------------------- #
-    def initialize_network(self):
-        """ Initializes the network used for training """
-        net = torch.nn.Sequential()
-        in_features = self.num_inputs
-        for i in range(self.num_layers):
-            out_features = self.num_hidden
-            current_hidden_layer = torch.nn.Linear(in_features, out_features, bias=True)
-            net.append(current_hidden_layer)
-            net.append(torch.nn.ReLU())
-            in_features = out_features
-        # output layer, no masks applied to it
-        net.append(torch.nn.Linear(self.num_hidden, self.num_classes, bias=True))
-
-        return net
 
     # ----------------------------- For saving and loading experiment checkpoints ----------------------------- #
     def get_experiment_checkpoint(self) -> dict:
