@@ -22,7 +22,6 @@ from src.cbpw_functions import initialize_weight_dict
 from src.networks import RegularizedSGD
 from src.cbpw_functions.weight_matrix_updates import update_weights
 from src.utils.experiment_utils import parse_terminal_arguments
-from src.networks.cbp_layer import CBPLinear
 
 
 class PermutedMNISTExperiment(Experiment):
@@ -78,7 +77,7 @@ class PermutedMNISTExperiment(Experiment):
         # CBP parameters
         self.use_cbp = access_dict(exp_params, "use_cbp", default=False, val_type=bool)
         self.maturity_threshold = access_dict(exp_params, "maturity_threshold", default=0, val_type=int)
-        self.decay_rate = access_dict(exp_params, "decay_rate", default=1e-6, val_type=float)
+        self.replacement_rate = access_dict(exp_params, "replacement_rate", default=1e-6, val_type=float)
 
         # paths for loading and storing data
         self.data_path = exp_params["data_path"]
