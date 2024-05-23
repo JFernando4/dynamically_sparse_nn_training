@@ -36,11 +36,11 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
         if use_cbp:
             assert maturity_threshold is not None and replacement_rate is not None
             self.cbp_1 = CBPLinear(in_layer=self.ff_1, out_layer=self.ff_2, replacement_rate=self.rr,
-                                   maturity_threshold=self.mm, init="kaiming")
+                                   maturity_threshold=self.mt, init="kaiming")
             self.cbp_2 = CBPLinear(in_layer=self.ff_2, out_layer=self.ff_3, replacement_rate=self.rr,
-                                   maturity_threshold=self.mm, init="kaiming")
+                                   maturity_threshold=self.mt, init="kaiming")
             self.cbp_3 = CBPLinear(in_layer=self.ff_3, out_layer=self.out, replacement_rate=self.rr,
-                                   maturity_threshold=self.mm, init="kaiming")
+                                   maturity_threshold=self.mt, init="kaiming")
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # first hidden layer
