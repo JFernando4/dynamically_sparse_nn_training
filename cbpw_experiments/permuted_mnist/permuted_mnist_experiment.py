@@ -22,6 +22,7 @@ from src.cbpw_functions import initialize_weight_dict
 from src.networks import RegularizedSGD
 from src.cbpw_functions.weight_matrix_updates import update_weights
 from src.utils.experiment_utils import parse_terminal_arguments
+from src.networks.cbp_layer import CBPLinear
 
 
 class PermutedMNISTExperiment(Experiment):
@@ -74,6 +75,11 @@ class PermutedMNISTExperiment(Experiment):
         self.previously_removed_weights = None
         self.current_topology_update = 0
 
+        # CBP parameters
+        self.use_cbp = access_dict(exp_params, "use_cbp", default=False, val_type=bool)
+        self.maturity_threshold = access_dict(exp_params, "maturity_threshold", default=0, val_type=int)
+        self.decay_rate = access_dict(exp_params, "decay_rate", default=1e-6, val_type=float)
+
         # paths for loading and storing data
         self.data_path = exp_params["data_path"]
         self.store_parameters = access_dict(exp_params, "store_parameters", default=False, val_type=bool)
@@ -87,6 +93,8 @@ class PermutedMNISTExperiment(Experiment):
 
         """ Network set up """
         self.net = self.initialize_network()
+        self.net.apply(lambda z: init_weights_kaiming(z, nonlinearity="relu", normal=True)) # initialize weights
+        # initialize CBPw dictionary
         self.weight_dict = None
         if self.use_cbpw:
             self.weight_dict = initialize_weight_dict(self.net, "sequential", self.prune_method,
@@ -140,9 +148,6 @@ class PermutedMNISTExperiment(Experiment):
             in_features = out_features
         # output layer, no masks applied to it
         net.append(torch.nn.Linear(self.num_hidden, self.num_classes, bias=True))
-
-        # initialize weights
-        net.apply(lambda z: init_weights_kaiming(z, nonlinearity="relu", normal=True))
 
         return net
 
