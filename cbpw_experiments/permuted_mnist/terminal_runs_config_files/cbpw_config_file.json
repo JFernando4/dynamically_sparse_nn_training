@@ -14,6 +14,7 @@
   "num_permutations": 1000,
 
   "__comment_4__": "CBPw Parameters.",
+  "use_cbpw": true,
   "topology_update_freq": 160,
   "prune_method": "gf",
   "grow_method": "zero",
