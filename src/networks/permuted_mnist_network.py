@@ -1,0 +1,61 @@
+from .cbp_layer import CBPLinear
+
+import torch
+
+INPUT_DIMS = 784
+OUTPUT_DIMS = 10
+
+
+class ThreeHiddenLayerNetwork(torch.nn.Module):
+
+    def __init__(self,
+                 hidden_dim: int = 10,
+                 use_cbp=False,
+                 maturity_threshold: int = None,
+                 replacement_rate: float = None):
+        """
+        Three-layer ReLU network with continual backpropagation for MNIST
+        """
+        super().__init__()
+
+        self.use_cbp = use_cbp
+        self.mt = maturity_threshold
+        self.rr = replacement_rate
+
+        self.ff_1 = torch.nn.Linear(INPUT_DIMS, out_features=hidden_dim, bias=True)
+        self.act_1 = torch.nn.ReLU()
+        self.cbp_1 = None
+        self.ff_2 = torch.nn.Linear(hidden_dim, out_features=hidden_dim, bias=True)
+        self.act_2 = torch.nn.ReLU()
+        self.cbp_2 = None
+        self.ff_3 = torch.nn.Linear(hidden_dim, out_features=hidden_dim, bias=True)
+        self.act_3 = torch.nn.ReLU()
+        self.cbp_3 = None
+        self.out = torch.nn.Linear(hidden_dim, OUTPUT_DIMS, bias=True)
+
+        if use_cbp:
+            assert maturity_threshold is not None and replacement_rate is not None
+            self.cbp_1 = CBPLinear(in_layer=self.ff_1, out_layer=self.ff_2, replacement_rate=self.rr,
+                                   maturity_threshold=self.mm, init="kaiming")
+            self.cbp_2 = CBPLinear(in_layer=self.ff_2, out_layer=self.ff_3, replacement_rate=self.rr,
+                                   maturity_threshold=self.mm, init="kaiming")
+            self.cbp_3 = CBPLinear(in_layer=self.ff_3, out_layer=self.out, replacement_rate=self.rr,
+                                   maturity_threshold=self.mm, init="kaiming")
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # first hidden layer
+        x = self.ff_1(x)
+        x = self.act_1(x)
+        if self.cbp_1 is not None:
+            x = self.cbp_1(x)
+        # second hidden layer
+        x = self.ff_2(x)
+        x = self.act_2(x)
+        if self.cbp_2 is not None:
+            x = self.cbp_2(x)
+        # third hidden layer
+        x = self.ff_3(x)
+        x = self.act_3(x)
+        if self.cbp_3 is not None:
+            x = self.cbp_3(x)
+        return self.out(x)
