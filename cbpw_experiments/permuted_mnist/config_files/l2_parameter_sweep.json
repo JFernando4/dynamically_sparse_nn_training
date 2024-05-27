@@ -6,9 +6,7 @@
     "relevant_parameters": [
       "stepsize",
       "l2_factor",
-      "batch_size",
-      "num_layers",
-      "num_hidden"
+      "batch_size"
     ]
   },
 
