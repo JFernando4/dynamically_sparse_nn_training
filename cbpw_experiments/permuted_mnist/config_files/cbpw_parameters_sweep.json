@@ -4,7 +4,6 @@
     "data_path": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/dst_lop_experiments/permuted_mnist/data/",
     "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
     "relevant_parameters": [
-      "num_hidden",
       "topology_update_freq",
       "prune_method",
       "grow_method",
@@ -20,13 +19,14 @@
     "stepsize": 0.005,
     "steps_per_task": 60000,
     "store_parameters": false,
-    "runs": 10
+    "runs": 30
   },
 
   "learning_params": {
+    "use_cbpw": true,
     "topology_update_freq": ["fixed", 5, 10, 20, 40, 80, 160, 320],
-    "prune_method": ["str", "magnitude", "gf", "hess_approx"],
-    "grow_method": ["str", "pm_min", "xavier_normal", "zero"],
+    "prune_method": ["str", "magnitude", "gf"],
+    "grow_method": ["str", "kaiming_normal", "zero"],
     "drop_factor": ["fixed", 0.01, 0.05, 0.1, 0.2, 0.4, 0.6, 0.8]
   },
 
