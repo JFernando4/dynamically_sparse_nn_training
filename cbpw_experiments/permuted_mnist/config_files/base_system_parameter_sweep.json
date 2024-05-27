@@ -5,9 +5,7 @@
     "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
     "relevant_parameters": [
       "stepsize",
-      "batch_size",
-      "num_layers",
-      "num_hidden"
+      "batch_size"
     ]
   },
 
@@ -15,7 +13,7 @@
     "num_permutations": 1000,
     "num_layers": 3,
     "num_hidden": 10,
-    "runs": 10
+    "runs": 30
   },
 
   "learning_params": {
