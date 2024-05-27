@@ -302,7 +302,8 @@ class IncrementalCIFARExperiment(Experiment):
                                                       include_conv_proj=self.conv_cbpw,
                                                       include_pos_embedding=self.pe_cbpw,
                                                       include_self_attention=self.msa_cbpw,
-                                                      include_head=self.head_cbpw)
+                                                      include_head=self.head_cbpw,
+                                                      df_as_rate=self.df_as_rate)
 
         if self.use_cbpw_ln:
             self.ln_list = initialize_ln_list_vit(self.net)
