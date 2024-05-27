@@ -16,8 +16,12 @@ def initialize_weight_dict(net: torch.nn.Module,
 
     if architecture_type == "vit":
         assert isinstance(net, VisionTransformer)
-        return initialize_weights_dict_vit(net, prune_method=prune_method, grow_method=grow_method,
-                                           drop_factor=drop_factor, **kwargs)
+        df_as_rate = False if "df_as_rate" not in kwargs else kwargs["df_as_rate"]
+        if df_as_rate:
+            return initialize_weights_dict_vit_df_as_rate(net, prune_method, grow_method, drop_factor)
+        else:
+            return initialize_weights_dict_vit(net, prune_method=prune_method, grow_method=grow_method,
+                                               drop_factor=drop_factor, **kwargs)
 
     elif architecture_type == "resnet":
         assert isinstance(net, ResNet)
@@ -81,6 +85,35 @@ def initialize_ln_list_bert(net):
     return list_of_layer_norm_layers
 
 
+def initialize_weights_dict_vit_df_as_rate(net: VisionTransformer,
+                                           prune_method: str,
+                                           grow_method: str,
+                                           drop_factor: float) -> dict[str, tuple]:
+    """
+    Initializes the weight dictionaries used in CBPw for a Vision Transformer. The drop_factor is used as a rate, which
+    is relevant if drop_factor * p.numel() is less than 1.
+    """
+    weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor, as_rate=True)
+    bias_update_func = setup_cbpw_weight_update_function(prune_method, "zero", drop_factor=drop_factor, as_rate=True)
+    ln_weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="fixed", drop_factor=drop_factor,
+                                                              as_rate=True, reinit_val=1.0)
+
+    weight_dict = {}
+    for n, p in net.named_parameters():
+        is_weight = "weight" in n
+        is_bias = "bias" in n
+        is_layer_norm = (".ln_1." in n) or (".ln_2." in n) or (".ln." in n)
+
+        if is_weight and is_layer_norm:
+            weight_dict[n] = (p, ln_weight_update_func)
+        elif is_bias:
+            weight_dict[n] = (p, bias_update_func)
+        else:
+            weight_dict[n] = (p, weight_update_func)
+
+    return weight_dict
+
+
 def initialize_weights_dict_vit(net: VisionTransformer,
                                 prune_method: str,
                                 grow_method: str,
@@ -90,7 +123,7 @@ def initialize_weights_dict_vit(net: VisionTransformer,
                                 include_pos_embedding: bool,
                                 include_self_attention: bool,
                                 include_head: bool) -> dict[str, tuple]:
-    """ Initializes the weight dictionaries used in CBPw for a Vision Transformer"""
+    """ Initializes the weight dictionaries used in CBPw for a Vision Transformer """
 
     update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor)
 

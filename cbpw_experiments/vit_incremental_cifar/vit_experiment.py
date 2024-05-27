@@ -20,7 +20,7 @@ from src.plasticity_functions import SGDL2Init, inject_noise
 from src.cbpw_functions import initialize_weight_dict, setup_cbpw_layer_norm_update_function, initialize_ln_list_vit
 from src.utils import get_cifar_data, compute_accuracy_from_batch
 from src.networks.torchvision_modified_vit import VisionTransformer
-from src.cbpw_functions.weight_matrix_updates import setup_cbpw_weight_update_function, update_weights
+from src.cbpw_functions.weight_matrix_updates import update_weights
 from src import parse_terminal_arguments
 
 from src.utils import save_model_parameters, evaluate_network
@@ -66,6 +66,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str, choices=grow_methods)
         assert not ((self.prune_method != "none" and self.grow_method == "none") or (self.prune_method == "none" and self.grow_method != "none"))
         self.drop_factor = access_dict(exp_params, "drop_factor", default=0.0, val_type=float)
+        self.df_as_rate = access_dict(exp_params, "df_as_rate", default=False, val_type=bool)
         self.use_cbpw = self.prune_method != "none" and self.grow_method != "none"
 
         self.msa_cbpw = access_dict(exp_params, "msa_cbpw", default=False, val_type=bool)       # use cbpw in self-attention
@@ -139,7 +140,7 @@ class IncrementalCIFARExperiment(Experiment):
                                                       grow_method=self.grow_method, drop_factor=self.drop_factor,
                                                       include_class_token=self.ct_cbpw, include_conv_proj=self.conv_cbpw,
                                                       include_pos_embedding=self.pe_cbpw, include_self_attention=self.msa_cbpw,
-                                                      include_head=self.head_cbpw)
+                                                      include_head=self.head_cbpw, df_as_rate=self.df_as_rate)
 
         if self.use_cbpw_ln:
             self.ln_list = initialize_ln_list_vit(self.net)
