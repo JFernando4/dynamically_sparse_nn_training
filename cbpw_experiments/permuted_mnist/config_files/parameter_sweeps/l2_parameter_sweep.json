@@ -5,8 +5,7 @@
     "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
     "relevant_parameters": [
       "stepsize",
-      "l2_factor",
-      "batch_size"
+      "l2_factor"
     ]
   },
 
