@@ -59,3 +59,16 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
         if self.cbp_3 is not None:
             x = self.cbp_3(x)
         return self.out(x)
+
+    def feature_replace_event_indicator(self):
+        if not self.use_cbp:
+            return False
+        return (self.cbp_1.replace_feature_event_indicator or
+                self.cbp_2.replace_feature_event_indicator or
+                self.cbp_3.replace_feature_event_indicator)
+
+    def reset_indicators(self):
+        if not self.use_cbp: return
+        self.cbp_1.replace_feature_event_indicator = False
+        self.cbp_2.replace_feature_event_indicator = False
+        self.cbp_3.replace_feature_event_indicator = False

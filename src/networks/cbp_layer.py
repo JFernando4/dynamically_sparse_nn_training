@@ -75,6 +75,10 @@ class CBPLinear(nn.Module):
         Calculate uniform distribution's bound for random feature initialization
         """
         self.bound = get_layer_bound(layer=self.in_layer, init=init, gain=nn.init.calculate_gain(nonlinearity=act_type))
+        """
+        Indicators for different events
+        """
+        self.replace_feature_event_indicator = False
 
     def forward(self, _input):
         return _input
@@ -124,6 +128,7 @@ class CBPLinear(nn.Module):
 
             self.out_layer.weight.data[:, features_to_replace] = 0
             self.ages[features_to_replace] = 0
+            self.replace_feature_event_indicator = True
 
     def reinit(self):
         """
