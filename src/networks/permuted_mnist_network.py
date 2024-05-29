@@ -72,3 +72,17 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
         self.cbp_1.replace_feature_event_indicator = False
         self.cbp_2.replace_feature_event_indicator = False
         self.cbp_3.replace_feature_event_indicator = False
+
+    @torch.no_grad()
+    def get_average_gradient_magnitude(self):
+        """ Returns the average magnitude of the gradient of the parameters in the network """
+        assert self.ff_1.weight.grad is not None
+        parameter_list = [self.ff_1.weight, self.ff_1.bias, self.ff_2.weight, self.ff_2.bias,
+                          self.ff_3.weight, self.ff_3.bias, self.out.weight, self.out.bias]
+        parameter_count = 0
+        gradient_magnitude_sum = 0.0
+        for p in parameter_list:
+            parameter_count += p.numel()
+            gradient_magnitude_sum += p.grad.abs().sum()
+        return gradient_magnitude_sum / parameter_count
+
