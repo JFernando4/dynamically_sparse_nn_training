@@ -4,6 +4,7 @@ import torch
 from .weight_matrix_updates import setup_cbpw_weight_update_function
 from src.networks.torchvision_modified_vit import VisionTransformer, EncoderBlock
 from src.networks.torchvision_modified_resnet import ResNet, BasicBlock
+from src.networks.permuted_mnist_network import ThreeHiddenLayerNetwork
 
 
 def initialize_weight_dict(net: torch.nn.Module,
@@ -33,7 +34,7 @@ def initialize_weight_dict(net: torch.nn.Module,
                                                include_output_layer=include_output_layer, include_all=include_all)
 
     elif architecture_type == "sequential":
-        assert isinstance(net, torch.nn.Sequential)
+        assert isinstance(net, ThreeHiddenLayerNetwork)
         return initialize_weights_dict_sequential(net, prune_method=prune_method, grow_method=grow_method,
                                                   drop_factor=drop_factor)
     elif architecture_type == "bert":
@@ -173,7 +174,7 @@ def initializes_weights_dict_resnet(net: ResNet,
     return weight_dict
 
 
-def initialize_weights_dict_sequential(net: torch.nn.Sequential,
+def initialize_weights_dict_sequential(net: ThreeHiddenLayerNetwork,
                                        prune_method: str,
                                        grow_method: str,
                                        drop_factor: float) -> dict[str, tuple]:
