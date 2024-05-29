@@ -42,7 +42,7 @@ class PermutedMNISTExperiment(Experiment):
             torch.cuda.manual_seed(actual_seed)
 
         """ Experiment parameters """
-
+        self.extended_summaries = access_dict(exp_params, "extended_summaries", default=False, val_type=bool)
         # learning parameters
         self.stepsize = exp_params["stepsize"]
         self.l1_factor = access_dict(exp_params, "l1_factor", default=0.0, val_type=float)
@@ -114,6 +114,7 @@ class PermutedMNISTExperiment(Experiment):
 
         """ Experiment Summaries """
         self.running_avg_window = 100 if self.batch_size == 1 else 10
+        self.store_next_loss = False        # indicates whether to store the loss computed on the next batch
         self.current_running_avg_step, self.running_loss, self.running_accuracy, self.current_permutation = (0, 0.0, 0.0, 0)
         self.results_dict = {}
         total_ckpts = self.steps_per_task * self.num_permutations // (self.running_avg_window * self.batch_size)
@@ -123,8 +124,11 @@ class PermutedMNISTExperiment(Experiment):
         if self.use_cbpw:
             total_top_updates = (self.steps_per_task * self.num_permutations) // self.topology_update_freq
             self.results_dict["prop_added_then_removed"] = torch.zeros(total_top_updates, device=self.device, dtype=torch.float32)
-            if "redo" in self.prune_method:
-                self.results_dict["total_removed_per_update"] = torch.zeros(total_top_updates, device=self.device, dtype=torch.float32)
+        if (self.use_cbp or self.use_cbpw) and self.extended_summaries:
+            self.results_dict["loss_before_topology_update"] = []
+            self.results_dict["loss_after_topology_update"] = []
+            self.results_dict["avg_grad_before_topology_update"] = []
+            self.results_dict["avg_grad_after_topology_update"] = []
 
         """ For creating experiment checkpoints """
         self.current_permutation = 0
@@ -212,6 +216,7 @@ class PermutedMNISTExperiment(Experiment):
 
         # train network
         self.train(mnist_data_loader=mnist_data_loader, training_data=mnist_train_data)
+        self.post_process_extended_results()
 
     def train(self, mnist_data_loader: DataLoader, training_data: MnistDataSet):
 
@@ -243,6 +248,8 @@ class PermutedMNISTExperiment(Experiment):
                 current_reg_loss.backward()
                 self.optim.step()
 
+                self.store_extended_summaries(current_loss)
+
                 # update topology and apply masks to weights
                 if self.time_to_update_topology(self.current_experiment_step):
                     self.update_topology()
@@ -263,6 +270,27 @@ class PermutedMNISTExperiment(Experiment):
             print("Epoch run time: {0:.2f}".format((final_time - initial_time) / 60))
 
         self._save_model_parameters()
+
+    def store_extended_summaries(self, current_loss: torch.Tensor) -> None:
+        """ Stores the extended summaries related to the topology update of CBP and CBPw """
+        if not self.extended_summaries: return
+
+        if (not self.store_cbp_extended_summaries() and         # check if using cbp and a feature has been replaced
+            not self.store_cbpw_extended_summaries() and        # check if using cbpw and weights have been replaced
+            not self.store_next_loss):                          # check if cbp or cbpw was used in the previous step
+            return
+
+        self.net.reset_indicators()
+        prefix = "after" if self.store_next_loss else "before"
+        self.results_dict[f"loss_{prefix}_topology_update"].append(current_loss)
+        self.results_dict[f"avg_grad_{prefix}_topology_update"].append(self.net.get_average_gradient_magnitude())
+        self.store_next_loss = not self.store_next_loss
+
+    def store_cbp_extended_summaries(self) -> bool:
+        return (self.use_cbp and self.net.feature_replace_event_indicator())
+
+    def store_cbpw_extended_summaries(self) -> bool:
+        return self.use_cbpw and self.time_to_update_topology(self.current_experiment_step)
 
     def time_to_update_topology(self, current_minibatch: int):
         if not self.use_cbpw:
@@ -305,8 +333,6 @@ class PermutedMNISTExperiment(Experiment):
             # print("Total removed: {0}".format(total_removed))
             # print("Proportion of added then removed: {0:.4f}".format(prop_added_then_removed))
             self.results_dict["prop_added_then_removed"][self.current_topology_update] += prop_added_then_removed
-            if "redo" in self.prune_method:
-                self.results_dict["total_removed_per_update"][self.current_topology_update] += total_removed
 
         self.previously_removed_weights = removed_masks
 
@@ -321,6 +347,13 @@ class PermutedMNISTExperiment(Experiment):
         file_path = os.path.join(model_parameters_dir_path, file_name)
 
         store_object_with_several_attempts(self.net.state_dict(), file_path, storing_format="torch", num_attempts=10)
+
+    def post_process_extended_results(self):
+        if not self.extended_summaries: return
+        self.results_dict["loss_before_topology_update"] = np.array(self.results_dict["loss_before_topology_update"], dtype=np.float32)
+        self.results_dict["loss_after_topology_update"] = np.array(self.results_dict["loss_after_topology_update"], dtype=np.float32)
+        self.results_dict["avg_grad_before_topology_update"] = np.array(self.results_dict["avg_grad_before_topology_update"], dtype=np.float32)
+        self.results_dict["avg_grad_after_topology_update"] = np.array(self.results_dict["avg_grad_after_topology_update"], dtype=np.float32)
 
 
 def main():
@@ -347,6 +380,7 @@ def main():
                                   run_index=terminal_arguments.run_index,
                                   verbose=terminal_arguments.verbose)
     exp.run()
+    exp.store_results()
     final_time = time.perf_counter()
     print("The running time in minutes is: {0:.2f}".format((final_time - initial_time) / 60))
 
