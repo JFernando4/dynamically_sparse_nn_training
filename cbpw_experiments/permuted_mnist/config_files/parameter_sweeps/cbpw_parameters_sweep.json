@@ -19,15 +19,15 @@
     "stepsize": 0.005,
     "steps_per_task": 60000,
     "store_parameters": false,
-    "runs": 30
+    "runs":
   },
 
   "learning_params": {
     "use_cbpw": true,
-    "topology_update_freq": ["fixed", 15, 30, 75, 150, 300],
-    "prune_method": ["str", "magnitude", "gf"],
-    "grow_method": ["str", "kaiming_normal", "zero"],
-    "drop_factor": ["fixed", 0.01, 0.05, 0.1, 0.2, 0.4, 0.6]
+    "topology_update_freq": ["fixed", 15],
+    "prune_method": ["str", "magnitude"],
+    "grow_method": ["str", "kaiming_normal"],
+    "drop_factor": ["fixed", 0.01]
   },
 
   "slurm_parameters": {
