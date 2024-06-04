@@ -19,7 +19,7 @@
     "stepsize": 0.005,
     "steps_per_task": 60000,
     "store_parameters": false,
-    "runs":
+    "runs": 5
   },
 
   "learning_params": {
