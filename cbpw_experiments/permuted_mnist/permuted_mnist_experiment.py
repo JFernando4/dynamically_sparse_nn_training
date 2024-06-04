@@ -343,10 +343,17 @@ class PermutedMNISTExperiment(Experiment):
         model_parameters_dir_path = os.path.join(self.results_dir, "model_parameters")
         os.makedirs(model_parameters_dir_path, exist_ok=True)
 
-        file_name = "index-{0}_permutation-{1}.pt".format(self.run_index, self.current_permutation)
+        file_name = f"index-{self.run_index}.pt"
         file_path = os.path.join(model_parameters_dir_path, file_name)
 
-        store_object_with_several_attempts(self.net.state_dict(), file_path, storing_format="torch", num_attempts=10)
+        model_parameters = []
+        if os.path.exists(file_path):
+            with open(file_path, mode="rb") as model_parameters_file:
+                model_parameters = pickle.load(model_parameters_file)
+            os.remove(file_path)
+
+        model_parameters.append(self.net.state_dict())
+        store_object_with_several_attempts(model_parameters, file_path, storing_format="pickle", num_attempts=10)
 
     def post_process_extended_results(self):
         if not self.extended_summaries: return
