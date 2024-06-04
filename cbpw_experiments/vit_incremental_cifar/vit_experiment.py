@@ -60,8 +60,8 @@ class IncrementalCIFARExperiment(Experiment):
         # CBPw parameters
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
         self.epoch_freq = access_dict(exp_params, "epoch_freq", default=False, val_type=bool)
-        pruning_functions_names = ["none", "magnitude", "redo", "gf", "hess_approx"]
-        grow_methods = ["none", "pm_min", "xavier_normal", "zero"]
+        pruning_functions_names = ["none", "magnitude", "gf"]
+        grow_methods = ["none", "kaiming_normal", "zero"]
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str, choices=pruning_functions_names)
         self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str, choices=grow_methods)
         assert not ((self.prune_method != "none" and self.grow_method == "none") or (self.prune_method == "none" and self.grow_method != "none"))
@@ -146,7 +146,6 @@ class IncrementalCIFARExperiment(Experiment):
             self.ln_list = initialize_ln_list_vit(self.net)
             self.norm_layer_update_func = setup_cbpw_layer_norm_update_function(self.prune_method, self.ln_drop_factor,True)
 
-
         # initialize optimizer and loss function
         self.optim = self._get_optimizer()
         self.lr_scheduler = None
@@ -210,8 +209,6 @@ class IncrementalCIFARExperiment(Experiment):
             else:
                 tensor_size = total_checkpoints * self.running_avg_window // self.topology_update_freq
             self.results_dict["prop_added_then_removed"] = torch.zeros(tensor_size, device=self.device, dtype=torch.float32)
-            if "redo" in self.prune_method:
-                self.results_dict["total_removed_per_update"] = torch.zeros(tensor_size, device=self.device, dtype=torch.float32)
 
     def _get_optimizer(self):
         """ Creates optimizer object based on the experiment parameters """
@@ -422,6 +419,8 @@ class IncrementalCIFARExperiment(Experiment):
                     self.update_topology()
                 if self.use_cbpw_ln and (self.current_minibatch % self.ln_update_freq) == 0:
                     for ln_layer in self.ln_list: self.norm_layer_update_func(ln_layer)
+
+                self.current_loss = detached_loss
 
             epoch_end = time.perf_counter()
 
