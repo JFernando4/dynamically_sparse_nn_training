@@ -18,13 +18,13 @@
     "steps_per_task": 60000,
     "store_parameters": false,
     "extended_summaries": false,
-    "runs": 5
+    "runs": 30
   },
 
   "learning_params": {
     "use_cbp": true,
-    "maturity_threshold": ["fixed", 100],
-    "replacement_rate": ["fixed", 1e-3]
+    "maturity_threshold": ["fixed", 50, 100, 1000],
+    "replacement_rate": ["fixed", 1e-3, 1e-4, 1e-5]
   },
 
   "slurm_parameters": {
