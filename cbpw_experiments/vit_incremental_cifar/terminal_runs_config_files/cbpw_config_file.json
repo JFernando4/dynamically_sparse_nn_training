@@ -12,10 +12,10 @@
   "fixed_classes": false,
   "use_best_network": true,
   "__comment_4__": "CBPw Parameters.",
-  "topology_update_freq": 60,
+  "topology_update_freq": 65,
   "prune_method": "gf",
   "grow_method": "zero",
-  "drop_factor": 0.001,
+  "drop_factor": 0.01,
   "df_as_rate": true,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
