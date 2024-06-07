@@ -420,8 +420,6 @@ class IncrementalCIFARExperiment(Experiment):
                 if self.use_cbpw_ln and (self.current_minibatch % self.ln_update_freq) == 0:
                     for ln_layer in self.ln_list: self.norm_layer_update_func(ln_layer)
 
-                self.current_loss = detached_loss
-
             epoch_end = time.perf_counter()
 
             self._store_test_summaries(test_dataloader, val_dataloader, epoch_number=e, epoch_runtime=epoch_end - epoch_start)
