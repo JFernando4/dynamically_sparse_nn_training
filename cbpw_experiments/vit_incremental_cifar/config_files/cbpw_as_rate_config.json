@@ -26,10 +26,10 @@
   },
 
   "learning_params": {
-    "topology_update_freq": ["fixed", 65],
+    "topology_update_freq": ["fixed", 130, 65, 30],
     "prune_method": ["str", "gf"],
     "grow_method": ["str", "zero"],
-    "drop_factor": ["fixed", 0.01],
+    "drop_factor": ["fixed", 0.02, 0.01, 0.005],
     "df_as_rate": true
   },
 
