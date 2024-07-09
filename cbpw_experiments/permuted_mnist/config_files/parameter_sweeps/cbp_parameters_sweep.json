@@ -15,6 +15,7 @@
     "num_hidden": 10,
     "batch_size": 30,
     "stepsize": 0.005,
+    "l2_factor": 7e-5,
     "steps_per_task": 60000,
     "store_parameters": false,
     "extended_summaries": false,
@@ -23,8 +24,8 @@
 
   "learning_params": {
     "use_cbp": true,
-    "maturity_threshold": ["fixed", 5, 50, 100, 1000],
-    "replacement_rate": ["fixed", 1e-1, 1e-2, 1e-3, 1e-4, 1e-5]
+    "maturity_threshold": ["fixed", 1, 5, 50, 100, 1000],
+    "replacement_rate": ["fixed", 0.2, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5]
   },
 
   "slurm_parameters": {
