@@ -7,20 +7,17 @@
   "__comment_2__": "Parameter value used in the original ResNet paper",
   "momentum": 0.9,
   "__comment_3__": "Incremental experiment parameters. Classes increase by 5 every 100 epochs.",
-  "num_epochs": 3200,
+  "num_epochs": 4000,
   "initial_num_classes": 5,
   "fixed_classes": false,
   "use_best_network": true,
   "__comment_4__": "CBPw Parameters.",
   "use_cbpw": true,
-  "use_cbpw_bn": true,
-  "exclude_bn_bias": true,
-  "exclude_downsample": true,
-  "include_output_layer": true,
-  "topology_update_freq": 525,
-  "prune_method": "hess_approx",
-  "grow_method": "pm_min",
-  "drop_factor": 0.2,
+  "df_as_rate": true,
+  "topology_update_freq": 260,
+  "prune_method": "gf",
+  "grow_method": "zero",
+  "drop_factor": 0.05,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
     "num_epochs",
@@ -28,9 +25,6 @@
     "prune_method",
     "grow_method",
     "drop_factor",
-    "use_cbpw_bn",
-    "exclude_bn_bias",
-    "exclude_downsample",
-    "include_output_layer"
+    "df_as_rate"
   ]
 }

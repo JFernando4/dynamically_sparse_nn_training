@@ -54,12 +54,13 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
         self.include_output_layer = access_dict(exp_params, "include_output_layer", default=False, val_type=bool)
         self.include_all = access_dict(exp_params, "include_all", default=False, val_type=bool)
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
-        pruning_functions_names = ["none", "magnitude", "redo", "gf", "hess_approx"]
+        pruning_functions_names = ["none", "magnitude", "gf"]
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str, choices=pruning_functions_names)
         grow_methods = ["none", "pm_min", "xavier_normal", "zero"]
         self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str, choices=grow_methods)
         assert not ((self.prune_method != "none" and self.grow_method == "none") or (self.prune_method == "none" and self.grow_method != "none"))
         self.drop_factor = access_dict(exp_params, "drop_factor", default=0.0, val_type=float)
+        self.df_as_rate = access_dict(exp_params, "df_as_rate", default=False, val_type=bool)
 
         self.use_cbpw_bn = access_dict(exp_params, "use_cbpw_bn", default=False, val_type=bool)
         self.bn_update_freq = access_dict(exp_params, "bn_update_freq", default=self.topology_update_freq, val_type=int)
@@ -84,7 +85,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
                                                       self.grow_method, self.drop_factor,
                                                       exclude_downsample=self.exclude_downsample,
                                                       include_output_layer=self.include_output_layer,
-                                                      include_all=self.include_all)
+                                                      include_all=self.include_all, df_as_rate=self.df_as_rate)
         if self.use_cbpw_bn:
             self.bn_list = initialize_bn_list_resnet(self.net, exclude_downsample=self.exclude_downsample)
             self.norm_layer_update_func = setup_cbpw_layer_norm_update_function(self.prune_method, self.bn_drop_factor,
