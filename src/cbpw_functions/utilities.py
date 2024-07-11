@@ -1,4 +1,4 @@
-
+from typing import Union
 import torch
 
 from .weight_matrix_updates import setup_cbpw_weight_update_function
@@ -15,23 +15,26 @@ def initialize_weight_dict(net: torch.nn.Module,
                            **kwargs) -> dict[str, tuple]:
     """ Initializes the weight dictionaries used in CBPw """
 
+    df_as_rate = False if "df_as_rate" not in kwargs else kwargs["df_as_rate"]
     if architecture_type == "vit":
         assert isinstance(net, VisionTransformer)
-        df_as_rate = False if "df_as_rate" not in kwargs else kwargs["df_as_rate"]
         if df_as_rate:
-            return initialize_weights_dict_vit_df_as_rate(net, prune_method, grow_method, drop_factor)
+            return initialize_weights_dict_df_as_rate(net, prune_method, grow_method, drop_factor)
         else:
             return initialize_weights_dict_vit(net, prune_method=prune_method, grow_method=grow_method,
                                                drop_factor=drop_factor, **kwargs)
 
     elif architecture_type == "resnet":
         assert isinstance(net, ResNet)
-        exclude_downsample = False if "exclude_downsample" not in kwargs.keys() else kwargs["exclude_downsample"]
-        include_output_layer = False if "include_output_layer" not in kwargs.keys() else kwargs["include_output_layer"]
-        include_all = False if "include_all" not in kwargs.keys() else kwargs["include_all"]
-        return initializes_weights_dict_resnet(net, prune_method=prune_method, grow_method=grow_method,
-                                               drop_factor=drop_factor, exclude_downsample=exclude_downsample,
-                                               include_output_layer=include_output_layer, include_all=include_all)
+        if df_as_rate:
+            initialize_weights_dict_df_as_rate(net, prune_method, grow_method, drop_factor)
+        else:
+            exclude_downsample = False if "exclude_downsample" not in kwargs.keys() else kwargs["exclude_downsample"]
+            include_output_layer = False if "include_output_layer" not in kwargs.keys() else kwargs["include_output_layer"]
+            include_all = False if "include_all" not in kwargs.keys() else kwargs["include_all"]
+            return initializes_weights_dict_resnet(net, prune_method=prune_method, grow_method=grow_method,
+                                                   drop_factor=drop_factor, exclude_downsample=exclude_downsample,
+                                                   include_output_layer=include_output_layer, include_all=include_all)
 
     elif architecture_type == "sequential":
         assert isinstance(net, ThreeHiddenLayerNetwork)
@@ -86,12 +89,12 @@ def initialize_ln_list_bert(net):
     return list_of_layer_norm_layers
 
 
-def initialize_weights_dict_vit_df_as_rate(net: VisionTransformer,
-                                           prune_method: str,
-                                           grow_method: str,
-                                           drop_factor: float) -> dict[str, tuple]:
+def initialize_weights_dict_df_as_rate(net: Union[VisionTransformer, ResNet],
+                                       prune_method: str,
+                                       grow_method: str,
+                                       drop_factor: float) -> dict[str, tuple]:
     """
-    Initializes the weight dictionaries used in CBPw for a Vision Transformer. The drop_factor is used as a rate, which
+    Initializes the weight dictionaries used in CBPw for a network. The drop_factor is used as a rate, which
     is relevant if drop_factor * p.numel() is less than 1.
     """
     weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor, as_rate=True)
@@ -103,9 +106,9 @@ def initialize_weights_dict_vit_df_as_rate(net: VisionTransformer,
     for n, p in net.named_parameters():
         is_weight = "weight" in n
         is_bias = "bias" in n
-        is_layer_norm = (".ln_1." in n) or (".ln_2." in n) or (".ln." in n)
+        is_layer_or_batch_norm = (".ln_1." in n) or (".ln_2." in n) or (".ln." in n) or ("bn1." in n) or ("bn2." in n)
 
-        if is_weight and is_layer_norm:
+        if is_weight and is_layer_or_batch_norm:
             weight_dict[n] = (p, ln_weight_update_func)
         elif is_bias:
             weight_dict[n] = (p, bias_update_func)
@@ -169,7 +172,6 @@ def initializes_weights_dict_resnet(net: ResNet,
             weight_dict[n] = (p, update_func)
         if ("fc.weight" in n) and include_output_layer:
             weight_dict[n] = (p, update_func)
-
 
     return weight_dict
 
