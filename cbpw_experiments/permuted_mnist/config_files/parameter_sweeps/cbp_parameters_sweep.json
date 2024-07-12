@@ -15,7 +15,6 @@
     "num_hidden": 10,
     "batch_size": 30,
     "stepsize": 0.005,
-    "l2_factor": 7e-5,
     "steps_per_task": 60000,
     "store_parameters": false,
     "extended_summaries": false,
