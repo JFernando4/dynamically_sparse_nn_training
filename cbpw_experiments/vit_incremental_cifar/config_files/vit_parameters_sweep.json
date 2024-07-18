@@ -1,0 +1,40 @@
+{
+  "file_management": {
+    "experiment_name": "vit_parameter_sweep",
+    "data_path": "/home/jfernan/dynamically_sparse_nn_training/experiments/vit_incremental_cifar_demonstration/data/",
+    "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
+    "relevant_parameters": [
+      "stepsize",
+      "weight_decay",
+      "dropout_prob"
+    ]
+  },
+
+  "experiment_params": {
+    "momentum": 0.9,
+    "num_epochs": 100,
+    "initial_num_classes": 100,
+    "fixed_classes": true,
+    "use_lr_schedule": true,
+    "runs": 1
+  },
+
+  "learning_params": {
+    "stepsize": ["fixed", 0.2, 0.1, 0.05, 0.01, 0.005],
+    "weight_decay": ["fixed", 1e-4, 1e-5, 5e-6, 2e-6, 1e-6, 1e-7, 1e-8],
+    "dropout_prob": ["fixed", 0.0, 0.05, 0.1, 0.15]
+  },
+
+  "slurm_parameters": {
+    "job_name": "vit_psweep",
+    "time": "1:50:00",
+    "max_runs_per_job": 1,
+    "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
+    "output_filename": "vit_psweep-%n-%j.out",
+    "mem": "12G",
+    "mail-type": "BEGIN,END,FAIL",
+    "mail-user":"jfhernan@ualberta.ca",
+    "cpus-per-task": 12,
+    "gpus-per-node": 1
+  }
+}
