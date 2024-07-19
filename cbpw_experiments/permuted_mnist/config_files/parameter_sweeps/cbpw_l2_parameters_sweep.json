@@ -26,7 +26,7 @@
 
   "learning_params": {
     "use_cbpw": true,
-    "topology_update_freq": ["fixed", 150, 300, 600],
+    "topology_update_freq": ["fixed", 30, 75, 150, 300, 600],
     "prune_method": ["str", "magnitude", "gf"],
     "grow_method": ["str", "kaiming_normal", "zero"],
     "drop_factor": ["fixed", 0.01, 0.05, 0.1, 0.2, 0.4]
@@ -34,7 +34,7 @@
 
   "slurm_parameters": {
     "job_name": "cbpw_ps",
-    "time": "11:00:00",
+    "time": "9:00:00",
     "max_runs_per_job": 5,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
     "output_filename": "pmnist_ps-%n-%j.out",
