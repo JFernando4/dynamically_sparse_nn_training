@@ -76,6 +76,10 @@ class PermutedMNISTExperiment(Experiment):
         self.maturity_threshold = access_dict(exp_params, "maturity_threshold", default=0, val_type=int)
         self.replacement_rate = access_dict(exp_params, "replacement_rate", default=1e-6, val_type=float)
 
+        # Layer Norm parameters
+        self.use_ln = access_dict(exp_params, "use_ln", default=False, val_type=bool)
+        self.preactivation_ln = access_dict(exp_params, "preactivation_ln", default=False, val_type=bool)
+
         # paths for loading and storing data
         self.data_path = exp_params["data_path"]
         self.store_parameters = access_dict(exp_params, "store_parameters", default=False, val_type=bool)
@@ -92,7 +96,9 @@ class PermutedMNISTExperiment(Experiment):
         self.net = ThreeHiddenLayerNetwork(hidden_dim=self.num_hidden,
                                            use_cbp=self.use_cbp,
                                            maturity_threshold=self.maturity_threshold,
-                                           replacement_rate=self.replacement_rate)
+                                           replacement_rate=self.replacement_rate,
+                                           use_layer_norm=self.use_ln,
+                                           preactivation_layer_norm=self.preactivation_ln)
         self.net.apply(lambda z: init_weights_kaiming(z, nonlinearity="relu", normal=True)) # initialize weights
         # initialize CBPw dictionary
         self.weight_dict = None

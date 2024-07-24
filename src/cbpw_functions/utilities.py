@@ -183,15 +183,21 @@ def initialize_weights_dict_sequential(net: ThreeHiddenLayerNetwork,
     """ Initializes the weight dictionaries used in CBPw for a Sequential Network """
     weights_update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor, as_rate=True)
     bias_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="zero", drop_factor=drop_factor, as_rate=True)
+    ln_weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="fixed", drop_factor=drop_factor, as_rate=True, reinit_val=1.0)
 
     weight_dict = {}
 
     for n, p in net.named_parameters():
-        if "bias" in n:
-            temp_update_func = bias_update_func
+        is_weight = "weight" in n
+        is_bias = "bias" in n
+        is_layer_norm = "ln_" in n
+
+        if is_weight and is_layer_norm:
+            weight_dict[n] = (p, ln_weight_update_func)
+        elif is_bias:
+            weight_dict[n] = (p, bias_update_func)
         else:
-            temp_update_func = weights_update_func
-        weight_dict[n] = (p, temp_update_func)
+            weight_dict[n] = (p, weights_update_func)
 
     return weight_dict
 
