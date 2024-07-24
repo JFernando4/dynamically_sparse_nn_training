@@ -1,0 +1,30 @@
+{
+  "__comment_1__": "Parameters for the optimizer.",
+  "stepsize": 0.005,
+  "l1_factor": 0.0,
+  "l2_factor": 0.0,
+
+  "__comment_2__": "Parameters for the architecture",
+  "num_layers": 3,
+  "num_hidden": 10,
+  "batch_size": 30,
+  "store_parameters": false,
+
+  "__comment_3__": "Permuted MNIST problem parameters. Classes increase by 5 every 100 epochs.",
+  "num_permutations": 50,
+
+  "__comment_4__": "UPGD Parameters.",
+  "use_upgd": true,
+  "noise_std": 0.001,
+  "beta_utility": 0.99,
+
+  "__comment_5__": "Other parameters",
+  "extended_summaries": false,
+
+  "__comment_6__": "For creating the results directory.",
+  "relevant_parameters": [
+    "stepsize",
+    "use_upgd",
+    "noise_std"
+  ]
+}
