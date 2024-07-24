@@ -138,63 +138,8 @@ class PermutedMNISTExperiment(Experiment):
 
         """ For creating experiment checkpoints """
         self.current_permutation = 0
-        self.experiment_checkpoints_dir_path = os.path.join(self.results_dir, "experiment_checkpoints")
-        self.checkpoint_identifier_name = "current_permutation"
-        self.checkpoint_save_frequency = 50     # create a checkpoint after this many task changes
         # with batch size of 30 and num permutations of 1000, experiment take less than an hour, so why checkpoints?
         self.store_checkpoints = False
-        self.load_experiment_checkpoint()
-
-    # ----------------------------- For saving and loading experiment checkpoints ----------------------------- #
-    def get_experiment_checkpoint(self) -> dict:
-        """ Creates a dictionary with all the data necessary to restart the experiment """
-
-        partial_results = {}
-        for k, v in self.results_dict.items():
-            partial_results[k] = v if not isinstance(v, torch.Tensor) else v.cpu()
-
-        checkpoint = {
-            "model_weights": self.net.state_dict(),
-            "torch_rng_state": torch.random.get_rng_state(),
-            "numpy_rng_state": np.random.get_state(),
-            "permutation_number": self.current_permutation,
-            "current_running_avg_step": self.current_running_avg_step,
-            "current_running_averages": (self.running_accuracy, self.running_loss),
-            "partial_results": partial_results
-        }
-
-        if self.device.type == "cuda":
-            checkpoint["cuda_rng_state"] = torch.cuda.get_rng_state()
-
-        return checkpoint
-
-    def load_checkpoint_data_and_update_experiment_variables(self, file_path):
-        """ Loads the checkpoint and assigns the experiment variables the recovered values """
-
-        with open(file_path, mode="rb") as experiment_checkpoint_file:
-            checkpoint = pickle.load(experiment_checkpoint_file)
-
-        self.net.load_state_dict(checkpoint["model_weights"])
-        torch.set_rng_state(checkpoint["torch_rng_state"])
-        np.random.set_state(checkpoint["numpy_rng_state"])
-        self.current_permutation = checkpoint["permutation_number"]
-        self.current_running_avg_step = checkpoint["current_running_avg_step"]
-        self.running_accuracy, self.running_loss = checkpoint["current_running_averages"]
-
-        if self.device.type == "cuda":
-            torch.cuda.set_rng_state(checkpoint["cuda_rng_state"])
-
-        partial_results = checkpoint["partial_results"]
-
-        # store partial results
-        for k, v in self.results_dict.items():
-            self.results_dict[k] = partial_results[k] if not isinstance(partial_results[k], torch.Tensor) else partial_results[k].to(self.device)
-
-        if not self.use_cbpw:
-            return
-
-        self.weight_dict = initialize_weight_dict(self.net, "sequential", self.prune_method,
-                                                  self.grow_method, self.drop_factor)
 
     # ----------------------------- For storing summaries ----------------------------- #
     def _store_training_summaries(self):
