@@ -20,6 +20,7 @@ from src.cbpw_functions import initialize_weight_dict
 from src.networks import RegularizedSGD, ThreeHiddenLayerNetwork
 from src.cbpw_functions.weight_matrix_updates import update_weights
 from src.utils.experiment_utils import parse_terminal_arguments
+from src.plasticity_functions import FirstOrderGlobalUPGD, inject_noise
 
 
 class PermutedMNISTExperiment(Experiment):
@@ -80,6 +81,12 @@ class PermutedMNISTExperiment(Experiment):
         self.use_ln = access_dict(exp_params, "use_ln", default=False, val_type=bool)
         self.preactivation_ln = access_dict(exp_params, "preactivation_ln", default=False, val_type=bool)
 
+        # UPGD and S&P parameters
+        self.use_upgd = access_dict(exp_params, "use_upgd", default=False, val_type=bool)
+        self.perturb_weights = access_dict(exp_params, "perturb_weights", default=False, val_type=bool)
+        self.noise_std = access_dict(exp_params, "noise_std", default=0.0, val_type=float)
+        self.beta_utility = access_dict(exp_params, "beta_utility", default=0.0, val_type=float)
+
         # paths for loading and storing data
         self.data_path = exp_params["data_path"]
         self.store_parameters = access_dict(exp_params, "store_parameters", default=False, val_type=bool)
@@ -107,10 +114,17 @@ class PermutedMNISTExperiment(Experiment):
                                                       self.grow_method, self.drop_factor)
 
         # initialize optimizer
-        self.optim = RegularizedSGD(self.net.parameters(),
-                                    lr=self.stepsize,
-                                    weight_decay=self.l2_factor / self.stepsize,
-                                    l1_reg_factor=self.l1_factor / self.stepsize)
+        if self.use_upgd:
+            self.optim = FirstOrderGlobalUPGD(self.net.named_parameters(),
+                                              lr=self.stepsize,
+                                              weight_decay=self.l2_factor / self.stepsize,
+                                              beta_utility=self.beta_utility,
+                                              sigma=self.noise_std)
+        else:
+            self.optim = RegularizedSGD(self.net.parameters(),
+                                        lr=self.stepsize,
+                                        weight_decay=self.l2_factor / self.stepsize,
+                                        l1_reg_factor=self.l1_factor / self.stepsize)
 
         # define loss function
         self.loss = torch.nn.CrossEntropyLoss(reduction="mean")
@@ -198,6 +212,9 @@ class PermutedMNISTExperiment(Experiment):
                 # backpropagate and update weights
                 current_reg_loss.backward()
                 self.optim.step()
+
+                if self.perturb_weights:
+                    inject_noise(self.net, noise_std=self.noise_std)
 
                 self.store_extended_summaries(current_loss)
 
