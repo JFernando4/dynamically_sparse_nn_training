@@ -15,11 +15,11 @@
 
   "__comment_4__": "CBPw Parameters.",
   "use_cbpw": true,
-  "extended_summaries": true,
-  "topology_update_freq": 150,
+  "extended_summaries": false,
+  "topology_update_freq": 300,
   "prune_method": "gf",
   "grow_method": "zero",
-  "drop_factor": 0.01,
+  "drop_factor": 0.1,
 
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
