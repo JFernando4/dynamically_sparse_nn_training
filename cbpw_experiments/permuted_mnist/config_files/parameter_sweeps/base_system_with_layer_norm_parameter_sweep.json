@@ -16,11 +16,11 @@
     "num_layers": 3,
     "num_hidden": 10,
     "batch_size": 30,
-    "runs": 5
+    "runs": 30
   },
 
   "learning_params": {
-    "stepsize": ["fixed", 0.005],
+    "stepsize": ["fixed", 0.01, 0.005, 0.001, 0.0005],
     "use_ln": ["fixed", true],
     "preactivation_ln": ["fixed", true, false]
   },
