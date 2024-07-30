@@ -22,9 +22,9 @@ def compute_average_gradient_magnitude(model: torch.nn.Module) -> float:
     total_params = 0.0
 
     for p in model.parameters():
-        assert p.grad is not None
-        grad_magnitude_summ += p.grad.abs().sum()
-        total_params += p.numel()
+        if p.grad is not None:
+            grad_magnitude_summ += p.grad.abs().sum()
+            total_params += p.numel()
 
     return float(grad_magnitude_summ / total_params)
 
