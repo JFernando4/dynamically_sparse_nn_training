@@ -14,18 +14,18 @@ def compute_accuracy_from_batch(predictions: torch.Tensor, labels: torch.Tensor)
     """
     return torch.mean((predictions.argmax(axis=1) == labels.argmax(axis=1)).to(torch.float32))
 
-def compute_average_gradient_magnitude(model: torch.nn.Module) -> torch.Tensor:
+def compute_average_gradient_magnitude(model: torch.nn.Module) -> float:
     """
     computes the average gradient magnitude of a network
     """
-    grad_magnitude_summ = torch.tensor(0.0, dtype=model.dtype, device=model.device)
-    total_params = torch.tensor(0.0, dtype=model.dtype, device=model.device)
+    grad_magnitude_summ = 0.0
+    total_params = 0.0
 
     for p in model.parameters():
         assert p.grad is not None
         grad_magnitude_summ += p.grad.abs().sum()
         total_params += p.numel()
 
-    return grad_magnitude_summ / total_params
+    return float(grad_magnitude_summ / total_params)
 
 
