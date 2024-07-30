@@ -38,6 +38,8 @@ class CBPLinear(nn.Module):
             self,
             in_layer: nn.Module,
             out_layer: nn.Module,
+            ln_layer: nn.LayerNorm = None,
+            bn_layer: nn.BatchNorm1d = None,
             act_type='relu',
             replacement_rate=0,
             init='kaiming',
@@ -46,6 +48,10 @@ class CBPLinear(nn.Module):
             decay_rate=0,
     ):
         super().__init__()
+        if type(in_layer) is not nn.Linear:
+            raise Warning("Make sure in_layer is a weight layer")
+        if type(out_layer) is not nn.Linear:
+            raise Warning("Make sure out_layer is a weight layer")
         """
         Define the hyper-parameters of the algorithm
         """
@@ -54,7 +60,6 @@ class CBPLinear(nn.Module):
         self.util_type = util_type
         self.decay_rate = decay_rate
         self.features = None
-
         """
         Register hooks
         """
@@ -62,9 +67,10 @@ class CBPLinear(nn.Module):
             self.register_full_backward_hook(call_reinit)
             self.register_forward_hook(log_features)
 
-        # todo: add warning that in_layer and out_layers must be nn.Linear
         self.in_layer = in_layer
         self.out_layer = out_layer
+        self.ln_layer = ln_layer
+        self.bn_layer = bn_layer
         """
         Utility of all features/neurons
         """
@@ -129,6 +135,18 @@ class CBPLinear(nn.Module):
             self.out_layer.weight.data[:, features_to_replace] = 0
             self.ages[features_to_replace] = 0
             self.replace_feature_event_indicator = True
+
+            """
+            Reset the corresponding batchnorm/layernorm layers
+            """
+            if self.bn_layer is not None:
+                self.bn_layer.bias.data[features_to_replace] = 0.0
+                self.bn_layer.weight.data[features_to_replace] = 1.0
+                self.bn_layer.running_mean.data[features_to_replace] = 0.0
+                self.bn_layer.running_var.data[features_to_replace] = 1.0
+            if self.ln_layer is not None:
+                self.ln_layer.bias.data[features_to_replace] = 0.0
+                self.ln_layer.weight.data[features_to_replace] = 1.0
 
     def reinit(self):
         """
