@@ -21,6 +21,7 @@ from src.networks import RegularizedSGD, ThreeHiddenLayerNetwork
 from src.cbpw_functions.weight_matrix_updates import update_weights
 from src.utils.experiment_utils import parse_terminal_arguments
 from src.plasticity_functions import FirstOrderGlobalUPGD, inject_noise
+from src.utils.evaluation_functions import compute_average_gradient_magnitude
 
 
 class PermutedMNISTExperiment(Experiment):
@@ -136,6 +137,7 @@ class PermutedMNISTExperiment(Experiment):
         self.running_avg_window = 100 if self.batch_size == 1 else 10
         self.store_next_loss = False        # indicates whether to store the loss computed on the next batch
         self.current_running_avg_step, self.running_loss, self.running_accuracy, self.current_permutation = (0, 0.0, 0.0, 0)
+        self.running_avg_grad_magnitude = 0.0
         self.results_dict = {}
         total_ckpts = self.steps_per_task * self.num_permutations // (self.running_avg_window * self.batch_size)
         self.results_dict["train_loss_per_checkpoint"] = torch.zeros(total_ckpts, device=self.device, dtype=torch.float32)
@@ -144,6 +146,10 @@ class PermutedMNISTExperiment(Experiment):
         if self.use_cbpw:
             total_top_updates = (self.steps_per_task * self.num_permutations) // self.topology_update_freq
             self.results_dict["prop_added_then_removed"] = torch.zeros(total_top_updates, device=self.device, dtype=torch.float32)
+
+        if self.extended_summaries:
+            self.results_dict["average_gradient_magnitude_per_checkpoint"] = torch.zeros(total_ckpts, device=self.device, dtype=torch.float32)
+
         if (self.use_cbp or self.use_cbpw) and self.extended_summaries:
             self.results_dict["loss_before_topology_update"] = []
             self.results_dict["loss_after_topology_update"] = []
@@ -157,19 +163,19 @@ class PermutedMNISTExperiment(Experiment):
 
     # ----------------------------- For storing summaries ----------------------------- #
     def _store_training_summaries(self):
-
-        current_results = {
-            "train_loss_per_checkpoint": self.running_loss / self.running_avg_window,
-            "train_accuracy_per_checkpoint": self.running_accuracy / self.running_avg_window
-        }
-
         # store train data for checkpoints
-        self.results_dict["train_loss_per_checkpoint"][self.current_running_avg_step] += current_results["train_loss_per_checkpoint"]
-        self.results_dict["train_accuracy_per_checkpoint"][self.current_running_avg_step] += current_results["train_accuracy_per_checkpoint"]
+        self.results_dict["train_loss_per_checkpoint"][self.current_running_avg_step] += self.running_loss / self.running_avg_window
+        self.results_dict["train_accuracy_per_checkpoint"][self.current_running_avg_step] += self.running_accuracy / self.running_avg_window
 
         self._print("\t\tOnline accuracy: {0:.2f}".format(self.running_accuracy / self.running_avg_window))
         self.running_loss *= 0.0
         self.running_accuracy *= 0.0
+
+        if self.extended_summaries:
+            self.results_dict["average_gradient_magnitude_per_checkpoint"][self.current_running_avg_step] += \
+                self.running_avg_grad_magnitude / self.running_avg_window
+            self.running_avg_grad_magnitude *= 0.0
+
         self.current_running_avg_step += 1
 
     # --------------------------- For running the experiment --------------------------- #
@@ -212,6 +218,9 @@ class PermutedMNISTExperiment(Experiment):
                 # backpropagate and update weights
                 current_reg_loss.backward()
                 self.optim.step()
+
+                if self.extended_summaries:
+                    self.running_avg_grad_magnitude += compute_average_gradient_magnitude(self.net)
 
                 if self.perturb_weights:
                     inject_noise(self.net, noise_std=self.noise_std)
@@ -316,15 +325,19 @@ class PermutedMNISTExperiment(Experiment):
 
         model_parameters = []
         if os.path.exists(file_path):
-            with open(file_path, mode="rb") as model_parameters_file:
-                model_parameters = pickle.load(model_parameters_file)
-            os.remove(file_path)
+            if self.current_permutation == 0:   # there was something stored from previous failed runs
+                os.remove(file_path)
+            else:                               # there was something stored from the current run
+                with open(file_path, mode="rb") as model_parameters_file:
+                    model_parameters = pickle.load(model_parameters_file)
+                os.remove(file_path)
 
         model_parameters.append(self.net.state_dict())
         store_object_with_several_attempts(model_parameters, file_path, storing_format="pickle", num_attempts=10)
 
     def post_process_extended_results(self):
-        if not self.extended_summaries: return
+        using_cbp_or_cbpw = self.use_cbp or self.use_cbpw
+        if not self.extended_summaries and not using_cbp_or_cbpw: return
         self.results_dict["loss_before_topology_update"] = np.array(self.results_dict["loss_before_topology_update"], dtype=np.float32)
         self.results_dict["loss_after_topology_update"] = np.array(self.results_dict["loss_after_topology_update"], dtype=np.float32)
         self.results_dict["avg_grad_before_topology_update"] = np.array(self.results_dict["avg_grad_before_topology_update"], dtype=np.float32)
