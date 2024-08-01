@@ -49,12 +49,13 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
             self.cbp_3 = CBPLinear(in_layer=self.ff_3, out_layer=self.out, replacement_rate=self.rr,
                                    maturity_threshold=self.mt, init="kaiming", ln_layer=self.ln_3)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, activations: list = None) -> torch.Tensor:
         # first hidden layer
         x = self.ff_1(x)
         if self.use_layer_norm and self.preactivation_layer_norm:
             x = self.ln_1(x)
         x = self.act_1(x)
+        if activations is not None: activations.append(x)
         if self.cbp_1 is not None:
             x = self.cbp_1(x)
         if self.use_layer_norm and not self.preactivation_layer_norm:
@@ -65,6 +66,7 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
         if self.use_layer_norm and self.preactivation_layer_norm:
             x = self.ln_2(x)
         x = self.act_2(x)
+        if activations is not None: activations.append(x)
         if self.cbp_2 is not None:
             x = self.cbp_2(x)
         if self.use_layer_norm and not self.preactivation_layer_norm:
@@ -75,6 +77,7 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
         if self.use_layer_norm and self.preactivation_layer_norm:
             x = self.ln_3(x)
         x = self.act_3(x)
+        if activations is not None: activations.append(x)
         if self.cbp_3 is not None:
             x = self.cbp_3(x)
         if self.use_layer_norm and not self.preactivation_layer_norm:
