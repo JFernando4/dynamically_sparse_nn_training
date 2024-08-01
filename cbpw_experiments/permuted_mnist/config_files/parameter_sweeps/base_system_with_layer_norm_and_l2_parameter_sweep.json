@@ -23,7 +23,7 @@
   "learning_params": {
     "stepsize": ["fixed", 0.007],
     "use_ln": ["fixed", true],
-    "preactivation_ln": ["fixed", true, false],
+    "preactivation_ln": ["fixed", false],
     "l2_factor": ["fixed", 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8]
   },
 
