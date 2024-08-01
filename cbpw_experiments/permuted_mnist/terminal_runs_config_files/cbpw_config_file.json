@@ -9,23 +9,22 @@
   "num_hidden": 10,
   "batch_size": 30,
   "store_parameters": false,
+  "extended_summaries": false,
 
   "__comment_3__": "Permuted MNIST problem parameters. Classes increase by 5 every 100 epochs.",
   "num_permutations": 1000,
 
   "__comment_4__": "CBPw Parameters.",
   "use_cbpw": true,
-  "extended_summaries": false,
   "topology_update_freq": 300,
   "prune_method": "gf",
-  "grow_method": "zero",
+  "grow_method": "fixed_with_noise",
   "drop_factor": 0.1,
+  "noise_std": 0.0001,
 
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
-    "batch_size",
-    "l1_factor",
-    "l2_factor",
+    "noise_std",
     "topology_update_freq",
     "prune_method",
     "grow_method",
