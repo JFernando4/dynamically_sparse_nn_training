@@ -1,0 +1,43 @@
+{
+  "file_management": {
+    "experiment_name": "cbp_with_layer_norm_parameters_sweep",
+    "data_path": "/home/dohare/projects/def-ashique/dohare/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/data",
+    "results_path": "/scratch/dohare/dynamically_sparse_nn_training/results",
+    "relevant_parameters": [
+      "maturity_threshold",
+      "replacement_rate"
+    ]
+  },
+
+  "experiment_params": {
+    "num_permutations": 1000,
+    "num_layers": 3,
+    "num_hidden": 10,
+    "batch_size": 30,
+    "stepsize": 0.007,
+    "steps_per_task": 60000,
+    "store_parameters": false,
+    "extended_summaries": false,
+    "runs": 5
+  },
+
+  "learning_params": {
+    "use_cbp": true,
+    "use_ln": true,
+    "preactivation_ln": false,
+    "maturity_threshold": ["fixed", 1],
+    "replacement_rate": ["fixed", 0.2]
+  },
+
+  "slurm_parameters": {
+    "job_name": "cbp_ln",
+    "time": "12:00:00",
+    "max_runs_per_job": 5,
+    "output_dir": "/scratch/dohare/dynamically_sparse_nn_training/outputs",
+    "output_filename": "pmnist_ps-%n-%j.out",
+    "mem": "12G",
+    "mail-type": "BEGIN,END,FAIL",
+    "mail-user":"jfhernan@ualberta.ca",
+    "cpus-per-task": 6
+  }
+}
