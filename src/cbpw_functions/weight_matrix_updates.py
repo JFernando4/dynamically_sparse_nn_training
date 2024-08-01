@@ -27,7 +27,7 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     """ Sets up weight update function for CBP-w """
     prune_function_names = ["magnitude", "redo", "gf_redo", "gf", "hess_approx"]
     grow_function_names = ["pm_min", "kaiming_normal", "xavier_normal", "zero", "kaming_uniform", "xavier_uniform",
-                           "fixed"]
+                           "fixed", "fixed_with_noise"]
     assert prune_name in prune_function_names and grow_name in grow_function_names
     assert "drop_factor" in kwargs.keys()
 
@@ -51,6 +51,10 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     elif grow_name == "fixed":
         assert "reinit_val" in kwargs.keys()
         grow_func = lambda w: fixed_reinit_weights(w, kwargs["reinit_val"])
+    elif grow_name == "fixed_with_noise":
+        assert "reinit_val" in kwargs.keys()
+        assert "noise_std" in kwargs.keys()
+        grow_func = lambda w: fixed_reinit_weights_with_noise(w, kwargs["reinit_val"], kwargs["noise_std"])
 
     def temp_prune_and_grow_weights(w: torch.Tensor):
         return prune_and_grow_weights(w, prune_func, grow_func)
@@ -238,3 +242,9 @@ def fixed_reinit_weights(weight: torch.Tensor, reinit_val: float) -> None:
     """ Reinitializes weights toa fixed value """
     pruned_indices = torch.where(weight.flatten() == 0.0)[0]
     weight.view(-1)[pruned_indices] = reinit_val
+
+@torch.no_grad()
+def fixed_reinit_weights_with_noise(weight: torch.Tensor, reinit_val: float, noise_std: float) -> None:
+    """ Reinitializes weights toa fixed value """
+    pruned_indices = torch.where(weight.flatten() == 0.0)[0]
+    weight.view(-1)[pruned_indices] = reinit_val + torch.rand_like(weight.view(-1)[pruned_indices]) * noise_std

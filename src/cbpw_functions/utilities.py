@@ -38,8 +38,9 @@ def initialize_weight_dict(net: torch.nn.Module,
 
     elif architecture_type == "sequential":
         assert isinstance(net, ThreeHiddenLayerNetwork)
+        noise_std = None if "noise_std" not in kwargs.keys() else kwargs["noise_std"]
         return initialize_weights_dict_sequential(net, prune_method=prune_method, grow_method=grow_method,
-                                                  drop_factor=drop_factor)
+                                                  drop_factor=drop_factor, noise_std=noise_std)
     elif architecture_type == "bert":
         return initialize_weights_dict_bert_all(net, prune_method=prune_method, grow_method=grow_method, drop_factor=drop_factor)
     else:
@@ -179,11 +180,18 @@ def initializes_weights_dict_resnet(net: ResNet,
 def initialize_weights_dict_sequential(net: ThreeHiddenLayerNetwork,
                                        prune_method: str,
                                        grow_method: str,
-                                       drop_factor: float) -> dict[str, tuple]:
+                                       drop_factor: float,
+                                       noise_std: float = None) -> dict[str, tuple]:
     """ Initializes the weight dictionaries used in CBPw for a Sequential Network """
-    weights_update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor, as_rate=True)
-    bias_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="zero", drop_factor=drop_factor, as_rate=True)
-    ln_weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="fixed", drop_factor=drop_factor, as_rate=True, reinit_val=1.0)
+    bias_grow_name = "zero" if grow_method is not "fixed_with_noise" else grow_method
+    ln_weight_grow_name = "fixed" if grow_method is not "fixed_with_noise" else grow_method
+    weights_update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor,
+                                                            as_rate=True, reinit_val=0.0, noise_std=noise_std)
+    bias_update_func = setup_cbpw_weight_update_function(prune_method, grow_name=bias_grow_name, drop_factor=drop_factor,
+                                                         as_rate=True, reinit_val=0.0, noise_std=noise_std)
+    ln_weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_name=ln_weight_grow_name,
+                                                              drop_factor=drop_factor, as_rate=True, reinit_val=1.0,
+                                                              noise_std=noise_std)
 
     weight_dict = {}
 
