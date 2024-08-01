@@ -15,7 +15,7 @@
 
   "__comment_4__": "Layer Norm Parameters.",
   "use_ln": true,
-  "preactivation_ln": true,
+  "preactivation_ln": false,
 
   "__comment_5__": "Other parameters",
   "extended_summaries": false,
