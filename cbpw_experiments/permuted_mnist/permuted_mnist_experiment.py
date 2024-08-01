@@ -68,7 +68,7 @@ class PermutedMNISTExperiment(Experiment):
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str,
                                         choices=["none", "magnitude", "gf"])
         self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str,
-                                       choices=["none", "pm_min", "kaiming_normal", "zero"])
+                                       choices=["none", "kaiming_normal", "zero", "fixed_with_noise"])
         self.drop_factor = access_dict(exp_params, "drop_factor", default=float, val_type=float)
         self.previously_removed_weights = None
         self.current_topology_update = 0
@@ -85,7 +85,7 @@ class PermutedMNISTExperiment(Experiment):
         # UPGD and S&P parameters
         self.use_upgd = access_dict(exp_params, "use_upgd", default=False, val_type=bool)
         self.perturb_weights = access_dict(exp_params, "perturb_weights", default=False, val_type=bool)
-        self.noise_std = access_dict(exp_params, "noise_std", default=0.0, val_type=float)
+        self.noise_std = access_dict(exp_params, "noise_std", default=None, val_type=float)
         self.beta_utility = access_dict(exp_params, "beta_utility", default=0.0, val_type=float)
 
         # paths for loading and storing data
@@ -107,12 +107,13 @@ class PermutedMNISTExperiment(Experiment):
                                            replacement_rate=self.replacement_rate,
                                            use_layer_norm=self.use_ln,
                                            preactivation_layer_norm=self.preactivation_ln)
-        self.net.apply(lambda z: init_weights_kaiming(z, nonlinearity="relu", normal=True)) # initialize weights
+        self.net.apply(lambda z: init_weights_kaiming(z, nonlinearity="relu", normal=True))     # initialize weights
+
         # initialize CBPw dictionary
         self.weight_dict = None
         if self.use_cbpw:
             self.weight_dict = initialize_weight_dict(self.net, "sequential", self.prune_method,
-                                                      self.grow_method, self.drop_factor)
+                                                      self.grow_method, self.drop_factor, noise_std=self.noise_std)
 
         # initialize optimizer
         if self.use_upgd:
@@ -337,7 +338,7 @@ class PermutedMNISTExperiment(Experiment):
 
     def post_process_extended_results(self):
         using_cbp_or_cbpw = self.use_cbp or self.use_cbpw
-        if not self.extended_summaries and not using_cbp_or_cbpw: return
+        if not self.extended_summaries or not using_cbp_or_cbpw: return
         self.results_dict["loss_before_topology_update"] = np.array(self.results_dict["loss_before_topology_update"], dtype=np.float32)
         self.results_dict["loss_after_topology_update"] = np.array(self.results_dict["loss_after_topology_update"], dtype=np.float32)
         self.results_dict["avg_grad_before_topology_update"] = np.array(self.results_dict["avg_grad_before_topology_update"], dtype=np.float32)
