@@ -1,6 +1,6 @@
 {
   "__comment_1__": "Parameters for the optimizer.",
-  "stepsize": 0.005,
+  "stepsize": 0.007,
   "l1_factor": 0.0,
   "l2_factor": 0.0,
 
