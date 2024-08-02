@@ -1,0 +1,6 @@
+{
+  "results_dir": "/scratch/dohare/dynamically_sparse_nn_training/results/base_sytem_with_layer_norm_parameter_sweep/",
+  "display_format": "table",
+  "column_var": "stepsize",
+  "row_var": "preactivation_ln"
+}

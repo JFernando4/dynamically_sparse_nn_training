@@ -1,3 +1,4 @@
+import numpy
 import torch
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
@@ -7,6 +8,7 @@ import pickle
 import argparse
 
 import os
+import re
 import torch
 from mlproj_manager.plots_and_summaries.plotting_functions import line_plot_with_error_bars, lighten_color
 from scipy.stats import pearsonr
@@ -22,6 +24,34 @@ def get_average_over_bins(np_array, bin_size: int):
     num_bins = np_array.size // bin_size
     reshaped_array = np_array.reshape(num_bins, bin_size)
     return np.average(reshaped_array, axis=1)
+
+
+def check_conversion(s: str):
+    # Check if the string can be converted to a float
+    try:
+        float_val = float(s)
+        can_be_float = True
+    except ValueError:
+        can_be_float = False
+
+    # Check if the string can be converted to an int
+    try:
+        int_val = int(s)
+        can_be_int = True
+    except ValueError:
+        can_be_int = False
+
+    return can_be_float, can_be_int
+
+def convert_to_float_or_int_if_possible(s: str):
+    # if possible, converts a string into a float or an int and returns it, otherwise it returns the same string
+    can_be_float, can_be_int = check_conversion(s)
+    if can_be_float and not can_be_int:
+        return int(s)
+    elif can_be_float and can_be_int:
+        return float(s)
+    else:
+        return s
 
 
 def get_network_weight_magnitude(net: torch.nn.Module):
@@ -40,7 +70,7 @@ def get_average_measurement_per_checkpoint(results_dir: str, measurement_name: s
     pass
 
 
-def simple_training_accuracy_analysis(results_dir: str):
+def training_accuracy_list_format(results_dir: str):
 
     """ Prints the training accuracy for each parameter combination in results dir """
     for param_comb in os.listdir(results_dir):
@@ -62,20 +92,121 @@ def simple_training_accuracy_analysis(results_dir: str):
         print(f"Avg: {mean:.4f}\tSE: {std_error:.4f}")
 
 
-def analyse_results(results_dir: str):
+def training_accuracy_table_format(results_dir: str, column_var: str, row_var: str):
+    """
+    Prints the training accuracy for each parameter combination in results as a table
+    """
 
-    bin_size = 200
+    column_var_list, row_var_list = get_sorted_values(os.listdir(results_dir), column_var, row_var)
 
-    simple_training_accuracy_analysis(results_dir)
+    average_results, num_samples, max_acc_indices = compute_average_training_accuracy_for_table(column_var_list,
+                                                                                                row_var_list,
+                                                                                                results_dir,
+                                                                                                column_var, row_var)
+
+    print_table(average_results, num_samples, max_acc_indices, column_var, row_var)
+
+
+def get_sorted_values(parameter_combinations: list[str], column_var: str, row_var: str):
+    column_var_list = []
+    row_var_list = []
+
+    for param_comb in parameter_combinations:
+        if column_var not in param_comb: continue
+        if row_var not in param_comb: continue
+
+        # param_comb is formatted as "column_var-val1_row_var-val2_other_var-val3"
+        # the line below gets the value immediately after the given variable
+        temp_cv_value = param_comb.split(column_var)[1].split("-")[1].split("_")[0]
+        temp_cv_value = convert_to_float_or_int_if_possible(temp_cv_value)
+
+        temp_rv_value = param_comb.split(row_var)[1].split("-")[1].split("_")[0]
+        temp_rv_value = convert_to_float_or_int_if_possible(temp_rv_value)
+
+        if temp_cv_value not in column_var_list:
+            column_var_list.append(temp_cv_value)
+        if temp_rv_value not in row_var_list:
+            row_var_list.append(temp_rv_value)
+
+    column_var_list.sort()
+    row_var_list.sort()
+    print(f"Column variable values: {column_var_list}")
+    print(f"Row variable values: {row_var_list}")
+    return column_var_list, row_var_list
+
+
+def compute_average_training_accuracy_for_table(column_var_list: list, row_var_list: list, results_dir: str,
+                                                column_var: str, row_var: str):
+
+    average_results = np.zeros((len(column_var_list), len(row_var_list))) + np.nan
+    num_samples = np.zeros((len(column_var_list), len(row_var_list)), dtype=np.int32)
+
+    base_name = os.listdir(results_dir)[0]
+    max_acc = -np.inf
+    max_acc_indices = (-1, -1)
+    for i, cv in enumerate(column_var_list):
+        for j, rv in enumerate(row_var_list):
+
+            # this was chatGPT generated, don't ask me how it works
+            param_comb_name = re.sub(rf"({re.escape(column_var)}-)[^_]+", r"\1" + cv, base_name)
+            param_comb_name = re.sub(rf"({re.escape(row_var)}-)[^_]+", r"\1" + rv, param_comb_name)
+
+            temp_dir = os.path.join(results_dir, param_comb_name, "train_accuracy_per_checkpoint")
+
+            if not os.path.isdir(temp_dir): continue
+            num_samples[i, j] = len(os.listdir(temp_dir))
+            results = []
+
+            for file_name in os.listdir(temp_dir):
+                results_file_name = os.path.join(temp_dir, file_name)
+                results.append(np.load(results_file_name))
+
+            average_results[i, j] = np.average(results)
+            if average_results[i, j] > max_acc:
+                max_acc = average_results[i, j]
+                max_acc_indices = (i, j)
+
+    return average_results, num_samples, max_acc_indices
+
+
+def print_table(average_results: np.ndarray, num_samples: np.ndarray, max_acc_indices: tuple[int, int],
+                column_var_list: str, row_var_list: str):
+
+    print("", end="\t|   ")
+    space_after = 1
+    for cv in column_var_list:
+        space = " " * (12 + space_after - len(f"{cv}"))
+        print(f"{cv}", end=f"{space}|\t")
+    print("")
+    for j, rv in enumerate(row_var_list):
+        print(f"{rv}", end="\t|   ")
+        for i, cv in enumerate(column_var_list):
+            best_indicator = " "
+            if i == max_acc_indices[0] and j == max_acc_indices[1]:
+                best_indicator = "*"
+            print(f"{average_results[i, j]:.4f} ({num_samples[i, j]}){best_indicator}", end=" " * space_after + "|\t")
+        print("")
+
+def analyse_results(analysis_parameters: dict):
+
+    results_dir = analysis_parameters["results_dir"]
+    display_format = analysis_parameters["display_format"]
+
+    if display_format == "list":
+        training_accuracy_list_format(results_dir)
+    elif display_format == "table":
+        assert "column_var" in analysis_parameters.keys()
+        assert "row_var" in analysis_parameters.keys()
+        training_accuracy_table_format(results_dir, analysis_parameters["column_var"], analysis_parameters["row_var"])
+    else:
+        raise ValueError(f"{display_format} is not a valid display format.")
 
 
 def parse_terminal_arguments():
     """ Reads experiment arguments """
     argument_parser = argparse.ArgumentParser()
-    argument_parser.add_argument("--results_dir_path", action="store", type=str, required=True,
-                                 help="Path where results are.")
-    # argument_parser.add_argument("--analysis_config_file", action="store", type=str, required=True,
-    #                              help="JSON file with analysis configurations.")
+    argument_parser.add_argument("--analysis_config_file", action="store", type=str, required=True,
+                                 help="JSON file with analysis configurations.")
     argument_parser.add_argument("--verbose", action="store_true", default=False)
     return argument_parser.parse_args()
 
@@ -83,7 +214,5 @@ def parse_terminal_arguments():
 if __name__ == "__main__":
 
     terminal_arguments = parse_terminal_arguments()
-
-    results_dir = terminal_arguments.results_dir_path
-    # analysis_parameters = read_json_file(terminal_arguments.analysis_config_file)
-    analyse_results(results_dir)
+    analysis_parameters = read_json_file(terminal_arguments.analysis_config_file)
+    analyse_results(analysis_parameters)
