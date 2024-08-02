@@ -137,6 +137,7 @@ def compute_average_training_accuracy_for_table(column_var_list: list, row_var_l
     num_samples = np.zeros((len(column_var_list), len(row_var_list)), dtype=np.int32)
 
     base_name = os.listdir(results_dir)[0]
+    print(base_name)
     max_acc = -np.inf
     max_acc_indices = (-1, -1)
     for i, cv in enumerate(column_var_list):
