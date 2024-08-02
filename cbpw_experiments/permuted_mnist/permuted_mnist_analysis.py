@@ -57,7 +57,7 @@ def simple_training_accuracy_analysis(results_dir: str):
             results_file_name = os.path.join(temp_dir, file_name)
             results.append(np.load(results_file_name))
 
-        print(f"Mean: {np.round(np.average(results), 4)}\t"
+        print(f"Mean: {np.round(np.average(results), 4)}\t" + \
               f"Standard Error: {np.round(np.std(np.average(results, axis=1), ddof=1) / np.sqrt(num_samples), 4)}")
 
 
