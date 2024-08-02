@@ -1,7 +1,7 @@
 {
   "file_management": {
-    "experiment_name": "cbpw_parameters_sweep",
-    "data_path": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/dst_lop_experiments/permuted_mnist/data/",
+    "experiment_name": "cbp_base_system_parameter_sweep",
+    "data_path": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/data/",
     "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
     "relevant_parameters": [
       "maturity_threshold",
@@ -14,25 +14,25 @@
     "num_layers": 3,
     "num_hidden": 10,
     "batch_size": 30,
-    "stepsize": 0.005,
+    "stepsize": 0.05,
     "steps_per_task": 60000,
     "store_parameters": false,
     "extended_summaries": false,
-    "runs": 30
+    "runs": 10
   },
 
   "learning_params": {
     "use_cbp": true,
-    "maturity_threshold": ["fixed", 1, 5, 50, 100, 1000],
-    "replacement_rate": ["fixed", 0.2, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5]
+    "maturity_threshold": ["fixed", 1, 5, 50, 100, 500],
+    "replacement_rate": ["fixed", 1e-1, 1e-2, 1e-3, 1e-4, 1e-5]
   },
 
   "slurm_parameters": {
-    "job_name": "cbp_ps",
+    "job_name": "cbp_bs",
     "time": "11:00:00",
     "max_runs_per_job": 5,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
-    "output_filename": "pmnist_ps-%n-%j.out",
+    "output_filename": "cbp_bs-%n-%j.out",
     "mem": "12G",
     "mail-type": "BEGIN,END,FAIL",
     "mail-user":"jfhernan@ualberta.ca",
