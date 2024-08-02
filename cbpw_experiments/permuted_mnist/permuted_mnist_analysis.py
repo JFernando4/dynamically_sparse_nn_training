@@ -40,10 +40,9 @@ def get_average_measurement_per_checkpoint(results_dir: str, measurement_name: s
     pass
 
 
-def analyse_results(results_dir: str):
+def simple_training_accuracy_analysis(results_dir: str):
 
-    bin_size = 200
-
+    """ Prints the training accuracy for each parameter combination in results dir """
     for param_comb in os.listdir(results_dir):
 
         temp_dir = os.path.join(results_dir, param_comb, "train_accuracy_per_checkpoint")
@@ -51,15 +50,22 @@ def analyse_results(results_dir: str):
         no_results = len(os.listdir(temp_dir)) == 0
         if no_results: continue
         num_samples = len(os.listdir(temp_dir))
-        print(param_comb, "\tSamples: {0}".format(num_samples))
+        print(f"{param_comb}\t\tSamples: {num_samples}")
         results = []
 
         for file_name in os.listdir(temp_dir):
             results_file_name = os.path.join(temp_dir, file_name)
             results.append(np.load(results_file_name))
 
-        print(np.average(results))
-        print(np.std(np.average(results, axis=1), ddof=1) / np.sqrt(num_samples))
+        print(f"Mean: {np.round(np.average(results), 4)}\t"
+              f"Standard Error: {np.std(np.average(results, axis=1), ddof=1) / np.sqrt(num_samples)}")
+
+
+def analyse_results(results_dir: str):
+
+    bin_size = 200
+
+    simple_training_accuracy_analysis(results_dir)
 
 
 def parse_terminal_arguments():
