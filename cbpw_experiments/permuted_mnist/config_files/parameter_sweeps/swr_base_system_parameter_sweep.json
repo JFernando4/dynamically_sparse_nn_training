@@ -1,7 +1,7 @@
 {
   "file_management": {
-    "experiment_name": "cbpw_parameters_sweep",
-    "data_path": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/dst_lop_experiments/permuted_mnist/data/",
+    "experiment_name": "swr_base_system_parameter_sweep",
+    "data_path": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/data/",
     "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
     "relevant_parameters": [
       "topology_update_freq",
@@ -16,23 +16,23 @@
     "num_layers": 3,
     "num_hidden": 10,
     "batch_size": 30,
-    "stepsize": 0.005,
+    "stepsize": 0.05,
     "steps_per_task": 60000,
     "store_parameters": false,
-    "runs": 30
+    "runs": 10
   },
 
   "learning_params": {
     "use_cbpw": true,
-    "topology_update_freq": ["fixed", 15, 30, 75, 150, 300, 600],
+    "topology_update_freq": ["fixed", 15, 30, 75, 150, 300],
     "prune_method": ["str", "magnitude", "gf"],
     "grow_method": ["str", "kaiming_normal", "zero"],
-    "drop_factor": ["fixed", 0.01, 0.05, 0.1, 0.2, 0.4]
+    "drop_factor": ["fixed", 0.01, 0.05, 0.1, 0.2]
   },
 
   "slurm_parameters": {
-    "job_name": "cbpw_ps",
-    "time": "11:00:00",
+    "job_name": "swr_bs",
+    "time": "10:00:00",
     "max_runs_per_job": 5,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
     "output_filename": "pmnist_ps-%n-%j.out",
