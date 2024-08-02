@@ -197,7 +197,7 @@ def print_table(average_results: np.ndarray, num_samples: np.ndarray, max_acc_in
     space_after = 1
     for cv in column_var_list:
         space = " " * (12 + space_after - len(f"{cv}"))
-        print(f"{cv}", end=f"{space}|\t\t")
+        print(f"{cv}", end=f"{space}|\t")
     print("")
     for j, rv in enumerate(row_var_list):
         print(f"{rv}", end="\t|   ")
@@ -205,7 +205,7 @@ def print_table(average_results: np.ndarray, num_samples: np.ndarray, max_acc_in
             best_indicator = " "
             if i == max_acc_indices[0] and j == max_acc_indices[1]:
                 best_indicator = "*"
-            print(f"{average_results[i, j]:.4f} ({num_samples[i, j]}){best_indicator}", end=" " * space_after + "|\t\t")
+            print(f"{average_results[i, j]:.4f} ({num_samples[i, j]}){best_indicator}", end=" " * space_after + "|\t")
         print("")
 
 def analyse_results(analysis_parameters: dict):
