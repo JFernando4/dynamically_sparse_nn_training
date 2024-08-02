@@ -143,8 +143,8 @@ def compute_average_training_accuracy_for_table(column_var_list: list, row_var_l
         for j, rv in enumerate(row_var_list):
 
             # this was chatGPT generated, don't ask me how it works
-            param_comb_name = re.sub(rf"({re.escape(column_var)}-)[^_]+", r"\1" + cv, base_name)
-            param_comb_name = re.sub(rf"({re.escape(row_var)}-)[^_]+", r"\1" + rv, param_comb_name)
+            param_comb_name = re.sub(rf"({re.escape(column_var)}-)[^_]+", r"\1" + str(cv), base_name)
+            param_comb_name = re.sub(rf"({re.escape(row_var)}-)[^_]+", r"\1" + str(rv), param_comb_name)
 
             temp_dir = os.path.join(results_dir, param_comb_name, "train_accuracy_per_checkpoint")
 
