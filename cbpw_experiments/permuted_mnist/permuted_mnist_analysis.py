@@ -45,9 +45,6 @@ def analyse_results(results_dir: str):
     bin_size = 200
 
     for param_comb in os.listdir(results_dir):
-        if "topology_update_freq" in param_comb: continue
-        if "maturity_threshold" in param_comb: continue
-        if "l2_factor" not in param_comb: continue
 
         temp_dir = os.path.join(results_dir, param_comb, "train_accuracy_per_checkpoint")
         if not os.path.isdir(temp_dir): continue
