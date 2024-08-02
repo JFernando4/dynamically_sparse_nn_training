@@ -99,7 +99,7 @@ def training_accuracy_table_format(results_dir: str, column_var: str, row_var: s
                                                                                                 results_dir,
                                                                                                 column_var, row_var)
 
-    print_table(average_results, num_samples, max_acc_indices, column_var, row_var)
+    print_table(average_results, num_samples, max_acc_indices, column_var_list, row_var_list)
 
 
 def get_sorted_values(parameter_combinations: list[str], column_var: str, row_var: str):
@@ -137,7 +137,7 @@ def compute_average_training_accuracy_for_table(column_var_list: list, row_var_l
     num_samples = np.zeros((len(column_var_list), len(row_var_list)), dtype=np.int32)
 
     base_name = os.listdir(results_dir)[0]
-    print(base_name)
+
     max_acc = -np.inf
     max_acc_indices = (-1, -1)
     for i, cv in enumerate(column_var_list):
@@ -191,7 +191,7 @@ def insert_column_and_row_values(base_name: str, column_var: str, row_var: str, 
 
 
 def print_table(average_results: np.ndarray, num_samples: np.ndarray, max_acc_indices: tuple[int, int],
-                column_var_list: str, row_var_list: str):
+                column_var_list: list, row_var_list: list):
 
     print("", end="\t|   ")
     space_after = 1
