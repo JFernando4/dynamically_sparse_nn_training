@@ -59,7 +59,7 @@ def simple_training_accuracy_analysis(results_dir: str):
 
         mean = np.round(np.average(results), 4)
         std_error = np.round(np.std(np.average(results, axis=1), ddof=1) / np.sqrt(num_samples), 4)
-        print(f"Mean: {mean:.4f}\tSE: {std_error:.4f}")
+        print(f"Avg: {mean:.4f}\tSE: {std_error:.4f}")
 
 
 def analyse_results(results_dir: str):
