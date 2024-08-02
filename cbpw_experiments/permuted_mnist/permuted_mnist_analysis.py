@@ -143,10 +143,7 @@ def compute_average_training_accuracy_for_table(column_var_list: list, row_var_l
     for i, cv in enumerate(column_var_list):
         for j, rv in enumerate(row_var_list):
 
-            # this was chatGPT generated, don't ask me how it works
-            param_comb_name = re.sub(rf"({re.escape(column_var)}-)[^_]+", rf"\1{cv}", base_name)
-            param_comb_name = re.sub(rf"({re.escape(row_var)}-)[^_]+", rf"\1{rv}", param_comb_name)
-
+            param_comb_name = insert_column_and_row_values(base_name, column_var, row_var, (cv, rv))
             temp_dir = os.path.join(results_dir, param_comb_name, "train_accuracy_per_checkpoint")
 
             if not os.path.isdir(temp_dir): continue
@@ -163,6 +160,34 @@ def compute_average_training_accuracy_for_table(column_var_list: list, row_var_l
                 max_acc_indices = (i, j)
 
     return average_results, num_samples, max_acc_indices
+
+
+def insert_column_and_row_values(base_name: str, column_var: str, row_var: str, values: tuple):
+    """
+    Inserts the row and column values into the base nam
+    This could be done more cleanly using regular expressions, but I'm lazy
+    """
+
+    cv, rv = values
+
+    split_list = base_name.split("-")
+    new_name = []
+    column_correct_next = False
+    row_correct_next = False
+    for i, part in enumerate(split_list):
+        temp_part = part
+        if row_correct_next or column_correct_next:
+            temp_part_split = temp_part.split("_")
+            temp_part_split[0] = str(rv) if row_correct_next else str(cv)
+            temp_part = "_".join(temp_part_split)
+            column_correct_next = False
+            row_correct_next = False
+        if column_var in part:
+            column_correct_next = True
+        if row_var in part:
+            row_correct_next = True
+        new_name.append(temp_part)
+    return "-".join(new_name)
 
 
 def print_table(average_results: np.ndarray, num_samples: np.ndarray, max_acc_indices: tuple[int, int],
