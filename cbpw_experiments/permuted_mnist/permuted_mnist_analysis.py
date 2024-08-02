@@ -27,31 +27,26 @@ def get_average_over_bins(np_array, bin_size: int):
 
 
 def check_conversion(s: str):
-    # Check if the string can be converted to a float
-    try:
-        float_val = float(s)
-        can_be_float = True
-    except ValueError:
-        can_be_float = False
+    """
+    Checks if the give string can be converted to int or float and returns the int or float value if possible
+    otherwise it returns the original string
+    """
 
     # Check if the string can be converted to an int
     try:
         int_val = int(s)
-        can_be_int = True
+        return int_val
     except ValueError:
         can_be_int = False
 
-    return can_be_float, can_be_int
+    # Check if the string can be converted to a float
+    try:
+        float_val = float(s)
+        return float_val
+    except ValueError:
+        can_be_float = False
 
-def convert_to_float_or_int_if_possible(s: str):
-    # if possible, converts a string into a float or an int and returns it, otherwise it returns the same string
-    can_be_float, can_be_int = check_conversion(s)
-    if can_be_float and not can_be_int:
-        return int(s)
-    elif can_be_float and can_be_int:
-        return float(s)
-    else:
-        return s
+    return s
 
 
 def get_network_weight_magnitude(net: torch.nn.Module):
@@ -118,10 +113,10 @@ def get_sorted_values(parameter_combinations: list[str], column_var: str, row_va
         # param_comb is formatted as "column_var-val1_row_var-val2_other_var-val3"
         # the line below gets the value immediately after the given variable
         temp_cv_value = param_comb.split(column_var)[1].split("-")[1].split("_")[0]
-        temp_cv_value = convert_to_float_or_int_if_possible(temp_cv_value)
+        temp_cv_value = check_conversion(temp_cv_value)
 
         temp_rv_value = param_comb.split(row_var)[1].split("-")[1].split("_")[0]
-        temp_rv_value = convert_to_float_or_int_if_possible(temp_rv_value)
+        temp_rv_value = check_conversion(temp_rv_value)
 
         if temp_cv_value not in column_var_list:
             column_var_list.append(temp_cv_value)
