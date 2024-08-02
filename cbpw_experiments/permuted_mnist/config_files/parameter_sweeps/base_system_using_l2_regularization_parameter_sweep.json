@@ -1,10 +1,9 @@
 {
   "file_management": {
-    "experiment_name": "cbpw_parameters_sweep",
+    "experiment_name": "base_system_using_l2_regularization_parameter_sweep",
     "data_path": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/dst_lop_experiments/permuted_mnist/data/",
     "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
     "relevant_parameters": [
-      "stepsize",
       "l2_factor"
     ]
   },
@@ -13,18 +12,18 @@
     "num_permutations": 1000,
     "num_layers": 3,
     "num_hidden": 10,
+    "stepsize": 0.05,
+    "steps_per_task": 60000,
+    "batch_size": 30,
     "runs": 30
   },
 
   "learning_params": {
-    "stepsize": ["fixed", 0.005],
-    "steps_per_task": ["fixed", 60000],
-    "l2_factor": ["fixed", 1e-3, 1e-4, 7e-5, 5e-5, 3e-5, 1e-5, 8e-6, 1e-6, 1e-7, 1e-8],
-    "batch_size": 30
+    "l2_factor": ["fixed", 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8]
   },
 
   "slurm_parameters": {
-    "job_name": "pmnist_ps",
+    "job_name": "bs_l2",
     "time": "10:00:00",
     "max_runs_per_job": 5,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
