@@ -139,11 +139,10 @@ def compute_average_training_accuracy_for_table(column_var_list: list, row_var_l
 
     average_results = np.zeros((len(column_var_list), len(row_var_list))) + np.nan
     num_samples = np.zeros((len(column_var_list), len(row_var_list)), dtype=np.int32)
-    print(grow_method, prune_method)
+
     base_name = os.listdir(results_dir)[0]
     if grow_method is not None and prune_method is not None:
         base_name = insert_column_and_row_values(base_name, "grow_method", "prune_method", (grow_method, prune_method))
-        print(base_name)
         print(f"{prune_method = }")
         print(f"{grow_method = }")
 
@@ -229,7 +228,8 @@ def analyse_results(analysis_parameters: dict):
         assert "row_var" in analysis_parameters.keys()
         grow_method = None if "grow_method" not in analysis_parameters.keys() else analysis_parameters["grow_method"]
         prune_method = None if "prune_method" not in analysis_parameters.keys() else analysis_parameters["prune_method"]
-        training_accuracy_table_format(results_dir, analysis_parameters["column_var"], analysis_parameters["row_var"])
+        training_accuracy_table_format(results_dir, analysis_parameters["column_var"], analysis_parameters["row_var"],
+                                       grow_method, prune_method)
     else:
         raise ValueError(f"{display_format} is not a valid display format.")
 
@@ -253,6 +253,4 @@ if __name__ == "__main__":
     analysis_parameters = read_json_file(terminal_arguments.analysis_config_file)
     analysis_parameters["grow_method"] = terminal_arguments.grow_method
     analysis_parameters["prune_method"] = terminal_arguments.prune_method
-    print(terminal_arguments.grow_method)
-    print(terminal_arguments.prune_method)
     analyse_results(analysis_parameters)
