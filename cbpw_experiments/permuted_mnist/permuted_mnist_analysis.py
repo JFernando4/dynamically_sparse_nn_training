@@ -253,4 +253,6 @@ if __name__ == "__main__":
     analysis_parameters = read_json_file(terminal_arguments.analysis_config_file)
     analysis_parameters["grow_method"] = terminal_arguments.grow_method
     analysis_parameters["prune_method"] = terminal_arguments.prune_method
+    print(terminal_arguments.grow_method)
+    print(terminal_arguments.prune_method)
     analyse_results(analysis_parameters)
