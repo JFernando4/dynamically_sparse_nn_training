@@ -115,10 +115,10 @@ def get_sorted_values(parameter_combinations: list[str], column_var: str, row_va
 
         # param_comb is formatted as "column_var-val1_row_var-val2_other_var-val3"
         # the line below gets the value immediately after the given variable
-        temp_cv_value = param_comb.split(column_var)[1].split("-")[1].split("_")[0]
+        temp_cv_value = param_comb.split(column_var)[1].split("_")[0][1:]
         temp_cv_value = check_conversion(temp_cv_value)
 
-        temp_rv_value = param_comb.split(row_var)[1].split("-")[1].split("_")[0]
+        temp_rv_value = param_comb.split(row_var)[1].split("_")[0][1:]
         temp_rv_value = check_conversion(temp_rv_value)
 
         if temp_cv_value not in column_var_list:
