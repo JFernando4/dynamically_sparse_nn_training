@@ -87,7 +87,8 @@ def training_accuracy_list_format(results_dir: str):
         print(f"Avg: {mean:.4f}\tSE: {std_error:.4f}")
 
 
-def training_accuracy_table_format(results_dir: str, column_var: str, row_var: str):
+def training_accuracy_table_format(results_dir: str, column_var: str, row_var: str, grow_method: str = None,
+                                   prune_method: str = None):
     """
     Prints the training accuracy for each parameter combination in results as a table
     """
@@ -97,7 +98,9 @@ def training_accuracy_table_format(results_dir: str, column_var: str, row_var: s
     average_results, num_samples, max_acc_indices = compute_average_training_accuracy_for_table(column_var_list,
                                                                                                 row_var_list,
                                                                                                 results_dir,
-                                                                                                column_var, row_var)
+                                                                                                column_var, row_var,
+                                                                                                grow_method=grow_method,
+                                                                                                prune_method=prune_method)
 
     print_table(average_results, num_samples, max_acc_indices, column_var_list, row_var_list)
 
@@ -131,12 +134,17 @@ def get_sorted_values(parameter_combinations: list[str], column_var: str, row_va
 
 
 def compute_average_training_accuracy_for_table(column_var_list: list, row_var_list: list, results_dir: str,
-                                                column_var: str, row_var: str):
+                                                column_var: str, row_var: str, grow_method: str = None,
+                                                prune_method: str = None):
 
     average_results = np.zeros((len(column_var_list), len(row_var_list))) + np.nan
     num_samples = np.zeros((len(column_var_list), len(row_var_list)), dtype=np.int32)
 
     base_name = os.listdir(results_dir)[0]
+    if grow_method is not None and prune_method is not None:
+        base_name = insert_column_and_row_values(base_name, "grow_method", "prune_method", (grow_method, prune_method))
+        print(f"{prune_method = }")
+        print(f"{grow_method = }")
 
     max_acc = -np.inf
     max_acc_indices = (-1, -1)
@@ -218,6 +226,8 @@ def analyse_results(analysis_parameters: dict):
     elif display_format == "table":
         assert "column_var" in analysis_parameters.keys()
         assert "row_var" in analysis_parameters.keys()
+        grow_method = None if "grow_method" not in analysis_parameters.keys() else analysis_parameters["grow_method"]
+        prune_method = None if "prune_method" not in analysis_parameters.keys() else analysis_parameters["prune_method"]
         training_accuracy_table_format(results_dir, analysis_parameters["column_var"], analysis_parameters["row_var"])
     else:
         raise ValueError(f"{display_format} is not a valid display format.")
@@ -228,6 +238,10 @@ def parse_terminal_arguments():
     argument_parser = argparse.ArgumentParser()
     argument_parser.add_argument("--analysis_config_file", action="store", type=str, required=True,
                                  help="JSON file with analysis configurations.")
+    argument_parser.add_argument("--grow_method", action="store", type=str, required=False, default=None,
+                                 help="Grow method for selective weight reinitialization.")
+    argument_parser.add_argument("--prune_method", action="store", type=str, required=False, default=None,
+                                 help="Prune method for selective weight reinitialization.")
     argument_parser.add_argument("--verbose", action="store_true", default=False)
     return argument_parser.parse_args()
 
@@ -236,4 +250,6 @@ if __name__ == "__main__":
 
     terminal_arguments = parse_terminal_arguments()
     analysis_parameters = read_json_file(terminal_arguments.analysis_config_file)
+    analysis_parameters["grow_method"] = terminal_arguments.grow_method
+    analysis_parameters["prune_method"] = terminal_arguments.prune_method
     analyse_results(analysis_parameters)
