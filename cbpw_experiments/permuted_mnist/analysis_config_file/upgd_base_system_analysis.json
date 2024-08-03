@@ -1,0 +1,6 @@
+{
+  "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/upgd_base_system_parameter_sweep/",
+  "display_format": "table",
+  "column_var": "noise_std",
+  "row_var": "beta_utility"
+}
