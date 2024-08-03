@@ -75,7 +75,7 @@ def training_accuracy_list_format(results_dir: str):
         no_results = len(os.listdir(temp_dir)) == 0
         if no_results: continue
         num_samples = len(os.listdir(temp_dir))
-        print(f"{param_comb}\t\tSamples: {num_samples}")
+        print(f"{param_comb}\t\t\tSamples: {num_samples}")
         results = []
 
         for file_name in os.listdir(temp_dir):
