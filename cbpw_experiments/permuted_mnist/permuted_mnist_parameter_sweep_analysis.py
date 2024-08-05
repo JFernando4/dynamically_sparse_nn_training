@@ -221,7 +221,7 @@ def parse_terminal_arguments():
                                  help="JSON file with analysis configurations.")
     argument_parser.add_argument("--grow_method", action="store", type=str, required=False, default=None,
                                  help="Grow method for selective weight reinitialization.")
-    argument_parser.add_argument("--prune_method", action="store_true", required=False, default=False,
+    argument_parser.add_argument("--prune_method", action="store", required=False, default=None,
                                  help="Prune method for selective weight reinitialization.")
     argument_parser.add_argument("--debug", action="store_true", default=False)
     return argument_parser.parse_args()
