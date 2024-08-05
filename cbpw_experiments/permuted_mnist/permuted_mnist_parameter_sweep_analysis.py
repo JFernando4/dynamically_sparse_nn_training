@@ -149,7 +149,7 @@ def insert_column_and_row_values(base_name: str, column_var: str, row_var: str, 
     split_list = base_name.split("-")
 
     for i, part in enumerate(split_list):   # quick hack for when parameter values are 1e-05, 1e-10, etc
-        if "e-" in part:
+        if "1e" in part:
             split_list.pop(i)
             break
     if DEBUG: print(split_list)
