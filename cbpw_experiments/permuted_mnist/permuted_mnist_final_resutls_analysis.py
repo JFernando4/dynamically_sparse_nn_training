@@ -1,29 +1,10 @@
-import numpy
-import torch
 from torch.utils.data import DataLoader
-import matplotlib.pyplot as plt
-import os
 import numpy as np
-import pickle
 import argparse
 
 import os
-import re
-import torch
-from mlproj_manager.plots_and_summaries.plotting_functions import line_plot_with_error_bars, lighten_color
-from scipy.stats import pearsonr
 
 from mlproj_manager.file_management import read_json_file
-from mlproj_manager.problems.supervised_learning import MnistDataSet
-
-from src.networks import ThreeHiddenLayerNetwork
-
-
-def get_average_over_bins(np_array, bin_size: int):
-
-    num_bins = np_array.size // bin_size
-    reshaped_array = np_array.reshape(num_bins, bin_size)
-    return np.average(reshaped_array, axis=1)
 
 
 def check_conversion(s: str):
@@ -37,32 +18,16 @@ def check_conversion(s: str):
         int_val = int(s)
         return int_val
     except ValueError:
-        can_be_int = False
+        pass
 
     # Check if the string can be converted to a float
     try:
         float_val = float(s)
         return float_val
     except ValueError:
-        can_be_float = False
+        pass
 
     return s
-
-
-def get_network_weight_magnitude(net: torch.nn.Module):
-    pass
-
-
-def get_network_average_activation(net: torch.nn.Module, test_data: DataLoader):
-    pass
-
-
-def get_average_measurement_per_checkpoint(results_dir: str, measurement_name: str):
-    """
-    :param results_dir: path to results directory
-    :param measurement_name: one of these three ["train_accuracy", "train_loss", "average_gradient_magnitude"]
-    """
-    pass
 
 
 def training_accuracy_list_format(results_dir: str):
