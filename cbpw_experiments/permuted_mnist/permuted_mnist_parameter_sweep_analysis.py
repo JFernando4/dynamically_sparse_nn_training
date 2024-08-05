@@ -147,6 +147,13 @@ def insert_column_and_row_values(base_name: str, column_var: str, row_var: str, 
     cv, rv = values
 
     split_list = base_name.split("-")
+
+    for i, part in enumerate(split_list):   # quick hack for when parameter values are 1e-05, 1e-10, etc
+        if "e-" in part:
+            split_list.pop(i)
+            break
+    if DEBUG: print(split_list)
+
     new_name = []
     column_correct_next = False
     row_correct_next = False
@@ -156,11 +163,8 @@ def insert_column_and_row_values(base_name: str, column_var: str, row_var: str, 
             temp_part_split = temp_part.split("_")
             temp_part_split[0] = str(rv) if row_correct_next else str(cv)
 
-            if DEBUG: print(temp_part_split)
             if len(temp_part_split) >= 2:
                 if temp_part_split[1] == "normal":  # quick hack for when parameter values is "kaiming_normal"
-                    temp_part_split.pop(1)
-                if isinstance(check_conversion(temp_part_split[1][0]), int):    # quick hack for when parameter values are "1e-05
                     temp_part_split.pop(1)
 
             temp_part = "_".join(temp_part_split)
