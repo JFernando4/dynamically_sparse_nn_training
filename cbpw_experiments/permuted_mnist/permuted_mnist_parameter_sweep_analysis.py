@@ -7,6 +7,8 @@ import os
 from mlproj_manager.file_management import read_json_file
 
 
+DEBUG = False
+
 def check_conversion(s: str):
     """
     Checks if the give string can be converted to int or float and returns the int or float value if possible
@@ -117,7 +119,7 @@ def compute_average_training_accuracy_for_table(column_var_list: list, row_var_l
         for j, rv in enumerate(row_var_list):
 
             param_comb_name = insert_column_and_row_values(base_name, column_var, row_var, (cv, rv))
-            # print(param_comb_name)
+            if DEBUG: print(param_comb_name)
             temp_dir = os.path.join(results_dir, param_comb_name, "train_accuracy_per_checkpoint")
 
             if not os.path.isdir(temp_dir): continue
@@ -210,9 +212,10 @@ def parse_terminal_arguments():
                                  help="JSON file with analysis configurations.")
     argument_parser.add_argument("--grow_method", action="store", type=str, required=False, default=None,
                                  help="Grow method for selective weight reinitialization.")
-    argument_parser.add_argument("--prune_method", action="store", type=str, required=False, default=None,
+    argument_parser.add_argument("--prune_method", action="store_true", type=bool, required=False,
+                                 default=False,
                                  help="Prune method for selective weight reinitialization.")
-    argument_parser.add_argument("--verbose", action="store_true", default=False)
+    argument_parser.add_argument("--debug", action="store_true", default=False)
     return argument_parser.parse_args()
 
 
@@ -222,4 +225,5 @@ if __name__ == "__main__":
     analysis_parameters = read_json_file(terminal_arguments.analysis_config_file)
     analysis_parameters["grow_method"] = terminal_arguments.grow_method
     analysis_parameters["prune_method"] = terminal_arguments.prune_method
+    DEBUG = terminal_arguments.debug
     analyse_results(analysis_parameters)
