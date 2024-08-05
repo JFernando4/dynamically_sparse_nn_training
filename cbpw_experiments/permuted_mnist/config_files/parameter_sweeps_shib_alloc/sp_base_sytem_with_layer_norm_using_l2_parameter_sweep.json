@@ -1,0 +1,41 @@
+{
+  "file_management": {
+    "experiment_name": "sp_base_sytem_with_layer_norm_using_l2_parameter_sweep",
+    "data_path": "/home/dohare/projects/def-ashique/dohare/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/data",
+    "results_path": "/scratch/dohare/dynamically_sparse_nn_training/results",
+    "relevant_parameters": [
+      "noise_std"
+    ]
+  },
+
+  "experiment_params": {
+    "num_permutations": 1000,
+    "num_layers": 3,
+    "num_hidden": 10,
+    "stepsize": 0.1,
+    "l2_factor": 0.0001,
+    "use_ln": true,
+    "preactivation_ln": false,
+    "steps_per_task": 60000,
+    "batch_size": 30,
+    "runs": 10
+  },
+
+  "learning_params": {
+    "perturb_weights": true,
+    "noise_std": ["fixed", 1e-3, 1e-4, 1e-5, 1e-6, 1e-7]
+  },
+
+  "slurm_parameters": {
+    "job_name": "sp_ln_l2",
+    "time": "11:00:00",
+    "max_runs_per_job": 5,
+    "output_dir": "/scratch/dohare/dynamically_sparse_nn_training/outputs",
+    "account": "def-ashique",
+    "output_filename": "sp_ln_l2-%n-%j.out",
+    "mem": "12G",
+    "mail-type": "BEGIN,END,FAIL",
+    "mail-user":"jfhernan@ualberta.ca",
+    "cpus-per-task": 6
+  }
+}
