@@ -152,7 +152,7 @@ def compute_average_training_accuracy_for_table(column_var_list: list, row_var_l
         for j, rv in enumerate(row_var_list):
 
             param_comb_name = insert_column_and_row_values(base_name, column_var, row_var, (cv, rv))
-            print(param_comb_name)
+            # print(param_comb_name)
             temp_dir = os.path.join(results_dir, param_comb_name, "train_accuracy_per_checkpoint")
 
             if not os.path.isdir(temp_dir): continue
