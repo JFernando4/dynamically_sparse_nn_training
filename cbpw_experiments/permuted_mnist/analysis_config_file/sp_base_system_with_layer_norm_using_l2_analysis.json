@@ -1,0 +1,5 @@
+{
+  "results_dir": "/dohare/dynamically_sparse_nn_training/results/sp_base_sytem_with_layer_norm_using_l2_parameter_sweep/",
+  "display_format": "list",
+  "column_var": "noise_std"
+}
