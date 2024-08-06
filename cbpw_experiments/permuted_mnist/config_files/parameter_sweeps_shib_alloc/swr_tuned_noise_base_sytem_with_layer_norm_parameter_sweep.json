@@ -1,0 +1,44 @@
+{
+  "file_management": {
+    "experiment_name": "swr_tuned_noise_base_sytem_with_layer_norm_parameter_sweep",
+    "data_path": "/home/dohare/projects/def-ashique/dohare/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/data",
+    "results_path": "/scratch/dohare/dynamically_sparse_nn_training/results",
+    "relevant_parameters": [
+      "noise_std"
+    ]
+  },
+
+  "experiment_params": {
+    "num_permutations": 1000,
+    "num_layers": 3,
+    "num_hidden": 10,
+    "stepsize": 0.1,
+    "use_ln": true,
+    "preactivation_ln": false,
+    "steps_per_task": 60000,
+    "batch_size": 30,
+    "runs": 10
+  },
+
+  "learning_params": {
+    "use_cbpw": true,
+    "topology_update_freq": 300,
+    "prune_method": "gf",
+    "grow_method": "fixed_with_noise",
+    "drop_factor": 0.1,
+    "noise_std": ["fixed", 1e-1, 1e-2, 1e-3, 1e-4, 1e-5]
+  },
+
+  "slurm_parameters": {
+    "job_name": "swr_tn_ln",
+    "time": "11:00:00",
+    "max_runs_per_job": 5,
+    "output_dir": "/scratch/dohare/dynamically_sparse_nn_training/outputs",
+    "account": "def-ashique",
+    "output_filename": "swr_tn_ln-%n-%j.out",
+    "mem": "12G",
+    "mail-type": "BEGIN,END,FAIL",
+    "mail-user":"jfhernan@ualberta.ca",
+    "cpus-per-task": 6
+  }
+}
