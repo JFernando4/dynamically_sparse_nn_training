@@ -1,6 +1,6 @@
 {
   "__comment_1__": "Parameters for the optimizer.",
-  "stepsize": 0.005,
+  "stepsize": 0.05,
   "l1_factor": 0.0,
   "l2_factor": 0.0,
 
@@ -12,21 +12,20 @@
   "extended_summaries": true,
 
   "__comment_3__": "Permuted MNIST problem parameters. Classes increase by 5 every 100 epochs.",
-  "num_permutations": 1000,
+  "num_permutations": 100,
 
   "__comment_4__": "CBPw Parameters.",
   "use_cbp": true,
   "maturity_threshold": 5,
-  "replacement_rate": 0.1,
-  "use_ln": true,
+  "replacement_rate": 0.001,
+  "use_ln": false,
   "preactivation_ln": false,
 
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
-    "use_ln",
-    "preactivation_ln",
     "use_cbp",
     "maturity_threshold",
-    "replacement_rate"
+    "replacement_rate",
+    "use_ln"
   ]
 }
