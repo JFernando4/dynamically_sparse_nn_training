@@ -145,7 +145,7 @@ class PermutedMNISTExperiment(Experiment):
         self.results_dict["train_accuracy_per_checkpoint"] = torch.zeros(total_ckpts, device=self.device, dtype=torch.float32)
 
         if self.use_cbpw:
-            total_top_updates = (self.steps_per_task * self.num_permutations) // self.topology_update_freq
+            total_top_updates = ((self.steps_per_task // self.batch_size) * self.num_permutations) // self.topology_update_freq
             self.results_dict["prop_added_then_removed"] = torch.zeros(total_top_updates, device=self.device, dtype=torch.float32)
 
         if self.extended_summaries:
