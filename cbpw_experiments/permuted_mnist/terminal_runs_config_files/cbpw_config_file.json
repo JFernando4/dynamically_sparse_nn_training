@@ -1,6 +1,6 @@
 {
   "__comment_1__": "Parameters for the optimizer.",
-  "stepsize": 0.005,
+  "stepsize": 0.05,
   "l1_factor": 0.0,
   "l2_factor": 0.0,
 
@@ -8,11 +8,11 @@
   "num_layers": 3,
   "num_hidden": 10,
   "batch_size": 30,
-  "store_parameters": false,
-  "extended_summaries": false,
+  "store_parameters": true,
+  "extended_summaries": true,
 
   "__comment_3__": "Permuted MNIST problem parameters. Classes increase by 5 every 100 epochs.",
-  "num_permutations": 1000,
+  "num_permutations": 100,
 
   "__comment_4__": "CBPw Parameters.",
   "use_cbpw": true,
@@ -20,14 +20,18 @@
   "prune_method": "gf",
   "grow_method": "fixed_with_noise",
   "drop_factor": 0.1,
-  "noise_std": 0.0001,
+  "noise_std": 0.001,
+  "use_ln": true,
+  "preactivation_ln": false,
 
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
+    "use_cbpw",
     "noise_std",
     "topology_update_freq",
     "prune_method",
     "grow_method",
-    "drop_factor"
+    "drop_factor",
+    "use_ln"
   ]
 }
