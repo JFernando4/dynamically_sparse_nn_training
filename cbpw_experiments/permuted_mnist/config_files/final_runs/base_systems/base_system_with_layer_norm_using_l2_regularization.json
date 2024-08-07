@@ -1,12 +1,13 @@
 {
   "file_management": {
     "experiment_name": "permuted_mnist",
-    "data_path": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/dst_lop_experiments/permuted_mnist/data/",
+    "data_path": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/data/",
     "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
     "relevant_parameters": [
-      "num_hidden",
-      "prune_method",
-      "grow_method"
+      "stepsize",
+      "l2_factor",
+      "use_ln",
+      "preactivation_ln"
     ]
   },
 
@@ -15,25 +16,25 @@
     "num_layers": 3,
     "num_hidden": 10,
     "batch_size": 30,
-    "stepsize": 0.005,
     "steps_per_task": 60000,
+    "extended_summaries": true,
     "store_parameters": true,
-    "runs": 100
+    "runs": 30
   },
 
   "learning_params": {
-    "topology_update_freq": 40,
-    "prune_method": "hess_approx",
-    "grow_method": "zero",
-    "drop_factor": 0.05
+    "stepsize": 0.1,
+    "l2_factor": 0.0001,
+    "use_ln": true,
+    "preactivation_ln": false
   },
 
   "slurm_parameters": {
-    "job_name": "pmnist",
-    "time": "10:00:00",
+    "job_name": "bs_ln_l2",
+    "time": "11:00:00",
     "max_runs_per_job": 5,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
-    "output_filename": "pmnist_ps-%n-%j.out",
+    "output_filename": "bs_ln_l2-%n-%j.out",
     "mem": "12G",
     "mail-type": "BEGIN,END,FAIL",
     "mail-user":"jfhernan@ualberta.ca",
