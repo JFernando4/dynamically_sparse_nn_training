@@ -5,7 +5,7 @@
   "l2_factor": 0.0,
 
   "__comment_2__": "Parameters for learning problem and architecture",
-    "num_permutations": 1000,
+    "num_permutations": 100,
     "num_layers": 3,
     "num_hidden": 10,
     "batch_size": 30,
