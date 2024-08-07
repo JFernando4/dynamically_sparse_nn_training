@@ -24,12 +24,12 @@
   "learning_params": {
     "use_cbp": true,
     "maturity_threshold": ["fixed", 1, 5, 50, 100, 500],
-    "replacement_rate": ["fixed", 1e-1, 1e-2, 1e-3, 1e-4, 1e-5]
+    "replacement_rate": ["fixed", 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6]
   },
 
   "slurm_parameters": {
     "job_name": "cbp_ln",
-    "time": "11:00:00",
+    "time": "12:00:00",
     "max_runs_per_job": 5,
     "output_dir": "/scratch/dohare/dynamically_sparse_nn_training/outputs",
     "account": "def-ashique",
