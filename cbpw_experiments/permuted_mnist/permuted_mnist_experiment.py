@@ -22,6 +22,7 @@ from src.cbpw_functions.weight_matrix_updates import update_weights
 from src.utils.experiment_utils import parse_terminal_arguments
 from src.plasticity_functions import FirstOrderGlobalUPGD, inject_noise
 from src.utils.evaluation_functions import compute_average_gradient_magnitude
+from src.utils.permuted_mnist_experiment_utils import compute_average_weight_magnitude, compute_dead_units_proportion
 
 
 class PermutedMNISTExperiment(Experiment):
@@ -150,6 +151,8 @@ class PermutedMNISTExperiment(Experiment):
 
         if self.extended_summaries:
             self.results_dict["average_gradient_magnitude_per_checkpoint"] = torch.zeros(total_ckpts, device=self.device, dtype=torch.float32)
+            self.results_dict["average_weight_magnitude_per_permutation"] = torch.zeros(self.num_permutations, device=self.device, dtype=torch.float32)
+            self.results_dict["proportion_dead_units_per_permutation"] = torch.zeros(self.num_permutations, device=self.device, dtype=torch.float32)
 
         if (self.use_cbp or self.use_cbpw) and self.extended_summaries:
             self.results_dict["loss_before_topology_update"] = []
@@ -197,6 +200,9 @@ class PermutedMNISTExperiment(Experiment):
             self._save_model_parameters()
 
             training_data.set_transformation(Permute(np.random.permutation(self.num_inputs)))  # apply new permutation
+
+            self.compute_network_extended_summaries(mnist_data_loader)
+
             print("\tPermutation number: {0}".format(self.current_permutation + 1))
             self.current_task_steps = 0
             for i, sample in enumerate(mnist_data_loader):
@@ -248,6 +254,16 @@ class PermutedMNISTExperiment(Experiment):
             print("Epoch run time: {0:.2f}".format((final_time - initial_time) / 60))
 
         self._save_model_parameters()
+
+    def compute_network_extended_summaries(self, training_data: DataLoader):
+        """ Computes the average weight magnitude and average dead units per permutation """
+
+        if not self.extended_summaries: return
+        avg_weight_magnitude = compute_average_weight_magnitude(self.net)
+        prop_dead_units = compute_dead_units_proportion(self.net, training_data, self.num_hidden, self.batch_size)
+        print(prop_dead_units)
+        self.results_dict["average_weight_magnitude_per_permutation"][self.current_permutation] += avg_weight_magnitude
+        self.results_dict["proportion_dead_units_per_permutation"][self.current_permutation] += prop_dead_units
 
     def store_extended_summaries(self, current_loss: torch.Tensor) -> None:
         """ Stores the extended summaries related to the topology update of CBP and CBPw """
