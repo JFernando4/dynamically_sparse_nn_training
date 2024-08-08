@@ -8,3 +8,4 @@ from .evaluation_functions import compute_accuracy_from_batch, compute_average_g
 from .data_management import get_cifar_data, subsample_cifar_data_set
 from .experiment_utils import parse_terminal_arguments
 from .cifar100_experiment_utils import *
+from .permuted_mnist_experiment_utils import compute_average_weight_magnitude, compute_dead_units_proportion
