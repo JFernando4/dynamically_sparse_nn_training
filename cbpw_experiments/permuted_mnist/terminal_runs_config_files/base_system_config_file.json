@@ -11,7 +11,7 @@
     "batch_size": 30,
     "steps_per_task": 60000,
     "extended_summaries": true,
-    "store_parameters": true,
+    "store_parameters": false,
 
   "__comment_6__": "For creating the results directory.",
   "relevant_parameters": [
