@@ -29,7 +29,6 @@
     "topology_update_freq",
     "prune_method",
     "grow_method",
-    "drop_factor",
-    "use_ln"
+    "drop_factor"
   ]
 }
