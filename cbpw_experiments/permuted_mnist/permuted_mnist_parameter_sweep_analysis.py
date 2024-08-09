@@ -216,7 +216,7 @@ def analyse_results(analysis_parameters: dict):
 def parse_terminal_arguments():
     """ Reads experiment arguments """
     argument_parser = argparse.ArgumentParser()
-    argument_parser.add_argument("--analysis_config_file", action="store", type=str, required=True,
+    argument_parser.add_argument("--config_file", action="store", type=str, required=True,
                                  help="JSON file with analysis configurations.")
     argument_parser.add_argument("--grow_method", action="store", type=str, required=False, default=None,
                                  help="Grow method for selective weight reinitialization.")
@@ -229,7 +229,7 @@ def parse_terminal_arguments():
 if __name__ == "__main__":
 
     terminal_arguments = parse_terminal_arguments()
-    analysis_parameters = read_json_file(terminal_arguments.analysis_config_file)
+    analysis_parameters = read_json_file(terminal_arguments.config_file)
     analysis_parameters["grow_method"] = terminal_arguments.grow_method
     analysis_parameters["prune_method"] = terminal_arguments.prune_method
     DEBUG = terminal_arguments.debug
