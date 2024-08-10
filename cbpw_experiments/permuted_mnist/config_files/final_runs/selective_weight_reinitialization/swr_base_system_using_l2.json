@@ -20,7 +20,7 @@
     "batch_size": 30,
     "steps_per_task": 60000,
     "extended_summaries": true,
-    "store_parameters": true,
+    "store_parameters": false,
     "runs": 30
   },
 
@@ -38,7 +38,7 @@
       "stepsize": 0.05,
       "l2_factor": 0.0001,
       "use_cbpw": true,
-      "topology_update_freq": 600,
+      "topology_update_freq": 1200,
       "prune_method": "magnitude",
       "grow_method": "kaiming_normal",
       "drop_factor": 0.005
@@ -47,7 +47,7 @@
       "stepsize": 0.05,
       "l2_factor": 0.0001,
       "use_cbpw": true,
-      "topology_update_freq": 600,
+      "topology_update_freq": 1200,
       "prune_method": "gf",
       "grow_method": "zero",
       "drop_factor": 0.005
@@ -56,7 +56,7 @@
       "stepsize": 0.05,
       "l2_factor": 0.0001,
       "use_cbpw": true,
-      "topology_update_freq": 600,
+      "topology_update_freq": 1200,
       "prune_method": "gf",
       "grow_method": "kaiming_normal",
       "drop_factor": 0.005
