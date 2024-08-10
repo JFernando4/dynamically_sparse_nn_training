@@ -214,28 +214,4 @@ if __name__ == "__main__":
 
     DEBUG = terminal_arguments.debug
 
-    # analysis_parameters = {
-    #     "results_dir": "/Users/rlai/PycharmProjects/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/results/",
-    #     "parameter_combinations":
-    #         [
-    #             "use_cbp-True_maturity_threshold-5_replacement_rate-0.001_use_ln-False",
-    #             "use_cbpw-True_topology_update_freq-600_prune_method-gf_grow_method-zero_drop_factor-0.1"
-    #         ],
-    #     "summary_names":
-    #         [
-    #             "difference_in_loss_after_reinitialization",
-    #             "average_weight_magnitude_per_permutation",
-    #             "proportion_dead_units_per_permutation",
-    #             "average_gradient_magnitude_per_checkpoint",
-    #             "train_accuracy_per_checkpoint",
-    #             "train_loss_per_checkpoint"
-    #         ],
-    #     "plot_dir": "/Users/rlai/PycharmProjects/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/plots/",
-    #     "bin_sizes": [1, 1, 1, 200, 200, 200],
-    #     "plot_parameters": {
-    #         "labels": ["CBP", "SWR"],
-    #         "color_order": ["sky_blue", "yellow"]
-    #     }
-    # }
-
     analyse_results(analysis_parameters, save_plots=terminal_arguments.save_plot)
