@@ -3,7 +3,7 @@
 
     "parameter_combinations":
         [
-            "stepsize-0.05 ",
+            "stepsize-0.05",
             "stepsize-0.05_l2_factor-0.0001",
             "stepsize-0.1_use_ln-True_preactivation_ln-False",
             "stepsize-0.1_l2_factor-0.0001_use_ln-True_preactivation_ln-False"
