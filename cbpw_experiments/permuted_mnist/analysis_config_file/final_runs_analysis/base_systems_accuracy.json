@@ -11,19 +11,18 @@
 
     "summary_names":
         [
-            "average_weight_magnitude_per_permutation",
-            "proportion_dead_units_per_permutation",
-            "average_gradient_magnitude_per_checkpoint",
-            "train_loss_per_checkpoint"
+            "train_accuracy_per_checkpoint"
         ],
 
     "plot_dir": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/plots",
 
-    "bin_sizes": [1, 1, 200, 200],
+    "bin_sizes": [200],
 
     "plot_parameters": {
         "labels": ["Base System", "Base System + L2", "Base System + LN", "Base System + L2 + LN"],
         "color_order": ["black", "sky_blue", "vermillion", "yellow"],
+        "ylim": [68, 93],
+        "yticks": [75, 80, 85, 90],
         "xlim": [-50, 1050]
     },
 
