@@ -74,7 +74,7 @@
 
   "slurm_parameters": {
     "job_name": "swr_bs_ln",
-    "time": "10:00:00",
+    "time": "11:00:00",
     "max_runs_per_job": 5,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
     "output_filename": "swr_bs_ln-%n-%j.out",
