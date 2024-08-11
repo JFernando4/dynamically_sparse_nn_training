@@ -150,16 +150,19 @@ def plot_results(results_data: dict, plot_parameters: dict, plot_dir: str, measu
         x_axis = np.arange(average.size)
         plt.plot(x_axis, average, label=labels[i], color=COLOR_DICTT[color_order[i]], linestyle=linestyles[i])
         plt.fill_between(x_axis, average - ste, average + ste, color=COLOR_DICTT[color_order[i]], alpha=alpha)
-        plt.ylabel(measurement_name)
-        plt.xlabel("Permutation Number")
-        plt.legend()
-        if ylim is not None:
-            plt.ylim(ylim)
-        if xlim is not None:
-            plt.xlim(xlim)
-        if yticks is not None:
-            plt.xticks(yticks)
-        plt.grid(visible=True, axis="y")
+
+    plt.ylabel(measurement_name)
+    plt.xlabel("Permutation Number")
+    plt.legend()
+    plt.grid(visible=True, axis="y")
+
+    if ylim is not None:
+        print("here")
+        plt.ylim(ylim)
+    if xlim is not None:
+        plt.xlim(xlim)
+    if yticks is not None:
+        plt.xticks(yticks)
 
     if save_plots:
         plot_path = os.path.join(plot_dir, f"{plot_name_prefix}_{measurement_name}.svg")
