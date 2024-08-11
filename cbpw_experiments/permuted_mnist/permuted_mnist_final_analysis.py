@@ -140,7 +140,6 @@ def plot_results(results_data: dict, plot_parameters: dict, plot_dir: str, measu
     ylim = access_dict(plot_parameters, "ylim", None, list)
     yticks = access_dict(plot_parameters, "yticks", None, list)
     xlim = access_dict(plot_parameters, "xlim", None, list)
-    print(ylim, yticks, xlim)
 
     for i, (pc, temp_results) in enumerate(results_data.items()):
 
@@ -157,7 +156,6 @@ def plot_results(results_data: dict, plot_parameters: dict, plot_dir: str, measu
     plt.grid(visible=True, axis="y")
 
     if ylim is not None:
-        print("here")
         plt.ylim(ylim)
     if xlim is not None:
         plt.xlim(xlim)
