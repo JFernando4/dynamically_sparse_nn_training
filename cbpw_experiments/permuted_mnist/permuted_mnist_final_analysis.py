@@ -160,7 +160,7 @@ def plot_results(results_data: dict, plot_parameters: dict, plot_dir: str, measu
     if xlim is not None:
         plt.xlim(xlim)
     if yticks is not None:
-        plt.xticks(yticks)
+        plt.yticks(yticks)
 
     if save_plots:
         plot_path = os.path.join(plot_dir, f"{plot_name_prefix}_{measurement_name}.svg")
