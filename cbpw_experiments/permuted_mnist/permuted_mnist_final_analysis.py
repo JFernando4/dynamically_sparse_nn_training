@@ -140,6 +140,7 @@ def plot_results(results_data: dict, plot_parameters: dict, plot_dir: str, measu
     ylim = access_dict(plot_parameters, "ylim", None, list)
     yticks = access_dict(plot_parameters, "yticks", None, list)
     xlim = access_dict(plot_parameters, "xlim", None, list)
+    print(ylim, yticks, xlim)
 
     for i, (pc, temp_results) in enumerate(results_data.items()):
 
@@ -152,13 +153,13 @@ def plot_results(results_data: dict, plot_parameters: dict, plot_dir: str, measu
         plt.ylabel(measurement_name)
         plt.xlabel("Permutation Number")
         plt.legend()
-        plt.grid(visible=True, axis="y")
         if ylim is not None:
             plt.ylim(ylim)
         if xlim is not None:
             plt.xlim(xlim)
         if yticks is not None:
             plt.xticks(yticks)
+        plt.grid(visible=True, axis="y")
 
     if save_plots:
         plot_path = os.path.join(plot_dir, f"{plot_name_prefix}_{measurement_name}.svg")
