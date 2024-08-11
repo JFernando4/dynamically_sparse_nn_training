@@ -137,9 +137,9 @@ def plot_results(results_data: dict, plot_parameters: dict, plot_dir: str, measu
     alpha = access_dict(plot_parameters, "alpha", 0.1, float)
     labels = access_dict(plot_parameters, "labels", list(results_data.keys()), list)
     linestyles = access_dict(plot_parameters, "linestyles", ["-"] * len(results_data), list)
-    ylim = access_dict(plot_parameters, "ylim", None, list)
-    yticks = access_dict(plot_parameters, "yticks", None, list)
-    xlim = access_dict(plot_parameters, "xlim", None, list)
+    ylim = access_dict(plot_parameters, "ylim", None)
+    yticks = access_dict(plot_parameters, "yticks", None)
+    xlim = access_dict(plot_parameters, "xlim", None)
 
     for i, (pc, temp_results) in enumerate(results_data.items()):
 
