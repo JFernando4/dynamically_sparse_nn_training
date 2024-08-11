@@ -21,8 +21,8 @@
     "plot_parameters": {
         "labels": ["Base System", "Base System + L2", "Base System + LN", "Base System + L2 + LN"],
         "color_order": ["black", "sky_blue", "vermillion", "yellow"],
-        "ylim": [0.68, 0.92],
-        "yticks": [0.70, 0.75, 0.80, 0.85, 0.90],
+        "ylim": [0.70, 0.92],
+        "yticks": [0.75, 0.80, 0.85, 0.90],
         "xlim": [-50, 1050]
     },
 
