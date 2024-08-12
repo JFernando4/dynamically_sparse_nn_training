@@ -145,6 +145,7 @@ def plot_results(results_data: dict, plot_parameters: dict, plot_dir: str, measu
 
         average = np.mean(temp_results, axis=0)
         ste = np.std(temp_results, axis=0, ddof=1) / np.sqrt(temp_results.shape[0])
+        print(f"\t{pc}\n\tNumber of samples: {temp_results.shape[0]}")
 
         x_axis = np.arange(average.size)
         plt.plot(x_axis, average, label=labels[i], color=COLOR_DICTT[color_order[i]], linestyle=linestyles[i])
