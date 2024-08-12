@@ -5,7 +5,8 @@
         [
             "stepsize-0.05_l2_factor-0.0001",
             "l2_factor-0.0001_use_cbp-True_maturity_threshold-100_replacement_rate-1e-05",
-            "l2_factor-0.0001_use_cbpw-True_topology_update_freq-1200_prune_method-gf_grow_method-zero_drop_factor-0.005"
+            "l2_factor-0.0001_use_cbpw-True_topology_update_freq-1200_prune_method-gf_grow_method-zero_drop_factor-0.005",
+            "l2_factor-0.0001_use_cbpw-True_topology_update_freq-1200_prune_method-gf_grow_method-kaiming_normal_drop_factor-0.005"
         ],
 
     "summary_names":
@@ -18,8 +19,8 @@
     "bin_sizes": [200],
 
     "plot_parameters": {
-        "labels": ["Base System", "CBP", "SWR"],
-        "color_order": ["sky_blue", "blue_green", "orange"],
+        "labels": ["Base System", "CBP", "SWR-GZ", "SWR-GK"],
+        "color_order": ["sky_blue", "blue_green", "orange", "gray"],
         "ylim": [0.71, 0.92],
         "yticks": [0.75, 0.80, 0.85, 0.90],
         "xlim": [-50, 1050]
