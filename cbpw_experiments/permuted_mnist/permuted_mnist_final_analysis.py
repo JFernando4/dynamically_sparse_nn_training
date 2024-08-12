@@ -146,8 +146,11 @@ def plot_results(results_data: dict, plot_parameters: dict, plot_dir: str, measu
     for i, (pc, temp_results) in enumerate(results_data.items()):
 
         average = np.mean(temp_results, axis=0)
-        ste = np.std(temp_results, axis=0, ddof=1) / np.sqrt(temp_results.shape[0])
-        print(f"\t{pc}\n\tNumber of samples: {temp_results.shape[0]}")
+        num_samples = temp_results.shape[0]
+        ste = np.std(temp_results, axis=0, ddof=1) / np.sqrt(num_samples)
+        print(f"\t{pc}\n\tNumber of samples: {num_samples}")
+        if num_samples < 30 and "_temp" not in measurement_name:
+            measurement_name += "_temp"
 
         x_axis = np.arange(average.size)
         plt.plot(x_axis, average, label=labels[i], color=COLOR_DICTT[color_order[i]], linestyle=linestyles[i])
