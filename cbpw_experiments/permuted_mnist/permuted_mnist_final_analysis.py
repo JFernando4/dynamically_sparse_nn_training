@@ -28,7 +28,8 @@ COLOR_LIST = [  # colorblind friendly according to nature
     "#f0e442",  # yellow
     "#0072b2",  # blue
     "#d55e00",  # vermillion
-    "#cc79a7"  # pale violet
+    "#cc79a7"   # pale violet
+    "#808080"   # gray
 ]
 
 COLOR_DICTT = {  # colorblind friendly according to nature
@@ -39,7 +40,8 @@ COLOR_DICTT = {  # colorblind friendly according to nature
     "yellow":       "#f0e442",
     "blue":         "#0072b2",
     "vermillion":   "#d55e00",
-    "pale_violet":  "#cc79a7"
+    "pale_violet":  "#cc79a7",
+    "gray":         "#808080"
 }
 
 
