@@ -36,7 +36,7 @@
   "slurm_parameters": {
     "job_name": "upgd_ln_l2",
     "time": "11:00:00",
-    "max_runs_per_job": 5,
+    "max_runs_per_job": 3,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
     "output_filename": "upgd_ln_l2-%n-%j.out",
     "mem": "12G",
