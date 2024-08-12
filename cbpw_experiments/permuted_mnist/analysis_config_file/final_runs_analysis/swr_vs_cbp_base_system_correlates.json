@@ -26,5 +26,5 @@
         "xlim": [-50, 1050]
     },
 
-    "plot_name_prefix": "swr_vs_cbp"
+    "plot_name_prefix": "swr_vs_cbp_base_system"
 }
