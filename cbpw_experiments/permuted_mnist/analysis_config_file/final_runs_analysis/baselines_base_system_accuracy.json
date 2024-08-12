@@ -1,0 +1,29 @@
+{
+    "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/permuted_mnist/",
+
+    "parameter_combinations":
+        [
+            "stepsize-0.05",
+            "use_cbp-True_maturity_threshold-5_replacement_rate-0.001",
+            "use_upgd-True_noise_std-0.001_beta_utility-0.999"
+        ],
+
+    "summary_names":
+        [
+            "train_accuracy_per_checkpoint"
+        ],
+
+    "plot_dir": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/plots/accuracy",
+
+    "bin_sizes": [200],
+
+    "plot_parameters": {
+        "labels": ["Base System", "CBP", "UPGD"],
+        "color_order": ["black", "blue_green", "blue"],
+        "ylim": [0.71, 0.92],
+        "yticks": [0.75, 0.80, 0.85, 0.90],
+        "xlim": [-50, 1050]
+    },
+
+    "plot_name_prefix": "baselines_base_system"
+}
