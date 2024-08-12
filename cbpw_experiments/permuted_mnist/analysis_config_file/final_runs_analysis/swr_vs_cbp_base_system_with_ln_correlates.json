@@ -22,7 +22,7 @@
 
     "plot_parameters": {
         "labels": ["Base System", "CBP", "SWR-GZ", "SWR-GK"],
-        "color_order": ["black", "blue_green", "orange", "gray"],
+        "color_order": ["vermillion", "blue_green", "orange", "gray"],
         "xlim": [-50, 1050]
     },
 
