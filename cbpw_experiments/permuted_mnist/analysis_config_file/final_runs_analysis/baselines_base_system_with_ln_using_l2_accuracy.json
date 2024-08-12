@@ -1,0 +1,30 @@
+{
+    "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/permuted_mnist/",
+
+    "parameter_combinations":
+        [
+            "stepsize-0.1_l2_factor-0.0001_use_ln-True_preactivation_ln-False",
+            "use_ln-True_l2_factor-0.0001_use_cbp-True_maturity_threshold-100_replacement_rate-1e-05",
+            "use_ln-True_l2_factor-0.0001_use_upgd-True_noise_std-0.0001_beta_utility-0.9999",
+            "use_ln-True_l2_factor-0.0001_perturb_weights-True_noise_std-1e-06"
+        ],
+
+    "summary_names":
+        [
+            "train_accuracy_per_checkpoint"
+        ],
+
+    "plot_dir": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/plots/accuracy",
+
+    "bin_sizes": [200],
+
+    "plot_parameters": {
+        "labels": ["Base System", "CBP", "UPGD", "SP"],
+        "color_order": ["sky_blue", "blue_green", "blue", "gray"],
+        "ylim": [0.71, 0.92],
+        "yticks": [0.75, 0.80, 0.85, 0.90],
+        "xlim": [-50, 1050]
+    },
+
+    "plot_name_prefix": "baselines_base_system_with_ln_using_l2"
+}
