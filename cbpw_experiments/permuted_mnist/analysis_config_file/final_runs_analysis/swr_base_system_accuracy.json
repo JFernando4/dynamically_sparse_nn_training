@@ -21,12 +21,11 @@
 
     "plot_parameters": {
         "labels": ["Base System", "SWR-MZ", "SWR-MK", "SWR-GZ", "SWR-GK"],
-        "color_order": ["black", "pale_violet", "pale_violet", "orange", "orange"],
-        "linestyles": ["solid", "solid", "dashed", "solid", "dashed"],
+        "color_order": ["black", "pale_violet", "blue", "orange", "gray"],
         "ylim": [0.71, 0.92],
         "yticks": [0.75, 0.80, 0.85, 0.90],
         "xlim": [-50, 1050]
     },
 
-    "plot_name_prefix": "swr_cbp_base_system"
+    "plot_name_prefix": "swr_base_system"
 }
