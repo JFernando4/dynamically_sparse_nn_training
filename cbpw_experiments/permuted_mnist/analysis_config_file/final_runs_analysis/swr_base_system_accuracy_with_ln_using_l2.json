@@ -1,0 +1,31 @@
+{
+    "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/permuted_mnist/",
+
+    "parameter_combinations":
+        [
+            "stepsize-0.1_l2_factor-0.0001_use_ln-True_preactivation_ln-False",
+            "use_ln-True_l2_factor-0.0001_use_cbpw-True_topology_update_freq-75_prune_method-magnitude_grow_method-zero_drop_factor-0.1",
+            "use_ln-True_l2_factor-0.0001_use_cbpw-True_topology_update_freq-1200_prune_method-magnitude_grow_method-kaiming_normal_drop_factor-0.005",
+            "use_ln-True_l2_factor-0.0001_use_cbpw-True_topology_update_freq-1200_prune_method-gf_grow_method-zero_drop_factor-0.005",
+            "use_ln-True_l2_factor-0.0001_use_cbpw-True_topology_update_freq-1200_prune_method-gf_grow_method-kaiming_normal_drop_factor-0.005"
+        ],
+
+    "summary_names":
+        [
+            "train_accuracy_per_checkpoint"
+        ],
+
+    "plot_dir": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/plots/accuracy",
+
+    "bin_sizes": [200],
+
+    "plot_parameters": {
+        "labels": ["Base System", "SWR-MZ", "SWR-MK", "SWR-GZ", "SWR-GK"],
+        "color_order": ["yellow", "pale_violet", "blue", "orange", "gray"],
+        "ylim": [0.71, 0.92],
+        "yticks": [0.75, 0.80, 0.85, 0.90],
+        "xlim": [-50, 1050]
+    },
+
+    "plot_name_prefix": "swr_base_system_with_ln_using_l2"
+}
