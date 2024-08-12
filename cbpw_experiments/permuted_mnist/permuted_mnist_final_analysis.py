@@ -122,7 +122,13 @@ def get_results_data(results_dir: str, measurement_name: str, parameter_combinat
 
         results[pc] = []
         for filename in os.listdir(measurement_dir):
-            temp_measurement_array = np.load(os.path.join(measurement_dir, filename))
+
+            try:
+                temp_measurement_array = np.load(os.path.join(measurement_dir, filename))
+            except EOFError:
+                if DEBUG:
+                    print(f"{filename = }, Parameter combination = {pc}")
+                raise EOFError
             results[pc].append(get_average_over_bins(temp_measurement_array, bin_size))
         results[pc] = np.array(results[pc])
 
