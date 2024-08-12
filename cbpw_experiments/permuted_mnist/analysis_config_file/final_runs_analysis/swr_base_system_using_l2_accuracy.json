@@ -3,7 +3,7 @@
 
     "parameter_combinations":
         [
-            "l2_factor-0.0001_use_cbp-True_maturity_threshold-100_replacement_rate-1e-05",
+            "stepsize-0.05_l2_factor-0.0001",
             "l2_factor-0.0001_use_cbpw-True_topology_update_freq-600_prune_method-magnitude_grow_method-zero_drop_factor-0.005",
             "l2_factor-0.0001_use_cbpw-True_topology_update_freq-1200_prune_method-magnitude_grow_method-kaiming_normal_drop_factor-0.005",
             "l2_factor-0.0001_use_cbpw-True_topology_update_freq-1200_prune_method-gf_grow_method-zero_drop_factor-0.005",
