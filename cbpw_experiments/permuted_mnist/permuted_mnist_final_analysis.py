@@ -198,6 +198,7 @@ def compute_difference_in_loss_after_reinitialization(results_dir: str, paramete
         ste_average_difference = np.std(average_difference, ddof=1) / np.sqrt(average_difference.size)
         print(f"\t\ttAverage Difference: {total_average:.4f}")
         print(f"\t\tStandard Error of Difference: {ste_average_difference:.4f}")
+        print(f"\t\tNumber of Samples: {average_difference.size}")
 
 
 def analyse_results(analysis_parameters: dict, save_plots: bool = True):
