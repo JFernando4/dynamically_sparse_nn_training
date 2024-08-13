@@ -206,7 +206,7 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
     results_dir = analysis_parameters["results_dir"]
     parameter_combinations = analysis_parameters["parameter_combinations"]
     summary_names = analysis_parameters["summary_names"]
-    plot_dir = analysis_parameters["plot_dir"]
+    plot_dir = access_dict(analysis_parameters, "plot_dir", default="")
     bin_sizes = access_dict(analysis_parameters, "bin_sizes", default=[1] * len(summary_names), val_type=list)
     plot_parameters = access_dict(analysis_parameters, "plot_parameters", default={}, val_type=dict)
     plot_name_prefix = access_dict(analysis_parameters, "plot_name_prefix", default="", val_type=str)
