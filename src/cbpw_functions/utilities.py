@@ -107,7 +107,7 @@ def initialize_weights_dict_df_as_rate(net: Union[VisionTransformer, ResNet],
     for n, p in net.named_parameters():
         is_weight = "weight" in n
         is_bias = "bias" in n
-        is_layer_or_batch_norm = (".ln_1." in n) or (".ln_2." in n) or (".ln." in n) or ("bn1." in n) or ("bn2." in n)
+        is_layer_or_batch_norm = (".ln_1." in n) or (".ln_2." in n) or (".ln." in n) or ("bn1." in n) or ("bn2." in n) or ("downsample.1." in n)
 
         if is_weight and is_layer_or_batch_norm:
             weight_dict[n] = (p, ln_weight_update_func)
