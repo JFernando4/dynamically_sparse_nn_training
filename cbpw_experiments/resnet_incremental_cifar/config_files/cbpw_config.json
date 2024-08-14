@@ -30,7 +30,7 @@
     "df_as_rate": true,
     "topology_update_freq": ["fixed", 260],
     "prune_method": "gf",
-    "grow_method": "kaiming_normal",
+    "grow_method": "zero",
     "drop_factor": ["fixed", 0.05]
   },
 
