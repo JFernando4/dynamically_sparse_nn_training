@@ -110,8 +110,15 @@ class CBPLinear(nn.Module):
         """
         Calculate feature utility
         """
-        output_weight_mag = self.out_layer.weight.data.abs().mean(dim=0)
-        self.util.data = output_weight_mag * self.features.abs().mean(dim=[i for i in range(self.features.ndim - 1)])
+        if self.util_type == "contribution":
+            output_weight_mag = self.out_layer.weight.data.abs().mean(dim=0)
+            self.util.data = output_weight_mag * self.features.abs().mean(dim=[i for i in range(self.features.ndim - 1)])
+        elif self.util_type == "gf":
+            weight_grad = self.out_layer.weight.grad
+            weight_times_grad = weight_grad * self.out_layer.weight
+            self.util.data = weight_times_grad.sum(dim=0).abs()
+        else:
+            raise ValueError(f"Unknown utility type: {self.util_type}")
         """
         Find features with smallest utility
         """

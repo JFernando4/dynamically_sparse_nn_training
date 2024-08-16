@@ -14,7 +14,8 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
                  maturity_threshold: int = None,
                  replacement_rate: float = None,
                  use_layer_norm: bool = False,
-                 preactivation_layer_norm: bool = False):
+                 preactivation_layer_norm: bool = False,
+                 cbp_utility: str = "contribution"):
         """
         Three-layer ReLU network with continual backpropagation for MNIST
         """
@@ -43,11 +44,14 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
         if use_cbp:
             assert maturity_threshold is not None and replacement_rate is not None
             self.cbp_1 = CBPLinear(in_layer=self.ff_1, out_layer=self.ff_2, replacement_rate=self.rr,
-                                   maturity_threshold=self.mt, init="kaiming", ln_layer=self.ln_1)
+                                   maturity_threshold=self.mt, init="kaiming", ln_layer=self.ln_1,
+                                   util_type=cbp_utility)
             self.cbp_2 = CBPLinear(in_layer=self.ff_2, out_layer=self.ff_3, replacement_rate=self.rr,
-                                   maturity_threshold=self.mt, init="kaiming", ln_layer=self.ln_2)
+                                   maturity_threshold=self.mt, init="kaiming", ln_layer=self.ln_2,
+                                   util_type=cbp_utility)
             self.cbp_3 = CBPLinear(in_layer=self.ff_3, out_layer=self.out, replacement_rate=self.rr,
-                                   maturity_threshold=self.mt, init="kaiming", ln_layer=self.ln_3)
+                                   maturity_threshold=self.mt, init="kaiming", ln_layer=self.ln_3,
+                                   util_type=cbp_utility)
 
     def forward(self, x: torch.Tensor, activations: list = None) -> torch.Tensor:
         # first hidden layer
