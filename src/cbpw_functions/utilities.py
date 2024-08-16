@@ -27,7 +27,8 @@ def initialize_weight_dict(net: torch.nn.Module,
     elif architecture_type == "resnet":
         assert isinstance(net, ResNet)
         if df_as_rate:
-            return initialize_weights_dict_df_as_rate(net, prune_method, grow_method, drop_factor)
+            noise_std = None if "noise_std" not in kwargs.keys() else kwargs["noise_std"]
+            return initialize_weights_dict_df_as_rate(net, prune_method, grow_method, drop_factor, noise_std=noise_std)
         else:
             exclude_downsample = False if "exclude_downsample" not in kwargs.keys() else kwargs["exclude_downsample"]
             include_output_layer = False if "include_output_layer" not in kwargs.keys() else kwargs["include_output_layer"]
