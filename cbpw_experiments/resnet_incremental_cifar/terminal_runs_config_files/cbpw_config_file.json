@@ -17,7 +17,7 @@
   "topology_update_freq": 260,
   "prune_method": "gf",
   "grow_method": "fixed_with_noise",
-  "noise_std": 0.001,
+  "noise_std": 0.0001,
   "drop_factor": 0.05,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
@@ -26,6 +26,7 @@
     "prune_method",
     "grow_method",
     "drop_factor",
-    "df_as_rate"
+    "df_as_rate",
+    "noise_std"
   ]
 }
