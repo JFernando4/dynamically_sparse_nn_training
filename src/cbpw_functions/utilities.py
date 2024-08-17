@@ -100,8 +100,8 @@ def initialize_weights_dict_df_as_rate(net: Union[VisionTransformer, ResNet],
     Initializes the weight dictionaries used in CBPw for a network. The drop_factor is used as a rate, which
     is relevant if drop_factor * p.numel() is less than 1.
     """
-    bias_grow_name = "zero" if grow_method is not "fixed_with_noise" else grow_method
-    ln_weight_grow_name = "fixed" if grow_method is not "fixed_with_noise" else grow_method
+    bias_grow_name = "zero" if grow_method != "fixed_with_noise" else grow_method
+    ln_weight_grow_name = "fixed" if grow_method != "fixed_with_noise" else grow_method
     weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor,
                                                             as_rate=True, reinit_val=0.0, noise_std=noise_std)
     bias_update_func = setup_cbpw_weight_update_function(prune_method, grow_name=bias_grow_name, drop_factor=drop_factor,
@@ -190,8 +190,8 @@ def initialize_weights_dict_sequential(net: ThreeHiddenLayerNetwork,
                                        drop_factor: float,
                                        noise_std: float = None) -> dict[str, tuple]:
     """ Initializes the weight dictionaries used in CBPw for a Sequential Network """
-    bias_grow_name = "zero" if grow_method is not "fixed_with_noise" else grow_method
-    ln_weight_grow_name = "fixed" if grow_method is not "fixed_with_noise" else grow_method
+    bias_grow_name = "zero" if grow_method != "fixed_with_noise" else grow_method
+    ln_weight_grow_name = "fixed" if grow_method != "fixed_with_noise" else grow_method
     weights_update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor,
                                                             as_rate=True, reinit_val=0.0, noise_std=noise_std)
     bias_update_func = setup_cbpw_weight_update_function(prune_method, grow_name=bias_grow_name, drop_factor=drop_factor,
