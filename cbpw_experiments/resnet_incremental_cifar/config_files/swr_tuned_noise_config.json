@@ -32,7 +32,7 @@
     "topology_update_freq": ["fixed", 260],
     "prune_method": "gf",
     "grow_method": "fixed_with_noise",
-    "noise_std": ["fixed", 1e-5, 1e-6],
+    "noise_std": ["fixed", 0.0001],
     "drop_factor": ["fixed", 0.05]
   },
 
