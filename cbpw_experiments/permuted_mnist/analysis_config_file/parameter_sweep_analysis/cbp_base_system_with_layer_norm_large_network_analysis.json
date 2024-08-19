@@ -1,0 +1,6 @@
+{
+  "results_dir": "/scratch/dohare/dynamically_sparse_nn_training/results/cbp_base_sytem_with_layer_norm_large_network_parameter_sweep/",
+  "display_format": "table",
+  "column_var": "replacement_rate",
+  "row_var": "maturity_threshold"
+}
