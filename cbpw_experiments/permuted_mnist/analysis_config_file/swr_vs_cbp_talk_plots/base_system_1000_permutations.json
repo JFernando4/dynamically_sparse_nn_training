@@ -23,5 +23,5 @@
         "xlim": [-50, 1050]
     },
 
-    "plot_name_prefix": "base_systems"
+    "plot_name_prefix": "base_system_1000_permutations"
 }
