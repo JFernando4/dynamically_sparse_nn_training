@@ -1,0 +1,42 @@
+{
+  "file_management": {
+    "experiment_name": "permuted_mnist_large_network",
+    "data_path": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/data/",
+    "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
+    "relevant_parameters": [
+      "use_cbp",
+      "maturity_threshold",
+      "replacement_rate"
+    ]
+  },
+
+  "experiment_params": {
+    "num_permutations": 1000,
+    "num_layers": 3,
+    "num_hidden": 100,
+    "batch_size": 30,
+    "steps_per_task": 60000,
+    "extended_summaries": true,
+    "store_parameters": false,
+    "runs": 30
+  },
+
+  "learning_params": {
+    "stepsize": 0.05,
+    "use_cbp": true,
+    "maturity_threshold": 1,
+    "replacement_rate": 0.0001
+  },
+
+  "slurm_parameters": {
+    "job_name": "cbp_bs",
+    "time": "13:00:00",
+    "max_runs_per_job": 5,
+    "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
+    "output_filename": "cbp_bs-%n-%j.out",
+    "mem": "12G",
+    "mail-type": "BEGIN,END,FAIL",
+    "mail-user":"jfhernan@ualberta.ca",
+    "cpus-per-task": 6
+  }
+}
