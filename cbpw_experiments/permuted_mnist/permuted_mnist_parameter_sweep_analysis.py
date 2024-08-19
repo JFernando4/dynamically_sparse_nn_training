@@ -40,11 +40,13 @@ def training_accuracy_list_format(results_dir: str):
         if not os.path.isdir(temp_dir): continue
         no_results = len(os.listdir(temp_dir)) == 0
         if no_results: continue
-        num_samples = len(os.listdir(temp_dir))
+        indices = np.load(os.path.join(results_dir, "experiment_indices.npy"))
+        num_samples = indices.size
         print(f"{param_comb}\t\t\tSamples: {num_samples}")
         results = []
 
-        for file_name in os.listdir(temp_dir):
+        for idx in indices:
+            file_name = f"index-{idx}.npy"
             results_file_name = os.path.join(temp_dir, file_name)
             results.append(np.load(results_file_name))
 
