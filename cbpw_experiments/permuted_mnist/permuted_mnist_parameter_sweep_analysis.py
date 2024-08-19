@@ -47,8 +47,12 @@ def training_accuracy_list_format(results_dir: str):
 
         for idx in indices:
             file_name = f"index-{idx}.npy"
-            results_file_name = os.path.join(temp_dir, file_name)
-            results.append(np.load(results_file_name))
+            try:
+                results_file_name = os.path.join(temp_dir, file_name)
+                results.append(np.load(results_file_name))
+            except EOFError:
+                print(f"Index: {idx}, Parameter combination: {param_comb}")
+                raise EOFError
 
         mean = np.round(np.average(results), 4)
         std_error = np.round(np.std(np.average(results, axis=1), ddof=1) / np.sqrt(num_samples), 4)
