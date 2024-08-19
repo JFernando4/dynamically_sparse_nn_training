@@ -1,0 +1,27 @@
+{
+    "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/permuted_mnist/",
+
+    "parameter_combinations":
+        [
+            "stepsize-0.05"
+        ],
+
+    "summary_names":
+        [
+            "train_accuracy_per_checkpoint"
+        ],
+
+    "plot_dir": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/swr_vs_cbp_talk_plots",
+
+    "bin_sizes": [200],
+
+    "plot_parameters": {
+        "labels": ["Base System"],
+        "color_order": ["black"],
+        "ylim": [0.71, 0.92],
+        "yticks": [0.75, 0.80, 0.85, 0.90],
+        "xlim": [-50, 1050]
+    },
+
+    "plot_name_prefix": "base_systems"
+}
