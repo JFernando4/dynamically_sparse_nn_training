@@ -247,4 +247,4 @@ def fixed_reinit_weights(weight: torch.Tensor, reinit_val: float) -> None:
 def fixed_reinit_weights_with_noise(weight: torch.Tensor, reinit_val: float, noise_std: float) -> None:
     """ Reinitializes weights toa fixed value """
     pruned_indices = torch.where(weight.flatten() == 0.0)[0]
-    weight.view(-1)[pruned_indices] = reinit_val + torch.rand_like(weight.view(-1)[pruned_indices]) * noise_std
+    weight.view(-1)[pruned_indices] = reinit_val + torch.randn_like(weight.view(-1)[pruned_indices]) * noise_std
