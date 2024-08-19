@@ -40,7 +40,7 @@ def training_accuracy_list_format(results_dir: str):
         if not os.path.isdir(temp_dir): continue
         no_results = len(os.listdir(temp_dir)) == 0
         if no_results: continue
-        indices = np.load(os.path.join(results_dir, "experiment_indices.npy"))
+        indices = np.load(os.path.join(results_dir, param_comb, "experiment_indices.npy"))
         num_samples = indices.size
         print(f"{param_comb}\t\t\tSamples: {num_samples}")
         results = []
@@ -128,12 +128,18 @@ def compute_average_training_accuracy_for_table(column_var_list: list, row_var_l
             temp_dir = os.path.join(results_dir, param_comb_name, "train_accuracy_per_checkpoint")
 
             if not os.path.isdir(temp_dir): continue
-            num_samples[i, j] = len(os.listdir(temp_dir))
+            indices = np.load(os.path.join(results_dir, param_comb_name, "experiment_indices.npy"))
+            num_samples[i, j] = indices.size
             results = []
 
-            for file_name in os.listdir(temp_dir):
-                results_file_name = os.path.join(temp_dir, file_name)
-                results.append(np.load(results_file_name))
+            for idx in indices:
+                file_name = f"index-{idx}.npy"
+                try:
+                    results_file_name = os.path.join(temp_dir, file_name)
+                    results.append(np.load(results_file_name))
+                except EOFError:
+                    print(f"Index: {idx}, Parameter combination: {param_comb_name}")
+                    raise EOFError
 
             average_results[i, j] = np.average(results)
             if average_results[i, j] > max_acc:
