@@ -1,0 +1,72 @@
+{
+  "file_management": {
+    "experiment_name": "permuted_mnist_large_network",
+    "data_path": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/data/",
+    "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
+    "relevant_parameters": [
+      "use_cbpw",
+      "topology_update_freq",
+      "prune_method",
+      "grow_method",
+      "drop_factor"
+    ]
+  },
+
+  "experiment_params": {
+    "num_permutations": 1000,
+    "num_layers": 3,
+    "num_hidden": 100,
+    "batch_size": 30,
+    "steps_per_task": 60000,
+    "extended_summaries": true,
+    "store_parameters": false,
+    "runs": 30
+  },
+
+  "specific_parameter_combination": [
+    {
+      "stepsize": 0.05,
+      "use_cbpw": true,
+      "topology_update_freq": 4800,
+      "prune_method": "magnitude",
+      "grow_method": "zero",
+      "drop_factor": 0.8
+    },
+    {
+      "stepsize": 0.05,
+      "use_cbpw": true,
+      "topology_update_freq": 4800,
+      "prune_method": "magnitude",
+      "grow_method": "kaiming_normal",
+      "drop_factor": 0.8
+    },
+    {
+      "stepsize": 0.05,
+      "use_cbpw": true,
+      "topology_update_freq": 1200,
+      "prune_method": "gf",
+      "grow_method": "zero",
+      "drop_factor": 0.2
+    },
+    {
+      "stepsize": 0.05,
+      "use_cbpw": true,
+      "topology_update_freq": 2400,
+      "prune_method": "gf",
+      "grow_method": "kaiming_normal",
+      "drop_factor": 0.4
+    }
+  ],
+
+  "slurm_parameters": {
+    "job_name": "swr_bs",
+    "time": "12:00:00",
+    "max_runs_per_job": 5,
+    "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
+    "output_filename": "swr_bs-%n-%j.out",
+    "mem": "12G",
+    "mail-type": "BEGIN,END,FAIL",
+    "mail-user":"jfhernan@ualberta.ca",
+    "cpus-per-task": 6
+  }
+}
