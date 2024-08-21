@@ -4,7 +4,7 @@
     "parameter_combinations":
         [
             "stepsize-0.1_use_ln-True_preactivation_ln-False",
-            "use_cbp-True_maturity_threshold-5_replacement_rate-0.001",
+            "use_ln-True_use_cbp-True_maturity_threshold-1_replacement_rate-1e-05",
             "stepsize-0.1_l2_factor-0.0001_use_ln-True_preactivation_ln-False",
             "use_ln-True_use_cbpw-True_topology_update_freq-1200_prune_method-magnitude_grow_method-zero_drop_factor-0.2",
             "use_ln-True_use_cbpw-True_topology_update_freq-1200_prune_method-magnitude_grow_method-kaiming_normal_drop_factor-0.2",
