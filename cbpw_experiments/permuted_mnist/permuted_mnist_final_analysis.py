@@ -116,7 +116,6 @@ def get_results_data(results_dir: str, measurement_name: str, parameter_combinat
     for pc in parameter_combination:
         temp_results_dir = os.path.join(results_dir, pc)
         indices = np.load(os.path.join(temp_results_dir, "experiment_indices.npy"))
-        print(indices)
         measurement_dir = os.path.join(temp_results_dir, measurement_name)
 
         # if not os.path.exists(measurement_dir) or recompute_results:
@@ -156,7 +155,6 @@ def plot_results(results_data: dict, plot_parameters: dict, plot_dir: str, measu
 
         average = np.mean(temp_results, axis=0)
         num_samples = temp_results.shape[0]
-        print(temp_results.shape)
         ste = np.std(temp_results, axis=0, ddof=1) / np.sqrt(num_samples)
         print(f"\t{pc}\n\tNumber of samples: {num_samples}")
         if num_samples < 30 and "_temp" not in measurement_name:
