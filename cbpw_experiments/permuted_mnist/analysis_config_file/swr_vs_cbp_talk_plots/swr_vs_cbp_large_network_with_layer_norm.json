@@ -24,8 +24,8 @@
     "plot_parameters": {
         "labels": ["Base System", "CBP", "L2", "SWR-MZ", "SWR-MK", "SWR-GZ", "SWR-GK"],
         "color_order": ["black", "blue_green", "yellow", "pale_violet", "blue", "orange", "gray"],
-        "ylim": [0.71, 0.92],
-        "yticks": [0.75, 0.80, 0.85, 0.90],
+        "ylim": [0.8, 0.98],
+        "yticks": [0.80, 0.85, 0.90, 0.95],
         "xlim": [-50, 1050]
     },
 
