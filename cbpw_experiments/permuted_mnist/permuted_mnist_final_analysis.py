@@ -116,6 +116,7 @@ def get_results_data(results_dir: str, measurement_name: str, parameter_combinat
     for pc in parameter_combination:
         temp_results_dir = os.path.join(results_dir, pc)
         indices = np.load(os.path.join(temp_results_dir, "experiment_indices.npy"))
+        print(indices)
         measurement_dir = os.path.join(temp_results_dir, measurement_name)
 
         # if not os.path.exists(measurement_dir) or recompute_results:
