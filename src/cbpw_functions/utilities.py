@@ -193,7 +193,7 @@ def initialize_weights_dict_sequential(net: ThreeHiddenLayerNetwork,
     bias_grow_name = "zero" if grow_method != "fixed_with_noise" else grow_method
     ln_weight_grow_name = "fixed" if grow_method != "fixed_with_noise" else grow_method
     weights_update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor,
-                                                            as_rate=True, reinit_val=0.0, noise_std=noise_std)
+                                                            as_rate=True, reinit_val=0.0, noise_std=noise_std, activation="relu")
     bias_update_func = setup_cbpw_weight_update_function(prune_method, grow_name=bias_grow_name, drop_factor=drop_factor,
                                                          as_rate=True, reinit_val=0.0, noise_std=noise_std)
     ln_weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_name=ln_weight_grow_name,
