@@ -232,11 +232,10 @@ def clipped_reinit_weights(weight: torch.Tensor, activation: str = "relu") -> No
     min_abs_active = weight.flatten().abs()[active_indices].min()
     gain = torch.nn.init.calculate_gain(activation)
     fan_in, fan_out = torch.nn.init._calculate_fan_in_and_fan_out(weight)
-    std = (gain / np.sqrt(fan_in))  # kaiming normal standard deviation
+    std = gain / np.sqrt(fan_in)  # kaiming normal standard deviation
 
     new_weights = torch.randn(size=pruned_indices.size()) * std
     clipped_new_weights = torch.clip(new_weights, -min_abs_active, min_abs_active)
-
     weight.view(-1)[pruned_indices] = clipped_new_weights
 
 
