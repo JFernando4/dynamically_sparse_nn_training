@@ -16,7 +16,7 @@ from mlproj_manager.util.neural_networks import init_weights_kaiming
 from mlproj_manager.file_management import store_object_with_several_attempts
 
 # from src
-from src.cbpw_functions import initialize_weight_dict
+from src.cbpw_functions import initialize_weight_dict, SelectiveWeightReinitializationSGD, get_init_parameters
 from src.networks import RegularizedSGD, ThreeHiddenLayerNetwork
 from src.cbpw_functions.weight_matrix_updates import update_weights
 from src.utils.experiment_utils import parse_terminal_arguments
@@ -62,22 +62,25 @@ class PermutedMNISTExperiment(Experiment):
         self.current_task_steps = 0
         self.current_experiment_step = 0
 
-        # CBPw parameters
+        # SWR (formerly CBPw) parameters
         self.use_cbpw = access_dict(exp_params, "use_cbpw", default=False, val_type=bool)
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
         self.epoch_freq = access_dict(exp_params, "epoch_freq", default=False, val_type=bool)
-        self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str,
+        self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str,                   # also use in SWR optimizer
                                         choices=["none", "magnitude", "gf"])
-        self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str,
-                                       choices=["none", "kaiming_normal", "zero", "fixed_with_noise"])
+        self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str,                     # also used in SWR optimizer
+                                       choices=["none", "kaiming_normal", "zero", "fixed_with_noise", "clipped"])
         self.drop_factor = access_dict(exp_params, "drop_factor", default=float, val_type=float)
         self.previously_removed_weights = None
         self.current_topology_update = 0
 
+        # SWR optimizer
+        self.use_swr_optim = access_dict(exp_params, "use_swr_optim", default=False, val_type=bool)
+
         # CBP parameters
         self.use_cbp = access_dict(exp_params, "use_cbp", default=False, val_type=bool)
         self.maturity_threshold = access_dict(exp_params, "maturity_threshold", default=0, val_type=int)
-        self.replacement_rate = access_dict(exp_params, "replacement_rate", default=1e-6, val_type=float)
+        self.replacement_rate = access_dict(exp_params, "replacement_rate", default=1e-6, val_type=float)           # also used in SWR optimizer
         self.cbp_utility = access_dict(exp_params, "cbp_utility", default="contribution", val_type=str)
 
         # Layer Norm parameters
@@ -125,6 +128,19 @@ class PermutedMNISTExperiment(Experiment):
                                               weight_decay=self.l2_factor / self.stepsize,
                                               beta_utility=self.beta_utility,
                                               sigma=self.noise_std)
+        elif self.use_swr_optim:
+            scaling = 0.0 if self.grow_method == "zero" else 1.0
+            means, stds = get_init_parameters(self.net, initialization_type="kaiming_normal", activation="relu", scaling=scaling)
+            self.optim = SelectiveWeightReinitializationSGD(
+                self.net.parameters(),
+                lr = self.stepsize,
+                weight_decay=self.l2_factor / self.stepsize,
+                replacement_rate=self.replacement_rate,
+                utility=self.prune_method,
+                new_params_mean=means,
+                new_params_std=stds,
+                clip_values=(self.grow_method == "clipped")
+            )
         else:
             self.optim = RegularizedSGD(self.net.parameters(),
                                         lr=self.stepsize,
@@ -263,7 +279,6 @@ class PermutedMNISTExperiment(Experiment):
         if not self.extended_summaries: return
         avg_weight_magnitude = compute_average_weight_magnitude(self.net)
         prop_dead_units = compute_dead_units_proportion(self.net, training_data, self.num_hidden, self.batch_size)
-        print(prop_dead_units)
         self.results_dict["average_weight_magnitude_per_permutation"][self.current_permutation] += avg_weight_magnitude
         self.results_dict["proportion_dead_units_per_permutation"][self.current_permutation] += prop_dead_units
 
