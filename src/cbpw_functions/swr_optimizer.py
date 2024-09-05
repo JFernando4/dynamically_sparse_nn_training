@@ -117,8 +117,8 @@ class SelectiveWeightReinitializationSGD(torch.optim.Optimizer):
             raise ValueError(f"Invalid l1_reg_factor value: {l1_reg_factor}")
         if replacement_rate < 0.0 or replacement_rate >= 1.0:
             raise ValueError(f"Invalid replacement_rate value: {replacement_rate}")
-        if utility not in ["none", "wm", "gf"]:  # wm = weight magnitude, gm = gradient magnitude
-            raise ValueError(f"Invalid pruning_function value: {utility}. Choose from: ['none', 'wm', 'gf']")
+        if utility not in ["none", "magnitude", "gf"]:  # magnitude = weight magnitude, gm = gradient magnitude
+            raise ValueError(f"Invalid pruning_function value: {utility}. Choose from: ['none', 'magnitude', 'gf']")
         if new_params_mean is not None:
             assert isinstance(new_params_mean, list)
             if not all([isinstance(temp_mean,float) for temp_mean in new_params_mean]):
@@ -137,7 +137,7 @@ class SelectiveWeightReinitializationSGD(torch.optim.Optimizer):
 
         self.clip_values = clip_values
         self.utility_function = None
-        if utility == "wm":
+        if utility == "magnitude":
             self.utility_function = compute_weight_magnitude
         elif utility == "gf":
             self.utility_function = compute_gradient_flow
