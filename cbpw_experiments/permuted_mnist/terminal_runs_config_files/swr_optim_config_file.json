@@ -1,0 +1,32 @@
+{
+  "__comment_1__": "Parameters for the optimizer.",
+  "stepsize": 0.05,
+  "l1_factor": 0.0,
+  "l2_factor": 0.0,
+
+  "__comment_2__": "Parameters for the architecture",
+  "num_layers": 3,
+  "num_hidden": 10,
+  "batch_size": 30,
+  "store_parameters": false,
+  "extended_summaries": false,
+
+  "__comment_3__": "Permuted MNIST problem parameters. Classes increase by 5 every 100 epochs.",
+  "num_permutations": 1000,
+
+  "__comment_4__": "CBPw Parameters.",
+  "use_swr_optim": true,
+  "replacement_rate": 0.0005,
+  "prune_method": "gf",
+  "grow_method": "clipped",
+  "use_ln": false,
+  "preactivation_ln": false,
+
+  "__comment_5__": "For creating the results directory.",
+  "relevant_parameters": [
+    "use_swr_optim",
+    "replacement_rate",
+    "prune_method",
+    "use_ln"
+  ]
+}
