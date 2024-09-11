@@ -27,7 +27,7 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     """ Sets up weight update function for CBP-w """
     prune_function_names = ["magnitude", "redo", "gf_redo", "gf", "hess_approx"]
     grow_function_names = ["pm_min", "kaiming_normal", "xavier_normal", "zero", "kaming_uniform", "xavier_uniform",
-                           "fixed", "fixed_with_noise", "clipped"]
+                           "fixed", "fixed_with_noise", "clipped", "cstd"]
     assert prune_name in prune_function_names and grow_name in grow_function_names
     assert "drop_factor" in kwargs.keys()
 
@@ -58,6 +58,9 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     elif grow_name == "clipped":
         assert "activation" in kwargs.keys()
         grow_func = lambda w: clipped_reinit_weights(w, activation=kwargs["activation"])
+    elif grow_name == "cstd":    # clipped std
+        assert "activation"
+        grow_func = lambda w: clipped_std_reinit_weights(w, activation=kwargs["activation"])
 
     def temp_prune_and_grow_weights(w: torch.Tensor):
         return prune_and_grow_weights(w, prune_func, grow_func)
@@ -237,6 +240,27 @@ def clipped_reinit_weights(weight: torch.Tensor, activation: str = "relu") -> No
     new_weights = torch.randn(size=pruned_indices.size()) * std
     clipped_new_weights = torch.clip(new_weights, -min_abs_active, min_abs_active)
     weight.view(-1)[pruned_indices] = clipped_new_weights
+
+
+@torch.no_grad()
+def clipped_std_reinit_weights(weight: torch.Tensor, activation: str = "relu") -> None:
+    """
+    Reinitializes entries in teh wegith matrix at the given indices using kaiming reinitialization with clipped
+    standard deviation, i.e., Normal(0, min(min_active_weight, kaiming_std))
+    """
+    pruned_indices = torch.where(weight.flatten() == 0.0)[0]
+    active_indices = torch.where(weight.flatten() != 0.0)[0]
+
+    if len(active_indices) == 0:
+        return
+
+    min_abs_active = weight.flatten().abs()[active_indices].min()
+    gain = torch.nn.init.calculate_gain(activation)
+    fan_in, fan_out = torch.nn.init._calculate_fan_in_and_fan_out(weight)
+    std = gain / np.sqrt(fan_in)  # kaiming normal standard deviation
+
+    new_weights = torch.randn(size=pruned_indices.size()) * min(std, min_abs_active)
+    weight.view(-1)[pruned_indices] = new_weights
 
 
 @torch.no_grad()
