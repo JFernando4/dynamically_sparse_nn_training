@@ -22,16 +22,16 @@
     "initial_num_classes": 5,
     "fixed_classes": false,
     "use_best_network": true,
-    "runs": 15
+    "runs": 5
   },
 
   "learning_params": {
     "use_cbpw": true,
     "df_as_rate": true,
-    "topology_update_freq": ["fixed", 260],
+    "topology_update_freq": ["fixed", 260, 520],
     "prune_method": "gf",
-    "grow_method": "zero",
-    "drop_factor": ["fixed", 0.05]
+    "grow_method": "kaiming_normal",
+    "drop_factor": ["fixed", 0.05, 0.1]
   },
 
   "slurm_parameters": {
