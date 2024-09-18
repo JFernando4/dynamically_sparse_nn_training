@@ -274,9 +274,9 @@ def random_reinit_weights(weight: torch.Tensor, reinit) -> None:
     """
     random_reinit_functions = {
         "kaiming_normal": lambda m: torch.nn.init.kaiming_normal_(m, nonlinearity="relu"),
-        "kaiming_uniform_": lambda m: torch.nn.init.kaiming_uniform(m, nonlinearity="relu"),
+        "kaiming_uniform": lambda m: torch.nn.init.kaiming_uniform_(m, nonlinearity="relu"),
         "xavier_normal": torch.nn.init.xavier_normal_,
-        "xavier_uniform_": torch.nn.init.xavier_uniform_
+        "xavier_uniform": torch.nn.init.xavier_uniform_
     }
     assert reinit in random_reinit_functions.keys()
 
