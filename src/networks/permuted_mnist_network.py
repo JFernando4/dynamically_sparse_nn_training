@@ -10,6 +10,8 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
 
     def __init__(self,
                  hidden_dim: int = 10,
+                 use_skip_connections: bool = False,
+                 preactivation_skip_connection: bool = False,
                  use_cbp=False,
                  maturity_threshold: int = None,
                  replacement_rate: float = None,
@@ -21,6 +23,8 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
         """
         super().__init__()
 
+        self.use_skip_connections = use_skip_connections
+        self.preactivation_skip_connection = preactivation_skip_connection
         self.use_cbp = use_cbp
         self.use_layer_norm = use_layer_norm
         self.preactivation_layer_norm = preactivation_layer_norm
@@ -56,21 +60,27 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
     def forward(self, x: torch.Tensor, activations: list = None) -> torch.Tensor:
         # first hidden layer
         x = self.ff_1(x)
-        if self.use_layer_norm and self.preactivation_layer_norm:
+        if self.use_layer_norm and self.preactivation_layer_norm:       # use layer norm before activations
             x = self.ln_1(x)
         x = self.act_1(x)
-        if activations is not None: activations.append(x)
-        if self.cbp_1 is not None:
+        if activations is not None: activations.append(x)               # store activations
+        res = x                                                         # store residual connection
+        if self.cbp_1 is not None:                                      # log features using cbp
             x = self.cbp_1(x)
-        if self.use_layer_norm and not self.preactivation_layer_norm:
+        if self.use_layer_norm and not self.preactivation_layer_norm:   # use layer norm after activation
             x = self.ln_1(x)
 
         # second hidden layer
         x = self.ff_2(x)
         if self.use_layer_norm and self.preactivation_layer_norm:
             x = self.ln_2(x)
+        if self.use_skip_connections and self.preactivation_skip_connection:    # add residual connection before activation
+            x = x + res
         x = self.act_2(x)
         if activations is not None: activations.append(x)
+        if self.use_skip_connections and not self.preactivation_skip_connection:    # add residual connection after activation
+            x = x + res
+        res = x
         if self.cbp_2 is not None:
             x = self.cbp_2(x)
         if self.use_layer_norm and not self.preactivation_layer_norm:
@@ -80,8 +90,12 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
         x = self.ff_3(x)
         if self.use_layer_norm and self.preactivation_layer_norm:
             x = self.ln_3(x)
+        if self.use_skip_connections and self.preactivation_skip_connection:
+            x = x + res
         x = self.act_3(x)
         if activations is not None: activations.append(x)
+        if self.use_skip_connections and not self.preactivation_skip_connection:
+            x = x + res
         if self.cbp_3 is not None:
             x = self.cbp_3(x)
         if self.use_layer_norm and not self.preactivation_layer_norm:
@@ -101,17 +115,3 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
         self.cbp_1.replace_feature_event_indicator = False
         self.cbp_2.replace_feature_event_indicator = False
         self.cbp_3.replace_feature_event_indicator = False
-
-    @torch.no_grad()
-    def get_average_gradient_magnitude(self):
-        """ Returns the average magnitude of the gradient of the parameters in the network """
-        assert self.ff_1.weight.grad is not None
-        parameter_list = [self.ff_1.weight, self.ff_1.bias, self.ff_2.weight, self.ff_2.bias,
-                          self.ff_3.weight, self.ff_3.bias, self.out.weight, self.out.bias]
-        parameter_count = 0
-        gradient_magnitude_sum = 0.0
-        for p in parameter_list:
-            parameter_count += p.numel()
-            gradient_magnitude_sum += p.grad.abs().sum()
-        return gradient_magnitude_sum / parameter_count
-
