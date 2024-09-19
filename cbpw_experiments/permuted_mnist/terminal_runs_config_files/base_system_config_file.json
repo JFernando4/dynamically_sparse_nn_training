@@ -12,9 +12,15 @@
     "steps_per_task": 60000,
     "extended_summaries": true,
     "store_parameters": false,
+    "use_ln": false,
+    "use_skip_connections": false,
+    "preactivation_skip_connections": false,
 
   "__comment_6__": "For creating the results directory.",
   "relevant_parameters": [
-    "stepsize"
+    "stepsize",
+    "use_ln",
+    "use_skip_connections",
+    "preactivation_skip_connections"
   ]
 }

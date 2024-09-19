@@ -87,6 +87,10 @@ class PermutedMNISTExperiment(Experiment):
         self.use_ln = access_dict(exp_params, "use_ln", default=False, val_type=bool)
         self.preactivation_ln = access_dict(exp_params, "preactivation_ln", default=False, val_type=bool)
 
+        # residual network parameters
+        self.use_skip_connections = access_dict(exp_params, "use_skip_connections", default=False, val_type=bool)
+        self.preactivation_skip_connections = access_dict(exp_params, "preactivation_skip_connections", default=False, val_type=bool)
+
         # UPGD and S&P parameters
         self.use_upgd = access_dict(exp_params, "use_upgd", default=False, val_type=bool)
         self.perturb_weights = access_dict(exp_params, "perturb_weights", default=False, val_type=bool)
@@ -107,6 +111,8 @@ class PermutedMNISTExperiment(Experiment):
         """ Network set up """
         # self.net = self.initialize_network()
         self.net = ThreeHiddenLayerNetwork(hidden_dim=self.num_hidden,
+                                           use_skip_connections=self.use_skip_connections,
+                                           preactivation_skip_connection=self.preactivation_skip_connections,
                                            use_cbp=self.use_cbp,
                                            maturity_threshold=self.maturity_threshold,
                                            replacement_rate=self.replacement_rate,
@@ -294,7 +300,7 @@ class PermutedMNISTExperiment(Experiment):
         self.net.reset_indicators()
         prefix = "after" if self.store_next_loss else "before"
         self.results_dict[f"loss_{prefix}_topology_update"].append(current_loss)
-        self.results_dict[f"avg_grad_{prefix}_topology_update"].append(self.net.get_average_gradient_magnitude())
+        self.results_dict[f"avg_grad_{prefix}_topology_update"].append(compute_average_gradient_magnitude(self.net))
         self.store_next_loss = not self.store_next_loss
 
     def store_cbp_extended_summaries(self) -> bool:
