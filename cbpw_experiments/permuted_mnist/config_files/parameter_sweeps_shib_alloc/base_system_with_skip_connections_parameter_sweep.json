@@ -1,6 +1,6 @@
 {
   "file_management": {
-    "experiment_name": "pmnist_skip_connections_parameter_sweep",
+    "experiment_name": "base_system_with_skip_connections_parameter_sweep",
     "data_path": "/home/dohare/projects/def-ashique/dohare/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/data",
     "results_path": "/scratch/dohare/dynamically_sparse_nn_training/results",
     "relevant_parameters": [
