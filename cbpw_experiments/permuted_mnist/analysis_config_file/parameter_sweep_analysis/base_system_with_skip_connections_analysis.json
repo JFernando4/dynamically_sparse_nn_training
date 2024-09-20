@@ -1,0 +1,6 @@
+{
+  "results_dir": "/scratch/dohare/dynamically_sparse_nn_training/results/pmnist_skip_connections_parameter_sweep/",
+  "display_format": "table",
+  "column_var": "stepsize",
+  "row_var": "preactivation_skip_connections"
+}
