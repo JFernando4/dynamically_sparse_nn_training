@@ -164,6 +164,7 @@ class PermutedMNISTExperiment(Experiment):
         self.store_next_loss = False        # indicates whether to store the loss computed on the next batch
         self.current_running_avg_step, self.running_loss, self.running_accuracy, self.current_permutation = (0, 0.0, 0.0, 0)
         self.running_avg_grad_magnitude = 0.0
+        self.previous_activations = []
         self.results_dict = {}
         total_ckpts = self.steps_per_task * self.num_permutations // (self.running_avg_window * self.batch_size)
         self.results_dict["train_loss_per_checkpoint"] = torch.zeros(total_ckpts, device=self.device, dtype=torch.float32)
@@ -183,6 +184,13 @@ class PermutedMNISTExperiment(Experiment):
             self.results_dict["loss_after_topology_update"] = []
             self.results_dict["avg_grad_before_topology_update"] = []
             self.results_dict["avg_grad_after_topology_update"] = []
+            if self.use_ln:
+                self.results_dict["change_in_average_activation_layer_1"] = []
+                self.results_dict["change_in_average_activation_layer_2"] = []
+                self.results_dict["change_in_average_activation_layer_3"] = []
+                self.results_dict["change_in_std_activation_layer_1"] = []
+                self.results_dict["change_in_std_activation_layer_2"] = []
+                self.results_dict["change_in_std_activation_layer_3"] = []
 
         """ For creating experiment checkpoints """
         self.current_permutation = 0
@@ -242,7 +250,8 @@ class PermutedMNISTExperiment(Experiment):
                 for param in self.net.parameters(): param.grad = None  # apparently faster than optim.zero_grad()
 
                 # compute prediction and loss
-                predictions = self.net.forward(image)
+                current_activations = [] if (self.extended_summaries and self.use_ln and (self.use_cbp or self.use_cbpw)) else None
+                predictions = self.net.forward(image, current_activations)
                 current_reg_loss = self.loss(predictions, label)
                 current_loss = current_reg_loss.detach().clone()
 
@@ -256,7 +265,7 @@ class PermutedMNISTExperiment(Experiment):
                 if self.perturb_weights:
                     inject_noise(self.net, noise_std=self.noise_std)
 
-                self.store_extended_summaries(current_loss)
+                self.store_extended_summaries(current_loss, current_activations)
 
                 # update topology and apply masks to weights
                 if self.time_to_update_topology(self.current_experiment_step):
@@ -288,7 +297,7 @@ class PermutedMNISTExperiment(Experiment):
         self.results_dict["average_weight_magnitude_per_permutation"][self.current_permutation] += avg_weight_magnitude
         self.results_dict["proportion_dead_units_per_permutation"][self.current_permutation] += prop_dead_units
 
-    def store_extended_summaries(self, current_loss: torch.Tensor) -> None:
+    def store_extended_summaries(self, current_loss: torch.Tensor, current_activations: list = None) -> None:
         """ Stores the extended summaries related to the topology update of CBP and CBPw """
         if not self.extended_summaries: return
 
@@ -301,6 +310,18 @@ class PermutedMNISTExperiment(Experiment):
         prefix = "after" if self.store_next_loss else "before"
         self.results_dict[f"loss_{prefix}_topology_update"].append(current_loss)
         self.results_dict[f"avg_grad_{prefix}_topology_update"].append(compute_average_gradient_magnitude(self.net))
+
+        if self.use_ln:
+            if self.store_next_loss:
+                for i in range(len(current_activations)):
+                    diff_average_act = current_activations[i].mean().detach() - self.previous_activations[i].mean().detach()
+                    diff_std_act = current_activations[i].std().detach() - self.previous_activations[i].std().detach()
+                    self.results_dict[f"change_in_average_activation_layer_{i + 1}"].append(diff_average_act.abs())
+                    self.results_dict[f"change_in_std_activation_layer_{i + 1}"].append(diff_std_act.abs())
+                self.previous_activations = []
+            else:
+                self.previous_activations = current_activations
+
         self.store_next_loss = not self.store_next_loss
 
     def store_cbp_extended_summaries(self) -> bool:
@@ -380,6 +401,13 @@ class PermutedMNISTExperiment(Experiment):
         self.results_dict["loss_after_topology_update"] = np.array(self.results_dict["loss_after_topology_update"], dtype=np.float32)
         self.results_dict["avg_grad_before_topology_update"] = np.array(self.results_dict["avg_grad_before_topology_update"], dtype=np.float32)
         self.results_dict["avg_grad_after_topology_update"] = np.array(self.results_dict["avg_grad_after_topology_update"], dtype=np.float32)
+        if self.use_ln:
+            self.results_dict["change_in_average_activation_layer_1"] = np.array(self.results_dict["change_in_average_activation_layer_1"], dtype=np.float32)
+            self.results_dict["change_in_average_activation_layer_2"] = np.array(self.results_dict["change_in_average_activation_layer_2"], dtype=np.float32)
+            self.results_dict["change_in_average_activation_layer_3"] = np.array(self.results_dict["change_in_average_activation_layer_3"], dtype=np.float32)
+            self.results_dict["change_in_std_activation_layer_1"] = np.array(self.results_dict["change_in_std_activation_layer_1"], dtype=np.float32)
+            self.results_dict["change_in_std_activation_layer_2"] = np.array(self.results_dict["change_in_std_activation_layer_2"], dtype=np.float32)
+            self.results_dict["change_in_std_activation_layer_3"] = np.array(self.results_dict["change_in_std_activation_layer_3"], dtype=np.float32)
 
 
 def main():
