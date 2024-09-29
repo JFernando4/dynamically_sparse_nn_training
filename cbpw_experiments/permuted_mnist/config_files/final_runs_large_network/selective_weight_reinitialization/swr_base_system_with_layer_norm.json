@@ -73,7 +73,7 @@
     "max_runs_per_job": 5,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
     "output_filename": "swr_bs_ln-%n-%j.out",
-    "mem": "12G",
+    "mem": "16G",
     "mail-type": "BEGIN,END,FAIL",
     "mail-user":"jfhernan@ualberta.ca",
     "cpus-per-task": 6
