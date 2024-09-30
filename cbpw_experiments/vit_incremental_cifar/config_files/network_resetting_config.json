@@ -30,8 +30,8 @@
   },
 
   "slurm_parameters": {
-    "job_name": "cbpw_vit_inc",
-    "time": "16:30:00",
+    "job_name": "nnr_vit",
+    "time": "18:00:00",
     "max_runs_per_job": 1,
     "output_filename": "vit_inc-%n-%j.out",
     "mem": "12G",
