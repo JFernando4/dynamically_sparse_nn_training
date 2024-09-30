@@ -228,7 +228,7 @@ def compute_difference_statistics_after_reinitialization(results_dir: str, param
             print(f"\t\tLayer {l + 1}")
             for stat in ["average", "std"]:
                 print(f"\t\t\t{stat}")
-                average_difference = np.average(loaded_results[f"layer_{l + 1}"][stat], axis=1)
+                average_difference = np.average(loaded_results[f"layer_{l + 1}"][stat][pc], axis=1)
                 total_average = np.average(average_difference)
                 ste_average_difference = np.std(average_difference, ddof=1) / np.sqrt(average_difference.size)
                 print(f"\t\t\t\ttAverage Difference: {total_average:.6f}")
