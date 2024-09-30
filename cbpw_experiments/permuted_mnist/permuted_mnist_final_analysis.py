@@ -204,6 +204,38 @@ def compute_difference_in_loss_after_reinitialization(results_dir: str, paramete
         print(f"\t\tNumber of Samples: {average_difference.size}")
 
 
+def compute_difference_statistics_after_reinitialization(results_dir: str, parameter_combinations: list[str]):
+    """ Computes the difference in loss before and after reinitialization """
+
+    loaded_results = {
+        "layer_1": {
+            "average": get_results_data(results_dir, "change_in_average_activation_layer_1", parameter_combinations),
+            "std": get_results_data(results_dir, "change_in_std_activation_layer_1", parameter_combinations)
+        },
+        "layer_2": {
+            "average": get_results_data(results_dir, "change_in_average_activation_layer_2", parameter_combinations),
+            "std": get_results_data(results_dir, "change_in_std_activation_layer_2", parameter_combinations)
+        },
+        "layer_3": {
+            "average": get_results_data(results_dir, "change_in_average_activation_layer_3", parameter_combinations),
+            "std": get_results_data(results_dir, "change_in_std_activation_layer_3", parameter_combinations)
+        }
+    }
+
+    for pc in parameter_combinations:
+        print(f"\t{pc}")
+        for l in range(3):
+            print(f"\t\tLayer {l + 1}")
+            for stat in ["average", "std"]:
+                print(f"\t\t\t{stat}")
+                average_difference = np.average(loaded_results[f"layer_{l + 1}"][stat], axis=1)
+                total_average = np.average(average_difference)
+                ste_average_difference = np.std(average_difference, ddof=1) / np.sqrt(average_difference.size)
+                print(f"\t\t\t\ttAverage Difference: {total_average:.6f}")
+                print(f"\t\t\t\tStandard Error of Difference: {ste_average_difference:.6f}")
+                print(f"\t\t\t\tNumber of Samples: {average_difference.size}")
+
+
 def analyse_results(analysis_parameters: dict, save_plots: bool = True):
 
     results_dir = analysis_parameters["results_dir"]
@@ -216,9 +248,11 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
 
     for sn, bs in zip(summary_names, bin_sizes):
 
-        if sn in ["difference_in_loss_after_reinitialization"]:
+        if sn == "difference_in_loss_after_reinitialization":
             print(f"Summary name: {sn}")
             compute_difference_in_loss_after_reinitialization(results_dir, parameter_combinations)
+        elif sn == "difference_statistics_after_reinitialization":
+            compute_difference_statistics_after_reinitialization(results_dir, parameter_combinations)
         else:
             results_data = get_results_data(results_dir, sn, parameter_combinations, bin_size=bs)
             plot_results(results_data, plot_parameters, plot_dir, sn, save_plots, plot_name_prefix)
