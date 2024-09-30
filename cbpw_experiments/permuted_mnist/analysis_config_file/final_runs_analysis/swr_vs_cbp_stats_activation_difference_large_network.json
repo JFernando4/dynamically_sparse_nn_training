@@ -4,7 +4,6 @@
     "parameter_combinations":
         [
             "use_ln-True_use_cbp-True_maturity_threshold-1_replacement_rate-0.01",
-            "use_ln-True_use_cbpw-True_topology_update_freq-2400_prune_method-gf_grow_method-zero_drop_factor-0.8",
             "use_ln-True_use_cbpw-True_topology_update_freq-1200_prune_method-gf_grow_method-kaiming_normal_drop_factor-0.1"
         ],
 
