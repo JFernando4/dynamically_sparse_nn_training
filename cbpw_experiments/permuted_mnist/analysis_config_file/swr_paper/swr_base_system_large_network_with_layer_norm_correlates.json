@@ -1,0 +1,33 @@
+{
+    "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/permuted_mnist_large_network/",
+
+    "parameter_combinations":
+        [
+            "stepsize-0.1_use_ln-True_preactivation_ln-False",
+            "use_ln-True_use_cbp-True_maturity_threshold-1_replacement_rate-0.01",
+            "stepsize-0.1_l2_factor-1e-05_use_ln-True_preactivation_ln-False",
+            "use_ln-True_use_cbpw-True_topology_update_freq-4800_prune_method-magnitude_grow_method-zero_drop_factor-0.8",
+            "use_ln-True_use_cbpw-True_topology_update_freq-4800_prune_method-magnitude_grow_method-kaiming_normal_drop_factor-0.8",
+            "use_ln-True_use_cbpw-True_topology_update_freq-2400_prune_method-gf_grow_method-zero_drop_factor-0.8",
+            "use_ln-True_use_cbpw-True_topology_update_freq-1200_prune_method-gf_grow_method-kaiming_normal_drop_factor-0.1"
+        ],
+
+    "summary_names":
+        [
+            "average_weight_magnitude_per_permutation",
+            "proportion_dead_units_per_permutation",
+            "average_gradient_magnitude_per_checkpoint"
+        ],
+
+    "plot_dir": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/plots/swr_paper",
+
+    "bin_sizes": [1, 1, 200],
+
+    "plot_parameters": {
+        "labels": ["Base System", "CBP", "L2", "SWR-MZ", "SWR-MK", "SWR-GZ", "SWR-GK"],
+        "color_order": ["black", "blue_green", "pale_violet", "yellow", "gray", "orange", "blue"],
+        "xlim": [-50, 1050]
+    },
+
+    "plot_name_prefix": "swr_vs_cbp_large_network_with_layer_norm"
+}
