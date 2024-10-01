@@ -6,8 +6,6 @@
             "stepsize-0.1_use_ln-True_preactivation_ln-False",
             "use_ln-True_use_cbp-True_maturity_threshold-1_replacement_rate-1e-05",
             "stepsize-0.1_l2_factor-0.0001_use_ln-True_preactivation_ln-False",
-            "use_ln-True_use_cbpw-True_topology_update_freq-1200_prune_method-magnitude_grow_method-zero_drop_factor-0.2",
-            "use_ln-True_use_cbpw-True_topology_update_freq-1200_prune_method-magnitude_grow_method-kaiming_normal_drop_factor-0.2",
             "use_ln-True_use_cbpw-True_topology_update_freq-300_prune_method-gf_grow_method-zero_drop_factor-0.1",
             "use_ln-True_use_cbpw-True_topology_update_freq-1200_prune_method-gf_grow_method-kaiming_normal_drop_factor-0.1"
         ],
@@ -24,8 +22,8 @@
     "bin_sizes": [1, 1, 200],
 
     "plot_parameters": {
-        "labels": ["Base System", "CBP", "L2", "SWR-MZ", "SWR-MK", "SWR-GZ", "SWR-GK"],
-        "color_order": ["black", "blue_green", "pale_violet", "yellow", "gray", "orange", "blue"],
+        "labels": ["Base System", "CBP", "L2", "SWR-GZ", "SWR-GK"],
+        "color_order": ["black", "blue_green", "pale_violet", "orange", "blue"],
         "xlim": [-50, 1050]
     },
 
