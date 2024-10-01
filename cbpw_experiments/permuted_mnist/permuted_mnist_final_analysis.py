@@ -122,6 +122,7 @@ def get_results_data(results_dir: str, measurement_name: str, parameter_combinat
             except EOFError:
                 if DEBUG:
                     print(f"\n{filename = }\nParameter combination = {pc}\nMeasurement = {measurement_name}")
+                    print(f"\n{results_dir = }\n")
                 raise EOFError
             results[pc].append(get_average_over_bins(temp_measurement_array, bin_size))
         results[pc] = np.array(results[pc])
