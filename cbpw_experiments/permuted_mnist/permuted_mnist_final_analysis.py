@@ -1,6 +1,3 @@
-import numpy
-import torch
-from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 import os
 import numpy as np
@@ -8,14 +5,9 @@ import pickle
 import argparse
 
 import os
-import re
-import torch
-from mlproj_manager.plots_and_summaries.plotting_functions import line_plot_with_error_bars, lighten_color
-from scipy.stats import pearsonr
 
-from mlproj_manager.file_management import read_json_file, store_object_with_several_attempts
+from mlproj_manager.file_management import read_json_file
 from mlproj_manager.util import access_dict
-from mlproj_manager.problems.supervised_learning import MnistDataSet
 
 from src.networks import ThreeHiddenLayerNetwork
 
@@ -199,7 +191,7 @@ def compute_difference_in_loss_after_reinitialization(results_dir: str, paramete
         average_difference = np.average(difference, axis=1)
         total_average = np.average(average_difference)
         ste_average_difference = np.std(average_difference, ddof=1) / np.sqrt(average_difference.size)
-        print(f"\t\ttAverage Difference: {total_average:.6f}")
+        print(f"\t\tAverage Difference: {total_average:.6f}")
         print(f"\t\tStandard Error of Difference: {ste_average_difference:.6f}")
         print(f"\t\tNumber of Samples: {average_difference.size}")
 
@@ -231,7 +223,7 @@ def compute_difference_statistics_after_reinitialization(results_dir: str, param
                 average_difference = np.average(loaded_results[f"layer_{l + 1}"][stat][pc], axis=1)
                 total_average = np.average(average_difference)
                 ste_average_difference = np.std(average_difference, ddof=1) / np.sqrt(average_difference.size)
-                print(f"\t\t\t\ttAverage Difference: {total_average:.6f}")
+                print(f"\t\t\t\tAverage Difference: {total_average:.6f}")
                 print(f"\t\t\t\tStandard Error of Difference: {ste_average_difference:.6f}")
                 print(f"\t\t\t\tNumber of Samples: {average_difference.size}")
 
