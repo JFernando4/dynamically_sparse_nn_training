@@ -16,17 +16,19 @@
 
   "__comment_4__": "CBPw Parameters.",
   "use_swr_optim": true,
-  "replacement_rate": 0.0005,
+  "replacement_rate": 0.0001,
+  "maturity_threshold": 100,
   "prune_method": "gf",
-  "grow_method": "clipped",
+  "grow_method": "kaiming_normal",
   "use_ln": false,
-  "preactivation_ln": false,
 
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
     "use_swr_optim",
     "replacement_rate",
+    "maturity_threshold",
     "prune_method",
+    "grow_method",
     "use_ln"
   ]
 }

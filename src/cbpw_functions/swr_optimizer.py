@@ -74,19 +74,21 @@ def compute_gradient_flow(weight: torch.Tensor) -> torch.Tensor:
 
 
 @torch.no_grad()
-def prune_number_of_weights(weight: torch.Tensor, drop_num: int, utility: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+def prune_number_of_weights(weight: torch.Tensor, drop_num: int, mature_weights_utility: torch.Tensor,
+                            mature_weights_indices:torch.Tensor) -> torch.Tensor:
     """
-    drop_num weights with the lowest |gradient * weight| are set to zero
-    returns indices of the pruned weights, indices of active weights
+    Sets the weights above a mature threshold and with low utility to zero
+    returns indices of the pruned weights
     """
-    indices = torch.argsort(utility)
-    weight.view(-1)[indices[:drop_num]] = 0.0
-    return indices[:drop_num], indices[drop_num:]
+    sorted_utility_indices = torch.argsort(mature_weights_utility)
+    pruned_indices = mature_weights_indices[sorted_utility_indices][:drop_num]
+    weight.view(-1)[pruned_indices] = 0.0
+    return pruned_indices
 
 
 @torch.no_grad()
 def reinitialize_weights_with_noise(weight: torch.Tensor, pruned_indices: torch.Tensor, center: float = 0.0,
-                                    std: float = 0.0, min_w: float = None):
+                                    std: float = 0.0):
     """ Reinitializes the entries of the given weight tensor at the given indices to center + Normal(center, std) """
 
     if center == 0.0 and std == 0.0:
@@ -95,15 +97,13 @@ def reinitialize_weights_with_noise(weight: torch.Tensor, pruned_indices: torch.
     new_value = center + torch.zeros(size=pruned_indices.size())
     if std > 0.0:
         new_value = center + torch.randn(size=pruned_indices.size()) * std
-    if min_w is not None:
-        new_value = torch.clip(new_value, -min_w, min_w)
     weight.view(-1)[pruned_indices] = new_value
 
 
 class SelectiveWeightReinitializationSGD(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-5, weight_decay=0.0, l1_reg_factor=0.0, momentum=0.0, replacement_rate = 0.0,
-                 utility: str = None, new_params_mean: list[float] = None, new_params_std: list[float] = None,
-                 clip_values: bool = False, beta_utility: float = 0.0):
+    def __init__(self, params, lr=1e-5, weight_decay=0.0, l1_reg_factor=0.0, momentum=0.0,
+                 replacement_rate: float = 0.0, maturity_threshold: int = 0, utility: str = None,
+                 new_params_mean: list[float] = None, new_params_std: list[float] = None, beta_utility: float = 0.0):
 
         params = list(params)
         # Check that arguments hae the right values.
@@ -132,10 +132,10 @@ class SelectiveWeightReinitializationSGD(torch.optim.Optimizer):
                              "new_params_mean and new_params_std.")
 
         defaults = dict(lr=lr, weight_decay=weight_decay, l1_reg_factor=l1_reg_factor, momentum=momentum,
-                        replacement_rate=replacement_rate, new_weights_mean=new_params_mean,
-                        new_weights_std=new_params_std, prune_method=utility, beta_utility=beta_utility)
+                        replacement_rate=replacement_rate, maturity_threshold=maturity_threshold,
+                        new_weights_mean=new_params_mean, new_weights_std=new_params_std, prune_method=utility,
+                        beta_utility=beta_utility)
 
-        self.clip_values = clip_values
         self.utility_function = None
         if utility == "magnitude":
             self.utility_function = compute_weight_magnitude
@@ -148,10 +148,10 @@ class SelectiveWeightReinitializationSGD(torch.optim.Optimizer):
             if p.requires_grad:
                 self.state[p]["momentum_buffer"] = torch.zeros_like(p, requires_grad=False)
                 self.state[p]["utility_trace"] = torch.zeros_like(p, requires_grad=False).view(-1)
+                self.state[p]["age"] = torch.zeros_like(p, requires_grad=False, dtype=torch.int32).view(-1)
                 self.state[p]["num_reinit_per_step"] = p.numel() * replacement_rate
                 self.state[p]["current_num_reinit"] = 0.0
                 self.state[p]["was_reinitialized"] = False
-                self.state[p]["last_pruned_indices"] = None
 
     def step(self, loss = None):
 
@@ -161,6 +161,7 @@ class SelectiveWeightReinitializationSGD(torch.optim.Optimizer):
             weight_decay = group["weight_decay"]
             l1_reg_factor = group["l1_reg_factor"]
             momentum = group["momentum"]
+            maturity_threshold = group["maturity_threshold"]
             means = group["new_weights_mean"]
             stds = group["new_weights_std"]
 
@@ -186,44 +187,42 @@ class SelectiveWeightReinitializationSGD(torch.optim.Optimizer):
 
                 # prune and reinitialize weights
                 if self.utility_function is not None:
-                    state["current_num_reinit"] += state["num_reinit_per_step"]
-                    if state["current_num_reinit"] >= 1.0:
+                    self.prune_and_reinitialize(state, p, beta_utility, means[i], stds[i], maturity_threshold)
 
-                        # compute utility
-                        utility = self.utility_function(p)
-                        if beta_utility != 0.0:
-                            state["utility_trace"] *= beta_utility
-                            state["utility_trace"] += (1 - beta_utility) * utility
-                            utility = state["utility_trace"]
+    def prune_and_reinitialize(self, state: dict, parameter: torch.Tensor, beta_utility: float, mean: float, std: float,
+                               maturity_threshold: int):
 
-                        # prune weights
-                        remainder, num_to_prune = modf(state["current_num_reinit"])
-                        pruned_indices, active_indices = prune_number_of_weights(p, int(num_to_prune), utility)
+        state["age"] += 1
+        mature_weights_indices = torch.where(state["age"] > maturity_threshold)[0]
+        if mature_weights_indices.size()[0] == 0: return  # weights are not mature enough
 
-                        # reinitialize weights
-                        if stds is not None and means is not None:
-                            min_w = None if not self.clip_values else float((p.view(-1)[active_indices].abs().min()))
-                            reinitialize_weights_with_noise(p, pruned_indices, means[i], stds[i], min_w)
+        state["current_num_reinit"] += state["num_reinit_per_step"]
+        if state["current_num_reinit"] < 1.0: return            # nothing to reinitialize yet
 
-                        # update buffers
-                        if beta_utility != 0.0:
-                            state["utility_trace"][pruned_indices] = 0.0
-                        state["current_num_reinit"] = remainder
-                        state["last_pruned_indices"] = (pruned_indices, active_indices)
-                        state["was_reinitialized"] = True
+        # compute utility
+        utility = self.utility_function(parameter)
+        if beta_utility != 0.0:                                 # if using moving average
+            state["utility_trace"] *= beta_utility
+            state["utility_trace"] += (1 - beta_utility) * utility
+            utility = state["utility_trace"]
+        mature_weights_utility = utility.view(-1)[state["age"] > maturity_threshold]
+
+        # prune weights
+        remainder, num_to_prune = modf(state["current_num_reinit"])
+        pruned_indices = prune_number_of_weights(parameter, int(num_to_prune), mature_weights_utility, mature_weights_indices)
+
+        # reinitialize weights
+        reinitialize_weights_with_noise(parameter, pruned_indices, mean, std)
+
+        # update buffers
+        if beta_utility != 0.0:
+            state["utility_trace"][pruned_indices] = 0.0
+        state["age"][pruned_indices] = 0
+        state["current_num_reinit"] = remainder
+        state["was_reinitialized"] = True
 
     def reset_reinitialized_indicator(self):
-
         for group in self.param_groups:
             for p in group["params"]:
                 state = self.state[p]
                 state["was_reinitialized"] = False
-
-    def get_reinitialized_parameters(self):
-        reinitialized = []
-        for group in self.param_groups:
-            for p in group["params"]:
-                state = self.state[p]
-                if state["was_reinitialized"]:
-                    reinitialized.append((p, state["last_pruned_indices"]))
-        return reinitialized
