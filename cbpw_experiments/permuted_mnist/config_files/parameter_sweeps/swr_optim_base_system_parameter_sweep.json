@@ -18,12 +18,11 @@
     "batch_size": 30,
     "stepsize": 0.05,
     "steps_per_task": 60000,
-    "store_parameters": false,
     "runs": 10
   },
 
   "learning_params": {
-    "use_cbpw": true,
+    "use_swr_optim": true,
     "replacement_rate": ["fixed", 0.001, 0.0005, 0.0001, 0.00005, 0.00001],
     "maturity_threshold": ["fixed", 50, 100, 500, 1000, 5000],
     "prune_method": ["str", "magnitude", "gf"],
