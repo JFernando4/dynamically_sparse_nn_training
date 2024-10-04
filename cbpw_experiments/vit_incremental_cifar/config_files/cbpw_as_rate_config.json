@@ -22,14 +22,14 @@
     "initial_num_classes": 5,
     "fixed_classes": false,
     "use_best_network": true,
-    "runs": 5
+    "runs": 2
   },
 
   "learning_params": {
-    "topology_update_freq": ["fixed", 65],
+    "topology_update_freq": ["fixed", 30, 65, 130],
     "prune_method": ["str", "gf"],
     "grow_method": ["str", "zero"],
-    "drop_factor": ["fixed", 0.01],
+    "drop_factor": ["fixed", 0.005, 0.01, 0.02],
     "df_as_rate": true
   },
 
