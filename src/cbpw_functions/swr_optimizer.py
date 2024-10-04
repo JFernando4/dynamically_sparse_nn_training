@@ -115,7 +115,7 @@ class SelectiveWeightReinitializationSGD(torch.optim.Optimizer):
             raise ValueError(f"Invalid weight_decay value: {weight_decay}")
         if l1_reg_factor < 0.0:
             raise ValueError(f"Invalid l1_reg_factor value: {l1_reg_factor}")
-        if replacement_rate < 0.0 or replacement_rate >= 1.0:
+        if replacement_rate < 0.0 or replacement_rate > 1.0:
             raise ValueError(f"Invalid replacement_rate value: {replacement_rate}")
         if utility not in ["none", "magnitude", "gf"]:  # magnitude = weight magnitude, gm = gradient magnitude
             raise ValueError(f"Invalid pruning_function value: {utility}. Choose from: ['none', 'magnitude', 'gf']")
@@ -193,7 +193,7 @@ class SelectiveWeightReinitializationSGD(torch.optim.Optimizer):
                                maturity_threshold: int):
 
         state["age"] += 1
-        mature_weights_indices = torch.where(state["age"] > maturity_threshold)[0]
+        mature_weights_indices = torch.where(state["age"] >= maturity_threshold)[0]
         if mature_weights_indices.size()[0] == 0: return  # weights are not mature enough
 
         state["current_num_reinit"] += state["num_reinit_per_step"]
@@ -205,7 +205,7 @@ class SelectiveWeightReinitializationSGD(torch.optim.Optimizer):
             state["utility_trace"] *= beta_utility
             state["utility_trace"] += (1 - beta_utility) * utility
             utility = state["utility_trace"]
-        mature_weights_utility = utility.view(-1)[state["age"] > maturity_threshold]
+        mature_weights_utility = utility.view(-1)[mature_weights_indices]
 
         # prune weights
         remainder, num_to_prune = modf(state["current_num_reinit"])
