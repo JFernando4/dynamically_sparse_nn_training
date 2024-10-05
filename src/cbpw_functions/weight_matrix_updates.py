@@ -1,14 +1,21 @@
 import torch
 import numpy as np
 from typing import Callable
+from scipy.special import erfinv
 
+QUANTILE = 0.25
+QUANTILE_SCALE = 1 / (np.sqrt(2) * erfinv(QUANTILE))
+MEAN_PRUNED_WEIGHTS = 0
 
 def prune_and_grow_weights(weight: torch.Tensor,
                            prune_function: Callable[[torch.Tensor], None],
                            grow_function: Callable[[torch.Tensor], None]) -> tuple[torch.Tensor, int]:
     """ Prunes and grows weight in a weight matrix"""
-
+    copy_of_weights = weight.detach().clone()
     was_pruned = prune_function(weight)
+
+    global MEAN_PRUNED_WEIGHTS
+    MEAN_PRUNED_WEIGHTS = copy_of_weights.view(-1)[was_pruned].abs().mean()
 
     # get mask of pruned weights and compute number of pruned weights
     mask = torch.ones_like(weight, requires_grad=False)
@@ -27,7 +34,7 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     """ Sets up weight update function for CBP-w """
     prune_function_names = ["magnitude", "redo", "gf_redo", "gf", "hess_approx"]
     grow_function_names = ["pm_min", "kaiming_normal", "xavier_normal", "zero", "kaming_uniform", "xavier_uniform",
-                           "fixed", "fixed_with_noise", "clipped", "cstd"]
+                           "fixed", "fixed_with_noise", "clipped", "cstd", "mad"]
     assert prune_name in prune_function_names and grow_name in grow_function_names
     assert "drop_factor" in kwargs.keys()
 
@@ -61,6 +68,8 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     elif grow_name == "cstd":    # clipped std
         assert "activation"
         grow_func = lambda w: clipped_std_reinit_weights(w, activation=kwargs["activation"])
+    elif grow_name == "mad":
+        grow_func = lambda w: magnitude_adjusted_uniform_reinit_weights(w)
 
     def temp_prune_and_grow_weights(w: torch.Tensor):
         return prune_and_grow_weights(w, prune_func, grow_func)
@@ -229,7 +238,7 @@ def clipped_reinit_weights(weight: torch.Tensor, activation: str = "relu") -> No
 @torch.no_grad()
 def clipped_std_reinit_weights(weight: torch.Tensor, activation: str = "relu") -> None:
     """
-    Reinitializes entries in teh wegith matrix at the given indices using kaiming reinitialization with clipped
+    Reinitializes entries in the weight matrix at the given indices using kaiming reinitialization with clipped
     standard deviation, i.e., Normal(0, min(min_active_weight, kaiming_std))
     """
     pruned_indices = torch.where(weight.flatten() == 0.0)[0]
@@ -244,6 +253,28 @@ def clipped_std_reinit_weights(weight: torch.Tensor, activation: str = "relu") -
     std = gain / np.sqrt(fan_in)  # kaiming normal standard deviation
 
     new_weights = torch.randn(size=pruned_indices.size()) * min(std, min_abs_active)
+    weight.view(-1)[pruned_indices] = new_weights
+
+@torch.no_grad()
+def magnitude_adjusted_uniform_reinit_weights(weight: torch):
+    """
+    Reinitializes entries in the weight matrix at the given indices using U(-median_active, median_active)
+    This way, the new weights will have an average magnitude of mean_active
+    """
+    pruned_indices = torch.where(weight.flatten() == 0.0)[0]
+    active_indices = torch.where(weight.flatten() != 0.0)[0]
+
+    if len(active_indices) == 0:
+        return
+
+    # current_quantile = torch.quantile(weight.flatten()[active_indices].abs(), QUANTILE)
+    # print(f"{current_quantile = }", f"{current_quantile * QUANTILE_SCALE = }", f"{QUANTILE = }")
+    # This: torch.randn(a) * sigma, gives a sample from a N(0, sigma)
+    new_weights = torch.randn(size=pruned_indices.size()) * (np.sqrt(np.pi/2) * MEAN_PRUNED_WEIGHTS)
+    print(f"Standard Deviation = {np.sqrt(np.pi/2) * MEAN_PRUNED_WEIGHTS}, {MEAN_PRUNED_WEIGHTS = }")
+    # new_weights = torch.randn(size=pruned_indices.size()) * (QUANTILE_SCALE * current_quantile)
+    # This: (r1 - r2) * torch.rand(a, b) + r2, gives samples from a uniform distribution in interval [r1, r2]
+    # new_weights = - (-2 * torch.rand(size=pruned_indices.size()) + 1) * mean_active
     weight.view(-1)[pruned_indices] = new_weights
 
 
