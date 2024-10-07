@@ -17,7 +17,7 @@
   "use_cbpw": true,
   "topology_update_freq": 1200,
   "prune_method": "gf",
-  "grow_method": "cstd",
+  "grow_method": "mad",
   "drop_factor": 0.2,
   "use_ln": false,
   "preactivation_ln": false,

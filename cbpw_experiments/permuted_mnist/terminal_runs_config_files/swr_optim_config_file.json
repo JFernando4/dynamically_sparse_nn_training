@@ -16,8 +16,8 @@
 
   "__comment_4__": "CBPw Parameters.",
   "use_swr_optim": true,
-  "replacement_rate": 0.0001,
-  "maturity_threshold": 100,
+  "replacement_rate": 0.001,
+  "maturity_threshold":   1,
   "prune_method": "gf",
   "grow_method": "kaiming_normal",
   "use_ln": false,
