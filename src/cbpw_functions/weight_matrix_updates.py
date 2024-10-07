@@ -3,70 +3,52 @@ import numpy as np
 from typing import Callable
 from scipy.special import erfinv
 
-QUANTILE = 0.25
-QUANTILE_SCALE = 1 / (np.sqrt(2) * erfinv(QUANTILE))
-MEAN_PRUNED_WEIGHTS = 0
 
 def prune_and_grow_weights(weight: torch.Tensor,
-                           prune_function: Callable[[torch.Tensor], None],
-                           grow_function: Callable[[torch.Tensor], None]) -> tuple[torch.Tensor, int]:
+                           prune_function: Callable[[torch.Tensor], tuple[torch.Tensor, torch.Tensor]],
+                           grow_function: Callable[[torch.Tensor, torch.Tensor, torch.Tensor], None]) -> tuple[torch.Tensor, int]:
     """ Prunes and grows weight in a weight matrix"""
-    copy_of_weights = weight.detach().clone()
-    was_pruned = prune_function(weight)
 
-    global MEAN_PRUNED_WEIGHTS
-    MEAN_PRUNED_WEIGHTS = copy_of_weights.view(-1)[was_pruned].abs().mean()
+    pruned_indices, active_indices = prune_function(weight)
 
     # get mask of pruned weights and compute number of pruned weights
     mask = torch.ones_like(weight, requires_grad=False)
-    if not was_pruned:
+    if len(pruned_indices) == 0:
         return mask, 0
-    pruned_indices = torch.where(weight.flatten() == 0.0)[0]
     mask.view(-1)[pruned_indices] = 0.0
     num_pruned = len(pruned_indices)
 
-    grow_function(weight)
+    grow_function(weight, pruned_indices, active_indices)
 
     return mask, num_pruned
 
 
 def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs) -> Callable[[torch.Tensor], tuple]:
     """ Sets up weight update function for CBP-w """
-    prune_function_names = ["magnitude", "redo", "gf_redo", "gf", "hess_approx"]
-    grow_function_names = ["pm_min", "kaiming_normal", "xavier_normal", "zero", "kaming_uniform", "xavier_uniform",
-                           "fixed", "fixed_with_noise", "clipped", "cstd", "mad"]
+    prune_function_names = ["magnitude", "gf"]
+    grow_function_names = ["kaiming_normal", "xavier_normal", "zero", "kaming_uniform", "xavier_uniform",
+                           "fixed", "clipped", "mad"]
     assert prune_name in prune_function_names and grow_name in grow_function_names
     assert "drop_factor" in kwargs.keys()
 
     as_rate = False if "as_rate" not in kwargs.keys() else kwargs["as_rate"]
     if prune_name == "magnitude":
         prune_func = lambda w: magnitude_prune_weights(w, drop_factor=kwargs["drop_factor"], as_rate=as_rate)
-    elif prune_name == "redo":
-        prune_func = lambda w: redo_prune_weights(w, drop_factor=kwargs["drop_factor"])
     elif prune_name == "gf":
         prune_func = lambda w: gradient_flow_prune_weights(w, drop_factor=kwargs["drop_factor"], as_rate=as_rate)
-    elif prune_name == "hess_approx":
-        mb_size = 1.0 if "mb_size" not in kwargs.keys() else kwargs["mb_size"]
-        prune_func = lambda w: hessian_approx_prune_weights(w, drop_factor=kwargs["drop_factor"], mb_size=mb_size, as_rate=as_rate)
 
-    if grow_name == "pm_min":
-        grow_func = lambda w: pm_min_reinit_weights(w)
-    elif "kaiming" in grow_name or "xavier" in grow_name:
-        grow_func = lambda w: random_reinit_weights(w, reinit=grow_name)
+    if "kaiming" in grow_name or "xavier" in grow_name:
+        grow_func = lambda w, pi, ai: random_reinit_weights(w, pruned_indices=pi, active_indices=ai, reinit=grow_name)
     elif grow_name == "zero":
-        grow_func = lambda w: fixed_reinit_weights(w, reinit_val=0.0)
+        grow_func = lambda w, pi, ai: fixed_reinit_weights(w, pruned_indices=pi, active_indices=ai, reinit_val=0.0)
     elif grow_name == "fixed":
         assert "reinit_val" in kwargs.keys()
-        grow_func = lambda w: fixed_reinit_weights(w, kwargs["reinit_val"])
-    elif grow_name == "fixed_with_noise":
-        assert "reinit_val" in kwargs.keys()
-        assert "noise_std" in kwargs.keys()
-        grow_func = lambda w: fixed_reinit_weights_with_noise(w, kwargs["reinit_val"], kwargs["noise_std"])
+        grow_func = lambda w, pi, ai: fixed_reinit_weights(w, pruned_indices=pi, active_indices=ai, reinit_val=kwargs["reinit_val"])
     elif grow_name == "clipped":
         assert "activation" in kwargs.keys()
-        grow_func = lambda w: clipped_reinit_weights(w, activation=kwargs["activation"])
+        grow_func = lambda w, pi, ai: clipped_reinit_weights(w, pruned_indices=pi, active_indices=ai, activation=kwargs["activation"])
     elif grow_name == "mad":
-        grow_func = lambda w: magnitude_adjusted_uniform_reinit_weights(w)
+        grow_func = lambda w, pi, ai: magnitude_adjusted_uniform_reinit_weights(w, pruned_indices=pi, active_indices=ai)
 
     def temp_prune_and_grow_weights(w: torch.Tensor):
         return prune_and_grow_weights(w, prune_func, grow_func)
@@ -105,7 +87,7 @@ def setup_cbpw_layer_norm_update_function(prune_name: str, drop_factor: float, e
     if prune_name == "magnitude":
         prune_func = lambda w: magnitude_prune_weights(w, drop_factor=drop_factor)
     elif prune_name == "redo":
-        prune_func = lambda w: redo_prune_weights(w, drop_factor=drop_factor)
+        prune_func = lambda w: magnitude_redo_prune_weights(w, drop_factor=drop_factor)
     elif prune_name == "gf":
         prune_func = lambda w: gradient_flow_prune_weights(w, drop_factor=drop_factor)
     elif prune_name == "hess_approx":
@@ -119,7 +101,7 @@ def setup_cbpw_layer_norm_update_function(prune_name: str, drop_factor: float, e
 
 # ----- ----- ----- ----- Pruning Functions ----- ----- ----- ----- #
 @torch.no_grad()
-def redo_prune_weights(weight: torch.Tensor, drop_factor: float):
+def magnitude_redo_prune_weights(weight: torch.Tensor, drop_factor: float):
     """
     Prunes the weight that are smaller than (drop_factor * average_absolute_weight_value)
     """
@@ -134,29 +116,31 @@ def redo_prune_weights(weight: torch.Tensor, drop_factor: float):
 
 
 @torch.no_grad()
-def magnitude_prune_weights(weight: torch.Tensor, drop_factor: float, as_rate: bool = False) -> bool:
+def magnitude_prune_weights(weight: torch.Tensor, drop_factor: float, as_rate: bool = False) -> tuple[torch.Tensor, torch.Tensor]:
     """ Creates a mask by dropping the weights with the smallest magnitude """
 
     drop_num = compute_drop_num(weight.numel(), drop_factor, as_rate)
-    if drop_num == 0: return False
+    if drop_num == 0: return torch.empty(0), torch.empty(0)
 
     abs_weight = torch.abs(weight).flatten()
     indices = torch.argsort(abs_weight)
-    weight.view(-1)[indices[:drop_num]] = 0.0
-    return True
+    pruned_indices = indices[:drop_num]
+    active_indices = indices[drop_num:]
+    return pruned_indices, active_indices
 
 
 @torch.no_grad()
-def gradient_flow_prune_weights(weight: torch.Tensor, drop_factor: float, as_rate: bool = False) -> bool:
+def gradient_flow_prune_weights(weight: torch.Tensor, drop_factor: float, as_rate: bool = False) -> tuple[torch.Tensor, torch.Tensor]:
     """ Creates a mask by dropping the weights with the smallest gradient flow """
 
     drop_num = compute_drop_num(weight.numel(), drop_factor, as_rate)
-    if drop_num == 0: return False
+    if drop_num == 0: return torch.empty(0), torch.empty(0)
 
     gradient_flow = torch.abs(weight * weight.grad).flatten()
     indices = torch.argsort(gradient_flow)
-    weight.view(-1)[indices[:drop_num]] = 0.0
-    return True
+    pruned_indices = indices[:drop_num]
+    active_indices = indices[drop_num:]
+    return pruned_indices, active_indices
 
 
 @torch.no_grad()
@@ -212,15 +196,10 @@ def pm_min_reinit_weights(weight: torch.Tensor) -> None:
 
 
 @torch.no_grad()
-def clipped_reinit_weights(weight: torch.Tensor, activation: str = "relu") -> None:
+def clipped_reinit_weights(weight: torch.Tensor,  pruned_indices: torch.Tensor, active_indices: torch.Tensor, activation: str = "relu") -> None:
     """
     Reinitializes entries in teh wegith matrix at the given indices using clipped kaiming reinitialization
     """
-    pruned_indices = torch.where(weight.flatten() == 0.0)[0]
-    active_indices = torch.where(weight.flatten() != 0.0)[0]
-
-    if len(active_indices) == 0:
-        return
 
     min_abs_active = weight.flatten().abs()[active_indices].min()
     gain = torch.nn.init.calculate_gain(activation)
@@ -232,30 +211,28 @@ def clipped_reinit_weights(weight: torch.Tensor, activation: str = "relu") -> No
     weight.view(-1)[pruned_indices] = clipped_new_weights
 
 @torch.no_grad()
-def magnitude_adjusted_uniform_reinit_weights(weight: torch):
+def magnitude_adjusted_uniform_reinit_weights(weight: torch,  pruned_indices: torch.Tensor, active_indices: torch.Tensor):
     """
     Reinitializes entries in the weight matrix at the given indices using U(-median_active, median_active)
     This way, the new weights will have an average magnitude of mean_active
     """
-    pruned_indices = torch.where(weight.flatten() == 0.0)[0]
-    active_indices = torch.where(weight.flatten() != 0.0)[0]
 
-    if len(active_indices) == 0:
-        return
+    mean_pruned_weights = weight.flatten().abs()[pruned_indices].mean()
+    new_weights = torch.randn(size=pruned_indices.size()) * (np.sqrt(np.pi/2) * mean_pruned_weights)
+    # This: (r1 - r2) * torch.rand(a, b) + r2, gives samples from a uniform distribution in interval [r1, r2]
+    # new_weights = - (-2 * torch.rand(size=pruned_indices.size()) + 1) * 2 * mean_active
+    print(f"Standard Deviation = {np.sqrt(np.pi/2) * mean_pruned_weights}, {mean_pruned_weights = }")
+    weight.view(-1)[pruned_indices] = new_weights
 
     # current_quantile = torch.quantile(weight.flatten()[active_indices].abs(), QUANTILE)
     # print(f"{current_quantile = }", f"{current_quantile * QUANTILE_SCALE = }", f"{QUANTILE = }")
     # This: torch.randn(a) * sigma, gives a sample from a N(0, sigma)
-    new_weights = torch.randn(size=pruned_indices.size()) * (np.sqrt(np.pi/2) * MEAN_PRUNED_WEIGHTS)
-    print(f"Standard Deviation = {np.sqrt(np.pi/2) * MEAN_PRUNED_WEIGHTS}, {MEAN_PRUNED_WEIGHTS = }")
+
     # new_weights = torch.randn(size=pruned_indices.size()) * (QUANTILE_SCALE * current_quantile)
-    # This: (r1 - r2) * torch.rand(a, b) + r2, gives samples from a uniform distribution in interval [r1, r2]
-    # new_weights = - (-2 * torch.rand(size=pruned_indices.size()) + 1) * mean_active
-    weight.view(-1)[pruned_indices] = new_weights
 
 
 @torch.no_grad()
-def random_reinit_weights(weight: torch.Tensor, reinit) -> None:
+def random_reinit_weights(weight: torch.Tensor, pruned_indices: torch.Tensor, active_indices: torch.Tensor, reinit) -> None:
     """
     Reinitializes entries in the weight matrix at the given indices using the specified reinit function
 
@@ -272,15 +249,13 @@ def random_reinit_weights(weight: torch.Tensor, reinit) -> None:
     assert reinit in random_reinit_functions.keys()
 
     temp_weights = torch.empty_like(weight)
-    pruned_indices = torch.where(weight.flatten() == 0.0)[0]
     random_reinit_functions[reinit](temp_weights)
     weight.view(-1)[pruned_indices] = temp_weights.view(-1)[pruned_indices]
 
 
 @torch.no_grad()
-def fixed_reinit_weights(weight: torch.Tensor, reinit_val: float) -> None:
+def fixed_reinit_weights(weight: torch.Tensor, pruned_indices: torch.Tensor, active_indices: torch.Tensor, reinit_val: float) -> None:
     """ Reinitializes weights toa fixed value """
-    pruned_indices = torch.where(weight.flatten() == 0.0)[0]
     weight.view(-1)[pruned_indices] = reinit_val
 
 @torch.no_grad()
