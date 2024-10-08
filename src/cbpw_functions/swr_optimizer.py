@@ -82,7 +82,6 @@ def prune_number_of_weights(weight: torch.Tensor, drop_num: int, mature_weights_
     """
     sorted_utility_indices = torch.argsort(mature_weights_utility)
     pruned_indices = mature_weights_indices[sorted_utility_indices][:drop_num]
-    weight.view(-1)[pruned_indices] = 0.0
     return pruned_indices
 
 
@@ -90,9 +89,6 @@ def prune_number_of_weights(weight: torch.Tensor, drop_num: int, mature_weights_
 def reinitialize_weights_with_noise(weight: torch.Tensor, pruned_indices: torch.Tensor, center: float = 0.0,
                                     std: float = 0.0):
     """ Reinitializes the entries of the given weight tensor at the given indices to center + Normal(center, std) """
-
-    if center == 0.0 and std == 0.0:
-        return
 
     new_value = center + torch.zeros(size=pruned_indices.size())
     if std > 0.0:
