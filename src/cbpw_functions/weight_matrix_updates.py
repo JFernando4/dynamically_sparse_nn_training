@@ -27,7 +27,7 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     """ Sets up weight update function for CBP-w """
     prune_function_names = ["magnitude", "gf"]
     grow_function_names = ["kaiming_normal", "xavier_normal", "zero", "kaming_uniform", "xavier_uniform",
-                           "fixed", "clipped", "mad"]
+                           "fixed", "clipped", "mad", "truncated"]
     assert prune_name in prune_function_names and grow_name in grow_function_names
     assert "drop_factor" in kwargs.keys()
 
@@ -49,6 +49,8 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
         grow_func = lambda w, pi, ai: clipped_reinit_weights(w, pruned_indices=pi, active_indices=ai, activation=kwargs["activation"])
     elif grow_name == "mad":
         grow_func = lambda w, pi, ai: magnitude_adjusted_uniform_reinit_weights(w, pruned_indices=pi, active_indices=ai)
+    elif grow_name == "truncated":
+        grow_func = lambda w, pi, ai: truncated_normal_reinit_weights(w, pruned_indices=pi, active_indices=ai)
 
     def temp_prune_and_grow_weights(w: torch.Tensor):
         return prune_and_grow_weights(w, prune_func, grow_func)
@@ -166,6 +168,24 @@ def clipped_reinit_weights(weight: torch.Tensor,  pruned_indices: torch.Tensor, 
     clipped_new_weights = torch.clip(new_weights, -min_abs_active, min_abs_active)
     weight.view(-1)[pruned_indices] = clipped_new_weights
 
+
+@torch.no_grad()
+def truncated_normal_reinit_weights(weight: torch.Tensor,  pruned_indices: torch.Tensor, active_indices: torch.Tensor, activation: str = "relu") -> None:
+    """
+    Reinitializes entries in teh wegith matrix at the given indices using clipped kaiming reinitialization
+    """
+
+    min_abs_active = weight.flatten().abs()[active_indices].min()
+    gain = torch.nn.init.calculate_gain(activation)
+    fan_in, fan_out = torch.nn.init._calculate_fan_in_and_fan_out(weight)
+    std = gain / np.sqrt(fan_in)                                                # kaiming normal standard deviation
+
+    new_weights = torch.zeros(size=pruned_indices.size(), dtype=weight.dtype, device=weight.device)
+    torch.nn.init.trunc_normal_(new_weights, mean=0, std=std, a=-min_abs_active, b=min_abs_active)
+
+    weight.view(-1)[pruned_indices] = new_weights
+
+
 @torch.no_grad()
 def magnitude_adjusted_uniform_reinit_weights(weight: torch,  pruned_indices: torch.Tensor, active_indices: torch.Tensor):
     """
@@ -177,14 +197,8 @@ def magnitude_adjusted_uniform_reinit_weights(weight: torch,  pruned_indices: to
     new_weights = torch.randn(size=pruned_indices.size()) * (np.sqrt(np.pi/2) * mean_pruned_weights)
     # This: (r1 - r2) * torch.rand(a, b) + r2, gives samples from a uniform distribution in interval [r1, r2]
     # new_weights = - (-2 * torch.rand(size=pruned_indices.size()) + 1) * 2 * mean_active
-    print(f"Standard Deviation = {np.sqrt(np.pi/2) * mean_pruned_weights}, {mean_pruned_weights = }")
+    # print(f"Standard Deviation = {np.sqrt(np.pi/2) * mean_pruned_weights}, {mean_pruned_weights = }")
     weight.view(-1)[pruned_indices] = new_weights
-
-    # current_quantile = torch.quantile(weight.flatten()[active_indices].abs(), QUANTILE)
-    # print(f"{current_quantile = }", f"{current_quantile * QUANTILE_SCALE = }", f"{QUANTILE = }")
-    # This: torch.randn(a) * sigma, gives a sample from a N(0, sigma)
-
-    # new_weights = torch.randn(size=pruned_indices.size()) * (QUANTILE_SCALE * current_quantile)
 
 
 @torch.no_grad()

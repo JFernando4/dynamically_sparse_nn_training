@@ -69,7 +69,7 @@ class PermutedMNISTExperiment(Experiment):
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str,                   # also use in SWR optimizer
                                         choices=["none", "magnitude", "gf"])
         self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str,                     # also used in SWR optimizer
-                                       choices=["none", "kaiming_normal", "zero", "fixed_with_noise", "clipped", "mad"])
+                                       choices=["none", "kaiming_normal", "zero", "truncated", "clipped", "mad"])
         self.drop_factor = access_dict(exp_params, "drop_factor", default=float, val_type=float)
         self.previously_removed_weights = None
         self.current_topology_update = 0
@@ -79,7 +79,7 @@ class PermutedMNISTExperiment(Experiment):
 
         # CBP parameters
         self.use_cbp = access_dict(exp_params, "use_cbp", default=False, val_type=bool)
-        self.maturity_threshold = access_dict(exp_params, "maturity_threshold", default=0, val_type=int)
+        self.maturity_threshold = access_dict(exp_params, "maturity_threshold", default=0, val_type=int)            # also used in SWR optimizer
         self.replacement_rate = access_dict(exp_params, "replacement_rate", default=1e-6, val_type=float)           # also used in SWR optimizer
         self.cbp_utility = access_dict(exp_params, "cbp_utility", default="contribution", val_type=str)
 
