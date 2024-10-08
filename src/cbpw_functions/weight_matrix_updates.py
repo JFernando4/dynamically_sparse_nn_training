@@ -81,7 +81,7 @@ def update_norm_layer(norm_layer: torch.nn.Module,
 def setup_cbpw_layer_norm_update_function(prune_name: str, drop_factor: float, exclude_layer_bias: bool = False,
                                           as_rate: bool = False) -> Callable[[torch.nn.Module], None]:
     """ Sets up weight update function for CBP-w for layer or batch norm """
-    prune_function_names = ["magnitude", "redo", "gf_redo", "gf", "hess_approx"]
+    prune_function_names = ["magnitude", "redo", "gf_redo", "gf"]
     assert prune_name in prune_function_names
 
     if prune_name == "magnitude":
@@ -90,8 +90,6 @@ def setup_cbpw_layer_norm_update_function(prune_name: str, drop_factor: float, e
         prune_func = lambda w: magnitude_redo_prune_weights(w, drop_factor=drop_factor)
     elif prune_name == "gf":
         prune_func = lambda w: gradient_flow_prune_weights(w, drop_factor=drop_factor)
-    elif prune_name == "hess_approx":
-        prune_func = lambda w: hessian_approx_prune_weights(w, drop_factor=drop_factor, as_rate=as_rate)
 
     def temp_prune_and_grow_weights(w: torch.nn.Module):
         return update_norm_layer(w, prune_func, exclude_layer_bias)
@@ -143,31 +141,6 @@ def gradient_flow_prune_weights(weight: torch.Tensor, drop_factor: float, as_rat
     return pruned_indices, active_indices
 
 
-@torch.no_grad()
-def hessian_approx_prune_weights(weight: torch.Tensor, drop_factor: float, mb_size: float = 1.0, as_rate: bool = False):
-    """
-    Prunes using redo criteria but using gradient flow instead of magnitude pruning
-    """
-
-    drop_num = compute_drop_num(weight.numel(), drop_factor, as_rate)
-    if drop_num == 0: return False
-
-    hess_approx = torch.abs(weight.flatten().square() * (weight.grad.flatten() * mb_size).square())
-    indices = torch.argsort(hess_approx)
-    weight.view(-1)[indices[:drop_num]] = 0.0
-    return True
-
-
-@torch.no_grad()
-def threshold_prune_weights(weight: torch, drop_factor: float) -> None:
-    """
-    Prunes any weight whose absolute value is below the given drop_factor
-    """
-    abs_weight = weight.flatten().abs()
-    indices = torch.where(abs_weight < drop_factor)[0]
-    weight.view(-1)[indices] = 0.0
-
-
 def compute_drop_num(num_weights: int, drop_factor: float, as_rate: bool = False) -> int:
     """ Computes the number of weights dropped """
     fraction_to_prune = num_weights * drop_factor
@@ -179,23 +152,6 @@ def compute_drop_num(num_weights: int, drop_factor: float, as_rate: bool = False
 
 # ----- ----- ----- ----- Growing Functions ----- ----- ----- ----- #
 @torch.no_grad()
-def pm_min_reinit_weights(weight: torch.Tensor) -> None:
-    """
-
-    """
-    pruned_indices = torch.where(weight.flatten() == 0.0)[0]
-    active_indices = torch.where(weight.flatten() != 0.0)[0]
-
-    if len(active_indices) == 0:
-        return
-
-    min_abs_active = weight.flatten().abs()[active_indices].min()
-    random_sign = -1.0 if torch.rand(1) > 0.5 else 1.0
-    weight.view(-1)[pruned_indices[len(pruned_indices) // 2:]] = random_sign * min_abs_active
-    weight.view(-1)[pruned_indices[:len(pruned_indices) // 2]] = - random_sign * min_abs_active
-
-
-@torch.no_grad()
 def clipped_reinit_weights(weight: torch.Tensor,  pruned_indices: torch.Tensor, active_indices: torch.Tensor, activation: str = "relu") -> None:
     """
     Reinitializes entries in teh wegith matrix at the given indices using clipped kaiming reinitialization
@@ -204,7 +160,7 @@ def clipped_reinit_weights(weight: torch.Tensor,  pruned_indices: torch.Tensor, 
     min_abs_active = weight.flatten().abs()[active_indices].min()
     gain = torch.nn.init.calculate_gain(activation)
     fan_in, fan_out = torch.nn.init._calculate_fan_in_and_fan_out(weight)
-    std = gain / np.sqrt(fan_in)  # kaiming normal standard deviation
+    std = gain / np.sqrt(fan_in)                                                # kaiming normal standard deviation
 
     new_weights = torch.randn(size=pruned_indices.size()) * std
     clipped_new_weights = torch.clip(new_weights, -min_abs_active, min_abs_active)
@@ -257,9 +213,3 @@ def random_reinit_weights(weight: torch.Tensor, pruned_indices: torch.Tensor, ac
 def fixed_reinit_weights(weight: torch.Tensor, pruned_indices: torch.Tensor, active_indices: torch.Tensor, reinit_val: float) -> None:
     """ Reinitializes weights toa fixed value """
     weight.view(-1)[pruned_indices] = reinit_val
-
-@torch.no_grad()
-def fixed_reinit_weights_with_noise(weight: torch.Tensor, reinit_val: float, noise_std: float) -> None:
-    """ Reinitializes weights toa fixed value """
-    pruned_indices = torch.where(weight.flatten() == 0.0)[0]
-    weight.view(-1)[pruned_indices] = reinit_val + torch.randn_like(weight.view(-1)[pruned_indices]) * noise_std
