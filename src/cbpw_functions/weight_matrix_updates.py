@@ -45,8 +45,7 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
         assert "reinit_val" in kwargs.keys()
         grow_func = lambda w, pi, ai: fixed_reinit_weights(w, pruned_indices=pi, active_indices=ai, reinit_val=kwargs["reinit_val"])
     elif grow_name == "clipped":
-        assert "activation" in kwargs.keys()
-        grow_func = lambda w, pi, ai: clipped_reinit_weights(w, pruned_indices=pi, active_indices=ai, activation=kwargs["activation"])
+        grow_func = lambda w, pi, ai: clipped_reinit_weights(w, pruned_indices=pi, active_indices=ai)
     elif grow_name == "mad":
         grow_func = lambda w, pi, ai: magnitude_adjusted_uniform_reinit_weights(w, pruned_indices=pi, active_indices=ai)
     elif grow_name == "truncated":
@@ -154,34 +153,42 @@ def compute_drop_num(num_weights: int, drop_factor: float, as_rate: bool = False
 
 # ----- ----- ----- ----- Growing Functions ----- ----- ----- ----- #
 @torch.no_grad()
-def clipped_reinit_weights(weight: torch.Tensor,  pruned_indices: torch.Tensor, active_indices: torch.Tensor, activation: str = "relu") -> None:
+def clipped_reinit_weights(weight: torch.Tensor,  pruned_indices: torch.Tensor, active_indices: torch.Tensor,
+                           activation: str = "relu", clip_to_median: bool = False) -> None:
     """
     Reinitializes entries in teh wegith matrix at the given indices using clipped kaiming reinitialization
     """
 
-    min_abs_active = weight.flatten().abs()[active_indices].min()
+    if clip_to_median:
+        clip_value = weight.flatten().abs()[active_indices].median()
+    else:
+        clip_value = weight.flatten().abs()[active_indices].min()
     gain = torch.nn.init.calculate_gain(activation)
     fan_in, fan_out = torch.nn.init._calculate_fan_in_and_fan_out(weight)
     std = gain / np.sqrt(fan_in)                                                # kaiming normal standard deviation
 
     new_weights = torch.randn(size=pruned_indices.size()) * std
-    clipped_new_weights = torch.clip(new_weights, -min_abs_active, min_abs_active)
+    clipped_new_weights = torch.clip(new_weights, -clip_value, clip_value)
     weight.view(-1)[pruned_indices] = clipped_new_weights
 
 
 @torch.no_grad()
-def truncated_normal_reinit_weights(weight: torch.Tensor,  pruned_indices: torch.Tensor, active_indices: torch.Tensor, activation: str = "relu") -> None:
+def truncated_normal_reinit_weights(weight: torch.Tensor, pruned_indices: torch.Tensor, active_indices: torch.Tensor,
+                                    activation: str = "relu", truncate_to_median: bool = False) -> None:
     """
     Reinitializes entries in teh wegith matrix at the given indices using clipped kaiming reinitialization
     """
 
-    min_abs_active = weight.flatten().abs()[active_indices].min()
+    if truncate_to_median:
+        clip_value = weight.flatten().abs()[active_indices].median()
+    else:
+        clip_value = weight.flatten().abs()[active_indices].min()
     gain = torch.nn.init.calculate_gain(activation)
     fan_in, fan_out = torch.nn.init._calculate_fan_in_and_fan_out(weight)
     std = gain / np.sqrt(fan_in)                                                # kaiming normal standard deviation
 
     new_weights = torch.zeros(size=pruned_indices.size(), dtype=weight.dtype, device=weight.device)
-    torch.nn.init.trunc_normal_(new_weights, mean=0, std=std, a=-min_abs_active, b=min_abs_active)
+    torch.nn.init.trunc_normal_(new_weights, mean=0, std=std, a=-clip_value, b=clip_value)
 
     weight.view(-1)[pruned_indices] = new_weights
 
