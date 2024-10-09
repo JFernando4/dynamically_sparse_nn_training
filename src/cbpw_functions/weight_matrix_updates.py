@@ -164,9 +164,9 @@ def clipped_reinit_weights(weight: torch.Tensor,  pruned_indices: torch.Tensor, 
     """
 
     if clip_to_median:
-        clip_value = weight.flatten().abs()[active_indices].median()
+        clip_value = weight.flatten().abs()[active_indices].median().to(weight.device)
     else:
-        clip_value = weight.flatten().abs()[active_indices].min()
+        clip_value = weight.flatten().abs()[active_indices].min().to(weight.device)
     gain = torch.nn.init.calculate_gain(activation)
     fan_in, fan_out = torch.nn.init._calculate_fan_in_and_fan_out(weight)
     std = gain / np.sqrt(fan_in)                                                # kaiming normal standard deviation
