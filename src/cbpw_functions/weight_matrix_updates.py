@@ -170,7 +170,7 @@ def clipped_reinit_weights(weight: torch.Tensor,  pruned_indices: torch.Tensor, 
     gain = torch.nn.init.calculate_gain(activation)
     fan_in, fan_out = torch.nn.init._calculate_fan_in_and_fan_out(weight)
     std = gain / np.sqrt(fan_in)                                                # kaiming normal standard deviation
-
+    print(f"{clip_value =}, {std = }")
     new_weights = torch.randn(size=pruned_indices.size(), device=weight.device) * std
     clipped_new_weights = torch.clip(new_weights, -clip_value, clip_value)
     weight.view(-1)[pruned_indices] = clipped_new_weights
