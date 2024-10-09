@@ -27,7 +27,7 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     """ Sets up weight update function for CBP-w """
     prune_function_names = ["magnitude", "gf"]
     grow_function_names = ["kaiming_normal", "xavier_normal", "zero", "kaming_uniform", "xavier_uniform",
-                           "fixed", "clipped", "mad", "truncated"]
+                           "fixed", "clipped", "mad", "truncated", "median_clipped", "median_truncated"]
     assert prune_name in prune_function_names and grow_name in grow_function_names
     assert "drop_factor" in kwargs.keys()
 
@@ -46,10 +46,14 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
         grow_func = lambda w, pi, ai: fixed_reinit_weights(w, pruned_indices=pi, active_indices=ai, reinit_val=kwargs["reinit_val"])
     elif grow_name == "clipped":
         grow_func = lambda w, pi, ai: clipped_reinit_weights(w, pruned_indices=pi, active_indices=ai)
+    elif grow_name == "median_clipped":
+        grow_func = lambda w, pi, ai: clipped_reinit_weights(w, pruned_indices=pi, active_indices=ai, clip_to_median=True)
     elif grow_name == "mad":
         grow_func = lambda w, pi, ai: magnitude_adjusted_uniform_reinit_weights(w, pruned_indices=pi, active_indices=ai)
     elif grow_name == "truncated":
         grow_func = lambda w, pi, ai: truncated_normal_reinit_weights(w, pruned_indices=pi, active_indices=ai)
+    elif grow_name == "median_truncated":
+        grow_func = lambda w, pi, ai: truncated_normal_reinit_weights(w, pruned_indices=pi, active_indices=ai, truncate_to_median=True)
 
     def temp_prune_and_grow_weights(w: torch.Tensor):
         return prune_and_grow_weights(w, prune_func, grow_func)
@@ -180,15 +184,15 @@ def truncated_normal_reinit_weights(weight: torch.Tensor, pruned_indices: torch.
     """
 
     if truncate_to_median:
-        clip_value = weight.flatten().abs()[active_indices].median()
+        truncation_value = weight.flatten().abs()[active_indices].median()
     else:
-        clip_value = weight.flatten().abs()[active_indices].min()
+        truncation_value = weight.flatten().abs()[active_indices].min()
     gain = torch.nn.init.calculate_gain(activation)
     fan_in, fan_out = torch.nn.init._calculate_fan_in_and_fan_out(weight)
     std = gain / np.sqrt(fan_in)                                                # kaiming normal standard deviation
 
     new_weights = torch.zeros(size=pruned_indices.size(), dtype=weight.dtype, device=weight.device)
-    torch.nn.init.trunc_normal_(new_weights, mean=0, std=std, a=-clip_value, b=clip_value)
+    torch.nn.init.trunc_normal_(new_weights, mean=0, std=std, a=-truncation_value, b=truncation_value)
 
     weight.view(-1)[pruned_indices] = new_weights
 
