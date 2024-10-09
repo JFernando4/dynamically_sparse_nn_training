@@ -15,7 +15,7 @@ def initialize_weight_dict(net: torch.nn.Module,
                            **kwargs) -> dict[str, tuple]:
     """ Initializes the weight dictionaries used in CBPw """
 
-    df_as_rate = False if "df_as_rate" not in kwargs else kwargs["df_as_rate"]
+    df_as_rate = True if "df_as_rate" not in kwargs else kwargs["df_as_rate"]
     if architecture_type == "vit":
         assert isinstance(net, VisionTransformer)
         if df_as_rate:
