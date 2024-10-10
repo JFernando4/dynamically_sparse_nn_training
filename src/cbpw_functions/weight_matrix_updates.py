@@ -26,8 +26,8 @@ def prune_and_grow_weights(weight: torch.Tensor,
 def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs) -> Callable[[torch.Tensor], tuple]:
     """ Sets up weight update function for CBP-w """
     prune_function_names = ["magnitude", "gf"]
-    grow_function_names = ["kaiming_normal", "xavier_normal", "zero", "kaming_uniform", "xavier_uniform",
-                           "fixed", "clipped", "mad", "truncated", "median_clipped", "median_truncated"]
+    grow_function_names = ["kaiming_normal", "xavier_normal", "zero", "kaming_uniform", "xavier_uniform", "fixed", "mad",
+                           "clipped", "truncated", "median_clipped", "median_truncated", "25p_clipped", "25p_truncated"]
     assert prune_name in prune_function_names and grow_name in grow_function_names
     assert "drop_factor" in kwargs.keys()
 
@@ -45,15 +45,19 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
         assert "reinit_val" in kwargs.keys()
         grow_func = lambda w, pi, ai: fixed_reinit_weights(w, pruned_indices=pi, active_indices=ai, reinit_val=kwargs["reinit_val"])
     elif grow_name == "clipped":
-        grow_func = lambda w, pi, ai: clipped_reinit_weights(w, pruned_indices=pi, active_indices=ai)
+        grow_func = lambda w, pi, ai: clipped_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="min")
     elif grow_name == "median_clipped":
-        grow_func = lambda w, pi, ai: clipped_reinit_weights(w, pruned_indices=pi, active_indices=ai, clip_to_median=True)
+        grow_func = lambda w, pi, ai: clipped_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="median")
+    elif grow_name == "25p_clipped":
+        grow_func = lambda w, pi, ai: clipped_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="25p")
     elif grow_name == "mad":
         grow_func = lambda w, pi, ai: magnitude_adjusted_uniform_reinit_weights(w, pruned_indices=pi, active_indices=ai)
     elif grow_name == "truncated":
-        grow_func = lambda w, pi, ai: truncated_normal_reinit_weights(w, pruned_indices=pi, active_indices=ai)
+        grow_func = lambda w, pi, ai: truncated_normal_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="min")
     elif grow_name == "median_truncated":
-        grow_func = lambda w, pi, ai: truncated_normal_reinit_weights(w, pruned_indices=pi, active_indices=ai, truncate_to_median=True)
+        grow_func = lambda w, pi, ai: truncated_normal_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="median")
+    elif grow_name == "25p_truncated":
+        grow_func = lambda w, pi, ai: truncated_normal_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="25p")
 
     def temp_prune_and_grow_weights(w: torch.Tensor):
         return prune_and_grow_weights(w, prune_func, grow_func)
@@ -158,15 +162,12 @@ def compute_drop_num(num_weights: int, drop_factor: float, as_rate: bool = False
 # ----- ----- ----- ----- Growing Functions ----- ----- ----- ----- #
 @torch.no_grad()
 def clipped_reinit_weights(weight: torch.Tensor,  pruned_indices: torch.Tensor, active_indices: torch.Tensor,
-                           activation: str = "relu", clip_to_median: bool = False) -> None:
+                           activation: str = "relu", bound_method: str = "min") -> None:
     """
     Reinitializes entries in teh wegith matrix at the given indices using clipped kaiming reinitialization
     """
 
-    if clip_to_median:
-        clip_value = weight.flatten().abs()[active_indices].median().to(weight.device)
-    else:
-        clip_value = weight.flatten().abs()[active_indices].min().to(weight.device)
+    clip_value = get_bounding_value(weight, active_indices, bound_method)
     gain = torch.nn.init.calculate_gain(activation)
     fan_in, fan_out = torch.nn.init._calculate_fan_in_and_fan_out(weight)
     std = gain / np.sqrt(fan_in)                                                # kaiming normal standard deviation
@@ -178,15 +179,12 @@ def clipped_reinit_weights(weight: torch.Tensor,  pruned_indices: torch.Tensor, 
 
 @torch.no_grad()
 def truncated_normal_reinit_weights(weight: torch.Tensor, pruned_indices: torch.Tensor, active_indices: torch.Tensor,
-                                    activation: str = "relu", truncate_to_median: bool = False) -> None:
+                                    activation: str = "relu", bound_method: str = "min") -> None:
     """
     Reinitializes entries in teh wegith matrix at the given indices using clipped kaiming reinitialization
     """
 
-    if truncate_to_median:
-        truncation_value = weight.flatten().abs()[active_indices].median()
-    else:
-        truncation_value = weight.flatten().abs()[active_indices].min()
+    truncation_value = get_bounding_value(weight, active_indices, bound_method)
     gain = torch.nn.init.calculate_gain(activation)
     fan_in, fan_out = torch.nn.init._calculate_fan_in_and_fan_out(weight)
     std = gain / np.sqrt(fan_in)                                                # kaiming normal standard deviation
@@ -195,6 +193,21 @@ def truncated_normal_reinit_weights(weight: torch.Tensor, pruned_indices: torch.
     torch.nn.init.trunc_normal_(new_weights, mean=0, std=std, a=-truncation_value, b=truncation_value)
 
     weight.view(-1)[pruned_indices] = new_weights
+
+@torch.no_grad()
+def get_bounding_value(weight: torch.Tensor, active_indices: torch.Tensor, bound_method: str) -> float:
+    """
+    Returns the value that bounds above and below the distribution of new weights
+    """
+    abs_weights = weight.flatten().abs()[active_indices]
+    if bound_method == "median":
+        return float(abs_weights.median())
+    elif bound_method == "min":
+        return float(abs_weights.min())
+    elif bound_method == "25p":
+        return float(torch.quantile(abs_weights, 0.25))
+    else:
+        raise ValueError(f"{bound_method} is not a valid bound method!")
 
 
 @torch.no_grad()

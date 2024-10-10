@@ -70,7 +70,7 @@ class PermutedMNISTExperiment(Experiment):
                                         choices=["none", "magnitude", "gf"])
         self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str,                     # also used in SWR optimizer
                                        choices=["none", "kaiming_normal", "zero", "truncated", "clipped", "mad",
-                                                "median_truncated", "median_clipped"])
+                                                "median_truncated", "median_clipped", "25p_truncated", "25p_clipped"])
         self.drop_factor = access_dict(exp_params, "drop_factor", default=float, val_type=float)
         self.previously_removed_weights = None
         self.current_topology_update = 0
