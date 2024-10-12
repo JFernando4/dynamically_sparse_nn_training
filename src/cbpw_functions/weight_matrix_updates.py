@@ -178,7 +178,7 @@ def clipped_reinit_weights(weight: torch.Tensor,  pruned_indices: torch.Tensor, 
     gain = torch.nn.init.calculate_gain(activation)
     fan_in, fan_out = torch.nn.init._calculate_fan_in_and_fan_out(weight)
     std = gain / np.sqrt(fan_in)                                                # kaiming normal standard deviation
-    print(f"{clip_value = }, {std = }")
+    # print(f"{clip_value = }, {std = }")
     new_weights = torch.randn(size=pruned_indices.size(), device=weight.device) * std
     clipped_new_weights = torch.clip(new_weights, -clip_value, clip_value)
     weight.view(-1)[pruned_indices] = clipped_new_weights
@@ -195,7 +195,7 @@ def truncated_normal_reinit_weights(weight: torch.Tensor, pruned_indices: torch.
     gain = torch.nn.init.calculate_gain(activation)
     fan_in, fan_out = torch.nn.init._calculate_fan_in_and_fan_out(weight)
     std = gain / np.sqrt(fan_in)                                                # kaiming normal standard deviation
-    print(f"{truncation_value = }, {std = }")
+    # print(f"{truncation_value = }, {std = }")
     new_weights = torch.zeros(size=pruned_indices.size(), dtype=weight.dtype, device=weight.device)
     torch.nn.init.trunc_normal_(new_weights, mean=0, std=std, a=-truncation_value, b=truncation_value)
 
