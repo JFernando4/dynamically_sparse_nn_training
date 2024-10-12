@@ -65,6 +65,7 @@ class PermutedMNISTExperiment(Experiment):
         # SWR (formerly CBPw) parameters
         self.use_cbpw = access_dict(exp_params, "use_cbpw", default=False, val_type=bool)
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
+        self.reinit_freq_as_rate = access_dict(exp_params, "reinit_freq_as_rate", default=False, val_type=bool)
         self.epoch_freq = access_dict(exp_params, "epoch_freq", default=False, val_type=bool)
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str,                   # also use in SWR optimizer
                                         choices=["none", "magnitude", "gf"])
@@ -73,6 +74,7 @@ class PermutedMNISTExperiment(Experiment):
                                                 "median_truncated", "median_clipped", "25p_truncated", "25p_clipped",
                                                 "mean_truncated", "mean_clipped"])
         self.drop_factor = access_dict(exp_params, "drop_factor", default=float, val_type=float)
+        self.cbpw_reset = False
         self.previously_removed_weights = None
         self.current_topology_update = 0
 
@@ -308,33 +310,52 @@ class PermutedMNISTExperiment(Experiment):
             not self.store_next_loss):                          # check if cbp or cbpw was used in the previous step
             return
 
-        self.net.reset_indicators()
-        prefix = "after" if self.store_next_loss else "before"
-        self.results_dict[f"loss_{prefix}_topology_update"].append(current_loss)
-        self.results_dict[f"avg_grad_{prefix}_topology_update"].append(compute_average_gradient_magnitude(self.net))
+        if not self.store_next_loss and (self.store_cbp_extended_summaries() or self.store_cbpw_extended_summaries()):
+            self.results_dict[f"loss_before_topology_update"].append(current_loss)
+            self.results_dict[f"avg_grad_before_topology_update"].append(compute_average_gradient_magnitude(self.net))
+            if self.use_ln:
+                self.previous_activations = current_activations
 
-        if self.use_ln:
-            if self.store_next_loss:
+        elif self.store_next_loss and (not self.store_cbp_extended_summaries() and not self.store_cbpw_extended_summaries()):
+            self.results_dict[f"loss_after_topology_update"].append(current_loss)
+            self.results_dict[f"avg_grad_after_topology_update"].append(compute_average_gradient_magnitude(self.net))
+            if self.use_ln:
                 for i in range(len(current_activations)):
                     diff_average_act = current_activations[i].mean().detach() - self.previous_activations[i].mean().detach()
                     diff_std_act = current_activations[i].std().detach() - self.previous_activations[i].std().detach()
                     self.results_dict[f"change_in_average_activation_layer_{i + 1}"].append(diff_average_act.abs())
                     self.results_dict[f"change_in_std_activation_layer_{i + 1}"].append(diff_std_act.abs())
                 self.previous_activations = []
-            else:
+
+        elif self.store_next_loss and (self.store_cbpw_extended_summaries() or self.store_cbpw_extended_summaries()):
+            self.results_dict[f"loss_before_topology_update"].append(current_loss)
+            self.results_dict[f"avg_grad_before_topology_update"].append(compute_average_gradient_magnitude(self.net))
+            self.results_dict[f"loss_after_topology_update"].append(current_loss)
+            self.results_dict[f"avg_grad_after_topology_update"].append(compute_average_gradient_magnitude(self.net))
+            if self.use_ln:
+                for i in range(len(current_activations)):
+                    diff_average_act = current_activations[i].mean().detach() - self.previous_activations[i].mean().detach()
+                    diff_std_act = current_activations[i].std().detach() - self.previous_activations[i].std().detach()
+                    self.results_dict[f"change_in_average_activation_layer_{i + 1}"].append(diff_average_act.abs())
+                    self.results_dict[f"change_in_std_activation_layer_{i + 1}"].append(diff_std_act.abs())
                 self.previous_activations = current_activations
 
-        self.store_next_loss = not self.store_next_loss
+
+        self.store_next_loss = self.store_cbp_extended_summaries() or self.store_cbpw_extended_summaries()
+        self.cbpw_reset = False
+        self.net.reset_indicators()
 
     def store_cbp_extended_summaries(self) -> bool:
         return (self.use_cbp and self.net.feature_replace_event_indicator())
 
     def store_cbpw_extended_summaries(self) -> bool:
-        return self.use_cbpw and self.time_to_update_topology(self.current_experiment_step)
+        return self.use_cbpw and self.cbpw_reset
 
     def time_to_update_topology(self, current_minibatch: int):
         if not self.use_cbpw:
             return False
+        if self.reinit_freq_as_rate:
+            return True
         return (current_minibatch % self.topology_update_freq) == 0
 
     def update_topology(self):
@@ -343,13 +364,16 @@ class PermutedMNISTExperiment(Experiment):
         Updates the neural network topology according to the chosen cbpw parameters
         """
         # update topology
-        temp_summaries_dict = update_weights(self.weight_dict)
+        reinitialization_rate = 1/self.topology_update_freq if self.reinit_freq_as_rate else None
+        temp_summaries_dict = update_weights(self.weight_dict, reinitialization_rate=reinitialization_rate)
         # compute and store summaries
-        removed_masks = [v[0] for v in temp_summaries_dict.values()]
-        num_pruned = sum([v[1] for v in temp_summaries_dict.values()])
-        self.store_mask_update_summary(removed_masks, num_pruned)
-
-        self.current_topology_update += 1
+        if len(temp_summaries_dict) > 0:
+            self.cbpw_reset = True
+        if not self.reinit_freq_as_rate:
+            removed_masks = [v[0] for v in temp_summaries_dict.values()]
+            num_pruned = sum([v[1] for v in temp_summaries_dict.values()])
+            self.store_mask_update_summary(removed_masks, num_pruned)
+            self.current_topology_update += 1
 
     def store_mask_update_summary(self, removed_masks: list, total_removed: int):
         """
