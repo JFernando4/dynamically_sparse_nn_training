@@ -176,7 +176,8 @@ def insert_column_and_row_values(base_name: str, column_var: str, row_var: str, 
             temp_part_split[0] = str(rv) if row_correct_next else str(cv)
 
             if len(temp_part_split) >= 2:
-                if temp_part_split[1] == "normal":  # quick hack for when parameter values is "kaiming_normal"
+                # quick hack for when parameter values is "kaiming_normal", "median_truncated", or "median_clipped"
+                if temp_part_split[1] == "normal" or temp_part_split[1] == "truncated" or temp_part_split[1] == "clipped":
                     temp_part_split.pop(1)
 
             temp_part = "_".join(temp_part_split)
