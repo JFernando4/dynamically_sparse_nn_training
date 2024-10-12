@@ -113,9 +113,9 @@ def compute_average_training_accuracy_for_table(column_var_list: list, row_var_l
     num_samples = np.zeros((len(column_var_list), len(row_var_list)), dtype=np.int32)
 
     base_name = os.listdir(results_dir)[0]
+    if DEBUG: print(base_name)
     if grow_method is not None and prune_method is not None:
         base_name = insert_column_and_row_values(base_name, "grow_method", "prune_method", (grow_method, prune_method))
-        if DEBUG: print(base_name)
         print(f"{prune_method = }")
         print(f"{grow_method = }")
 
