@@ -5,7 +5,7 @@
   "l2_factor": 0.0,
 
   "__comment_2__": "Parameters for the architecture",
-  "num_hidden": 10,
+  "num_hidden": 100,
   "batch_size": 30,
   "store_parameters": false,
   "extended_summaries": false,
@@ -15,10 +15,11 @@
 
   "__comment_4__": "CBPw Parameters.",
   "use_cbpw": true,
-  "topology_update_freq": 1200,
+  "topology_update_freq": 600,
   "prune_method": "gf",
-  "grow_method": "truncated",
-  "drop_factor": 0.2,
+  "grow_method": "median_truncated",
+  "drop_factor": 0.1,
+  "reinit_freq_as_rate": false,
   "use_ln": false,
   "preactivation_ln": false,
 
@@ -29,6 +30,7 @@
     "topology_update_freq",
     "prune_method",
     "grow_method",
-    "drop_factor"
+    "drop_factor",
+    "reinit_freq_as_rate"
   ]
 }
