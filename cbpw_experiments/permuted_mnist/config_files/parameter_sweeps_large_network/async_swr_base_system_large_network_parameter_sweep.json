@@ -1,0 +1,46 @@
+{
+  "file_management": {
+    "experiment_name": "async_swr_base_system_large_network_parameter_sweep",
+    "data_path": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/data/",
+    "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
+    "relevant_parameters": [
+      "reinit_freq_as_rate",
+      "topology_update_freq",
+      "prune_method",
+      "grow_method",
+      "drop_factor"
+    ]
+  },
+
+  "experiment_params": {
+    "num_permutations": 1000,
+    "num_layers": 3,
+    "num_hidden": 100,
+    "batch_size": 30,
+    "stepsize": 0.05,
+    "steps_per_task": 60000,
+    "store_parameters": false,
+    "runs": 10
+  },
+
+  "learning_params": {
+    "use_cbpw": true,
+    "topology_update_freq": ["fixed", 300, 600, 1200, 2400, 4800],
+    "prune_method": ["str", "gf"],
+    "grow_method": ["str", "kaiming_normal", "zero", "median_truncated"],
+    "drop_factor": ["fixed", 0.05, 0.1, 0.2, 0.4, 0.8],
+    "reinit_freq_as_rate": true
+  },
+
+  "slurm_parameters": {
+    "job_name": "aswr_bs",
+    "time": "12:00:00",
+    "max_runs_per_job": 5,
+    "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
+    "output_filename": "swr_bs-%n-%j.out",
+    "mem": "12G",
+    "mail-type": "BEGIN,END,FAIL",
+    "mail-user":"jfhernan@ualberta.ca",
+    "cpus-per-task": 6
+  }
+}
