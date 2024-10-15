@@ -14,6 +14,7 @@
   "__comment_4__": "CBPw Parameters.",
   "use_cbpw": true,
   "df_as_rate": true,
+  "reinit_freq_as_rate": true,
   "topology_update_freq": 4160,
   "prune_method": "gf",
   "grow_method": "median_truncated",
@@ -25,6 +26,7 @@
     "prune_method",
     "grow_method",
     "drop_factor",
-    "df_as_rate"
+    "df_as_rate",
+    "reinit_freq_as_rate"
   ]
 }
