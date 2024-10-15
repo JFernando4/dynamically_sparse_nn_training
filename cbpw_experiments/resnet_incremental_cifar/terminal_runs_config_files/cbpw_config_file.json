@@ -15,10 +15,10 @@
   "use_cbpw": true,
   "df_as_rate": true,
   "reinit_freq_as_rate": true,
-  "topology_update_freq": 4160,
+  "topology_update_freq": 2080,
   "prune_method": "gf",
   "grow_method": "median_truncated",
-  "drop_factor": 0.005,
+  "drop_factor": 0.01,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
     "num_epochs",
