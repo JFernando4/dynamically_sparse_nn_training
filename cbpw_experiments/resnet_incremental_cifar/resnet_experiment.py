@@ -54,6 +54,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
         self.include_output_layer = access_dict(exp_params, "include_output_layer", default=False, val_type=bool)
         self.include_all = access_dict(exp_params, "include_all", default=False, val_type=bool)
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
+        self.reinit_freq_as_rate = access_dict(exp_params, "reinit_freq_as_rate", default=False, val_type=bool)
         pruning_functions_names = ["none", "magnitude", "gf"]
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str, choices=pruning_functions_names)
         grow_methods = ["none", "kaiming_normal", "zero", "fixed_with_noise", "median_truncated"]
@@ -272,6 +273,9 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
     def update_topology(self):
         " Reinitializes weights in the network using SWR "
         if not self.use_cbpw:
+            return
+        if self.reinit_freq_as_rate:
+            update_weights(self.weight_dict, 1/self.topology_update_freq)
             return
         if (self.current_minibatch % self.topology_update_freq) == 0:
             self._store_mask_update_summary(update_weights(self.weight_dict))
