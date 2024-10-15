@@ -28,10 +28,10 @@
   "learning_params": {
     "use_cbpw": true,
     "df_as_rate": true,
-    "topology_update_freq": ["fixed", 2080, 4160, 8320, 16640],
+    "topology_update_freq": ["fixed", 2080, 4160, 8320],
     "prune_method": "gf",
     "grow_method": "median_truncated",
-    "drop_factor": ["fixed", 0.005, 0.01, 0.025, 0.05]
+    "drop_factor": ["fixed", 0.005, 0.01, 0.02]
   },
 
   "slurm_parameters": {
