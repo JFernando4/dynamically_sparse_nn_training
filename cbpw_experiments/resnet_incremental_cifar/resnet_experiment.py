@@ -242,9 +242,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
                 if self.perturb_weights_indicator: inject_noise(self.net, self.noise_std)
 
                 self.current_minibatch += 1
-                if self.use_cbpw and (self.current_minibatch % self.topology_update_freq) == 0:
-                    self._store_mask_update_summary(update_weights(self.weight_dict))
-                    self.current_topology_update += 1
+                self.update_topology()
 
                 # store summaries
                 current_accuracy = compute_accuracy_from_batch(predictions, label)
@@ -270,6 +268,14 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
                     abs_param_val += p.abs().sum().item()
                     total += p.numel()
             print("Current bn weight magnitude: {0:.4f}".format(abs_param_val / total))
+
+    def update_topology(self):
+        " Reinitializes weights in the network using SWR "
+        if not self.use_cbpw:
+            return
+        if (self.current_minibatch % self.topology_update_freq) == 0:
+            self._store_mask_update_summary(update_weights(self.weight_dict))
+            self.current_topology_update += 1
 
     def set_lr(self):
         """ Changes the learning rate of the optimizer according to the current epoch of the task """
