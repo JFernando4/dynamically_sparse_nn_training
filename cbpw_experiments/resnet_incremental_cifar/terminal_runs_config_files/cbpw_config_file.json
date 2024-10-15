@@ -14,10 +14,10 @@
   "__comment_4__": "CBPw Parameters.",
   "use_cbpw": true,
   "df_as_rate": true,
-  "topology_update_freq": 260,
+  "topology_update_freq": 4160,
   "prune_method": "gf",
-  "grow_method": "median_clipped",
-  "drop_factor": 0.05,
+  "grow_method": "median_truncated",
+  "drop_factor": 0.005,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
     "num_epochs",
