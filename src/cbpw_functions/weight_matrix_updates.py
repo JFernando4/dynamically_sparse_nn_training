@@ -76,6 +76,7 @@ def update_weights(weight_dict: dict[str, tuple], reinitialization_rate: float =
     for k, v in weight_dict.items():
         reinit = 1 if reinitialization_rate is None else np.random.binomial(p=reinitialization_rate, n=1)
         if reinit:
+            print(k)
             temp_weight, temp_update_function = v
             summaries_dict[k] = temp_update_function(temp_weight)
     return summaries_dict
