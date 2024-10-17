@@ -12,10 +12,10 @@
   "fixed_classes": false,
   "use_best_network": true,
   "__comment_4__": "Other parameters.",
-  "use_l2_init_ln": true,
+  "reset_momentum": true,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
     "num_epochs",
-    "use_l2_init_ln"
+    "reset_momentum"
   ]
 }

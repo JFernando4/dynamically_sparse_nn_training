@@ -50,6 +50,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.weight_decay = exp_params["weight_decay"]
         self.rescaled_wd = access_dict(exp_params, "rescaled_wd", default=False, val_type=bool)
         self.momentum = exp_params["momentum"]
+        self.reset_momentum = access_dict(exp_params, "reset_momentum", default=False, val_type=bool)
         self.use_lr_schedule = access_dict(exp_params, "use_lr_schedule", default=True, val_type=bool)
         self.dropout_prob = access_dict(exp_params, "dropout_prob", default=0.05, val_type=float)
 
@@ -530,6 +531,8 @@ class IncrementalCIFARExperiment(Experiment):
                 self.optim = self._get_optimizer()
             if self.reset_layer_norm:
                 self.net.apply(initialize_layer_norm_module)
+            if self.reset_momentum:
+                self.optim = self._get_optimizer()
             if self.use_lr_schedule:
                 self.lr_scheduler = self.get_lr_scheduler(steps_per_epoch=len(train_dataloader))
             return True
