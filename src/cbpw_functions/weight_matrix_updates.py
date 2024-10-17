@@ -35,8 +35,12 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     as_rate = False if "as_rate" not in kwargs.keys() else kwargs["as_rate"]
     if prune_name == "magnitude":
         prune_func = lambda w: magnitude_prune_weights(w, drop_factor=kwargs["drop_factor"], as_rate=as_rate)
-    elif prune_name == "gf":
+    elif prune_name == "gf":    # gradient flow
         prune_func = lambda w: gradient_flow_prune_weights(w, drop_factor=kwargs["drop_factor"], as_rate=as_rate)
+    elif prune_name == "mr":    # magnitude redo
+        prune_func = lambda w: redo_prune_weights(w, drop_factor=kwargs["drop_factor"], utility_name="magnitude")
+    elif prune_name == "gr":    # gradient redo
+        prune_func = lambda w: redo_prune_weights(w, drop_factor=kwargs["drop_factor"], utility_name="gradient")
 
     if "kaiming" in grow_name or "xavier" in grow_name:
         grow_func = lambda w, pi, ai: random_reinit_weights(w, pruned_indices=pi, active_indices=ai, reinit=grow_name)
@@ -102,8 +106,6 @@ def setup_cbpw_layer_norm_update_function(prune_name: str, drop_factor: float, e
 
     if prune_name == "magnitude":
         prune_func = lambda w: magnitude_prune_weights(w, drop_factor=drop_factor)
-    elif prune_name == "redo":
-        prune_func = lambda w: magnitude_redo_prune_weights(w, drop_factor=drop_factor)
     elif prune_name == "gf":
         prune_func = lambda w: gradient_flow_prune_weights(w, drop_factor=drop_factor)
 
@@ -115,18 +117,25 @@ def setup_cbpw_layer_norm_update_function(prune_name: str, drop_factor: float, e
 
 # ----- ----- ----- ----- Pruning Functions ----- ----- ----- ----- #
 @torch.no_grad()
-def magnitude_redo_prune_weights(weight: torch.Tensor, drop_factor: float):
+def redo_prune_weights(weight: torch.Tensor, drop_factor: float, utility_name: str = "magnitude"):
     """
     Prunes the weight that are smaller than (drop_factor * average_absolute_weight_value)
+
+    arguments:
+        utility_name (str): "magnitude" or "gradient"
     """
 
-    abs_weights = weight.abs().flatten()
-    prune_threshold = drop_factor * abs_weights.mean()
-    prune_indices = torch.where(abs_weights < prune_threshold)[0]
-    if len(prune_indices) > 0:                      # prune according to redo
-        weight.view(-1)[prune_indices] = 0.0
-    else:                                           # prune one weight according to magnitude pruning
-        magnitude_prune_weights(weight, drop_factor)
+    if utility_name == "magnitude":
+        utility = weight.abs().flatten()
+    elif utility_name == "gradient":
+        utility = torch.abs(weight * weight.grad).flatten()
+    else:
+        raise ValueError(f"{utility_name} is not a valid utility.")
+
+    prune_threshold = drop_factor * utility.mean()
+    prune_indices = torch.where(utility < prune_threshold)[0]
+    active_indices = torch.where(utility >= prune_threshold)[0]
+    return prune_indices, active_indices
 
 
 @torch.no_grad()
