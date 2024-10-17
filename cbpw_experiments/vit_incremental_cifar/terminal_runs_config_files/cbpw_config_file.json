@@ -13,7 +13,7 @@
   "use_best_network": true,
   "__comment_4__": "CBPw Parameters.",
   "topology_update_freq": 65,
-  "prune_method": "gf",
+  "prune_method": "gr",
   "grow_method": "median_truncated",
   "drop_factor": 0.01,
   "df_as_rate": true,
