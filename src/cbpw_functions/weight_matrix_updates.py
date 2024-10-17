@@ -134,7 +134,7 @@ def redo_prune_weights(weight: torch.Tensor, drop_factor: float, utility_name: s
 
     prune_threshold = drop_factor * utility.mean()
     prune_indices = torch.where(utility < prune_threshold)[0]
-    print(f"{prune_indices.numel() = }")
+    # print(f"{prune_indices.numel() = }")
     active_indices = torch.where(utility >= prune_threshold)[0]
     return prune_indices, active_indices
 
