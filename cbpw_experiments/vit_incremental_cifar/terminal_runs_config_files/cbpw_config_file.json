@@ -17,12 +17,14 @@
   "grow_method": "median_truncated",
   "drop_factor": 0.01,
   "df_as_rate": true,
+  "use_l2_init_ln": true,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
     "num_epochs",
     "topology_update_freq",
     "prune_method",
     "grow_method",
-    "drop_factor"
+    "drop_factor",
+    "use_l2_init_ln"
   ]
 }
