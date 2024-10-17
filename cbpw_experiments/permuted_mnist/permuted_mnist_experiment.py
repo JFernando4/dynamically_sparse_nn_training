@@ -68,7 +68,7 @@ class PermutedMNISTExperiment(Experiment):
         self.reinit_freq_as_rate = access_dict(exp_params, "reinit_freq_as_rate", default=False, val_type=bool)
         self.epoch_freq = access_dict(exp_params, "epoch_freq", default=False, val_type=bool)
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str,                   # also use in SWR optimizer
-                                        choices=["none", "magnitude", "gf"])
+                                        choices=["none", "magnitude", "gf", "gr", "mr"])
         self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str,                     # also used in SWR optimizer
                                        choices=["none", "kaiming_normal", "zero", "truncated", "clipped", "mad",
                                                 "median_truncated", "median_clipped", "25p_truncated", "25p_clipped",
