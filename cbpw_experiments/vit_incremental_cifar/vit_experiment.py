@@ -214,7 +214,7 @@ class IncrementalCIFARExperiment(Experiment):
         """ Creates optimizer object based on the experiment parameters """
         wd = self.weight_decay if self.rescaled_wd else self.weight_decay / self.stepsize
         params = self.net.parameters()
-        if not self.use_l2_init:
+        if (not self.use_l2_init) and (not self.use_l2_init_ln):
             return torch.optim.SGD(params, lr=self.stepsize, momentum=self.momentum, weight_decay=wd)
         else:
             return SGDL2Init(params, self.l2_init_flags, self.reg_flags, lr=self.stepsize, momentum=self.momentum,
@@ -222,7 +222,7 @@ class IncrementalCIFARExperiment(Experiment):
 
     def _get_optim_flags(self):
         """ Creates list of flags to indicate which parameters are regularized toward their initial value """
-        if not self.use_l2_init:
+        if not self.use_l2_init and not self.use_l2_init_ln:
             return [], []
 
         if self.use_l2_init:
