@@ -1,0 +1,6 @@
+{
+  "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/swr_redo_base_system_parameter_sweep/",
+  "display_format": "table",
+  "column_var": "topology_update_freq",
+  "row_var": "drop_factor"
+}
