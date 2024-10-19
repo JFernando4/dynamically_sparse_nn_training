@@ -11,13 +11,20 @@ def compute_average_weight_magnitude(net: ThreeHiddenLayerNetwork):
 
     weight_magnitude = 0.0
     total_weights = 0.0
+    ln_weight_magnitude = 0.0
+    ln_total_weights = 0.0
 
-    for p in net.parameters():
+    for n, p in net.named_parameters():
         if p.requires_grad:
             weight_magnitude += p.abs().sum()
             total_weights += p.numel()
+            if ("weight" in n) and ("ln" in n):
+                ln_weight_magnitude += p.abs().sum()
+                ln_total_weights += p.numel()
 
-    return weight_magnitude / total_weights
+    average_weight_magnitude = weight_magnitude / total_weights
+    average_ln_weight_magnitude = 0.0 if ln_total_weights == 0.0 else ln_weight_magnitude / ln_total_weights
+    return average_weight_magnitude, average_ln_weight_magnitude
 
 
 @torch.no_grad()

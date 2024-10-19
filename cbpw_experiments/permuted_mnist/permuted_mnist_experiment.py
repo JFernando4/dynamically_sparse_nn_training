@@ -182,6 +182,8 @@ class PermutedMNISTExperiment(Experiment):
             self.results_dict["average_gradient_magnitude_per_checkpoint"] = torch.zeros(total_ckpts, device=self.device, dtype=torch.float32)
             self.results_dict["average_weight_magnitude_per_permutation"] = torch.zeros(self.num_permutations, device=self.device, dtype=torch.float32)
             self.results_dict["proportion_dead_units_per_permutation"] = torch.zeros(self.num_permutations, device=self.device, dtype=torch.float32)
+            if self.use_ln:
+                self.results_dict["average_ln_weight_magnitude_per_checkpoint"] = torch.zeros(total_ckpts, device=self.device, dtype=torch.float32)
 
         if (self.use_cbp or self.use_cbpw) and self.extended_summaries:
             self.results_dict["loss_before_topology_update"] = []
@@ -296,10 +298,11 @@ class PermutedMNISTExperiment(Experiment):
         """ Computes the average weight magnitude and average dead units per permutation """
 
         if not self.extended_summaries: return
-        avg_weight_magnitude = compute_average_weight_magnitude(self.net)
+        avg_weight_magnitude, avg_ln_weight_magnitude = compute_average_weight_magnitude(self.net)
         prop_dead_units = compute_dead_units_proportion(self.net, training_data, self.num_hidden, self.batch_size)
         self.results_dict["average_weight_magnitude_per_permutation"][self.current_permutation] += avg_weight_magnitude
         self.results_dict["proportion_dead_units_per_permutation"][self.current_permutation] += prop_dead_units
+        self.results_dict["average_ln_weight_magnitude_per_checkpoint"][self.current_permutation] += avg_ln_weight_magnitude
 
     def store_extended_summaries(self, current_loss: torch.Tensor, current_activations: list = None) -> None:
         """ Stores the extended summaries related to the topology update of CBP and CBPw """
