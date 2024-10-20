@@ -19,7 +19,8 @@ def initialize_weight_dict(net: torch.nn.Module,
     if architecture_type == "vit":
         assert isinstance(net, VisionTransformer)
         if df_as_rate:
-            return initialize_weights_dict_df_as_rate(net, prune_method, grow_method, drop_factor)
+            ln_drop_factor = drop_factor if "ln_drop_factor" not in kwargs.keys() else kwargs["ln_drop_factor"]
+            return initialize_weights_dict_df_as_rate(net, prune_method, grow_method, drop_factor, ln_drop_factor=ln_drop_factor)
         else:
             return initialize_weights_dict_vit(net, prune_method=prune_method, grow_method=grow_method,
                                                drop_factor=drop_factor, **kwargs)
@@ -28,7 +29,9 @@ def initialize_weight_dict(net: torch.nn.Module,
         assert isinstance(net, ResNet)
         if df_as_rate:
             noise_std = None if "noise_std" not in kwargs.keys() else kwargs["noise_std"]
-            return initialize_weights_dict_df_as_rate(net, prune_method, grow_method, drop_factor, noise_std=noise_std)
+            ln_drop_factor = drop_factor if "ln_drop_factor" not in kwargs.keys() else kwargs["ln_drop_factor"]
+            return initialize_weights_dict_df_as_rate(net, prune_method, grow_method, drop_factor,
+                                                      ln_drop_factor=ln_drop_factor, noise_std=noise_std)
         else:
             exclude_downsample = False if "exclude_downsample" not in kwargs.keys() else kwargs["exclude_downsample"]
             include_output_layer = False if "include_output_layer" not in kwargs.keys() else kwargs["include_output_layer"]
@@ -95,6 +98,7 @@ def initialize_weights_dict_df_as_rate(net: Union[VisionTransformer, ResNet],
                                        prune_method: str,
                                        grow_method: str,
                                        drop_factor: float,
+                                       ln_drop_factor: float,
                                        noise_std: float = None) -> dict[str, tuple]:
     """
     Initializes the weight dictionaries used in CBPw for a network. The drop_factor is used as a rate, which
@@ -107,7 +111,7 @@ def initialize_weights_dict_df_as_rate(net: Union[VisionTransformer, ResNet],
     bias_update_func = setup_cbpw_weight_update_function(prune_method, grow_name=bias_grow_name, drop_factor=drop_factor,
                                                          as_rate=True, reinit_val=0.0, noise_std=noise_std)
     ln_weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_name=ln_weight_grow_name,
-                                                              drop_factor=drop_factor, as_rate=True, reinit_val=1.0,
+                                                              drop_factor=ln_drop_factor, as_rate=True, reinit_val=1.0,
                                                               noise_std=noise_std)
 
     weight_dict = {}
