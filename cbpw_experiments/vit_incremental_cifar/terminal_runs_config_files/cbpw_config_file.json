@@ -16,6 +16,7 @@
   "prune_method": "gr",
   "grow_method": "median_truncated",
   "drop_factor": 0.01,
+  "ln_drop_factor": 0.0,
   "df_as_rate": true,
   "reset_layer_norm": true,
   "__comment_5__": "For creating the results directory.",
@@ -25,6 +26,7 @@
     "prune_method",
     "grow_method",
     "drop_factor",
+    "ln_drop_factor",
     "reset_layer_norm"
   ]
 }
