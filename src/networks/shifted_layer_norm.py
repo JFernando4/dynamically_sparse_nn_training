@@ -25,10 +25,8 @@ class ShiftedLayerNorm(Module):
         self.reset_parameters()
 
     def reset_parameters(self) -> None:
-        if self.elementwise_affine:
-            init.ones_(self.weight)
-            if self.bias is not None:
-                init.zeros_(self.bias)
+        init.zeros_(self.weight)
+        init.zeros_(self.bias)
 
     def forward(self, x: Tensor) -> Tensor:
         """
