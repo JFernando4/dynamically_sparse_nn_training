@@ -24,10 +24,10 @@
 
   "learning_params": {
     "use_cbpw": true,
-    "topology_update_freq": ["fixed", 2400, 4800, 8600],
+    "topology_update_freq": ["fixed", 600, 1200, 2400, 4800, 8600],
     "prune_method": ["str", "mr", "gr"],
     "grow_method": ["str", "kaiming_normal", "zero", "median_truncated"],
-    "drop_factor": ["fixed", 0.0005, 0.001, 0.002]
+    "drop_factor": ["fixed", 0.0001, 0.0002, 0.0005, 0.001, 0.002]
   },
 
   "slurm_parameters": {
