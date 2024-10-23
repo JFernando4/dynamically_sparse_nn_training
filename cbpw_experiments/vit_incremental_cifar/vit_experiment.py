@@ -470,8 +470,13 @@ class IncrementalCIFARExperiment(Experiment):
         """
         # update topology
         temp_summaries_dict = update_weights(self.weight_dict)
-        # compute and store summaries
         removed_masks = [v[0] for v in temp_summaries_dict.values()]
+        # reset momentum buffers
+        self.reset_buffers_afer_reinit = True
+        if self.reset_buffers_afer_reinit:
+            for i, p in enumerate(self.optim.param_groups[0]['params']):
+                self.optim.state[p]['momentum_buffer'] *= removed_masks[i]
+        # compute and store summaries
         num_pruned = sum([v[1] for v in temp_summaries_dict.values()])
         self.store_mask_update_summary(removed_masks, num_pruned)
 
