@@ -137,6 +137,11 @@ class IncrementalCIFARExperiment(Experiment):
         self.net.to(self.device)
         self.l2_init_flags, self.reg_flags = self._get_optim_flags()
 
+        # initialize optimizer and loss function
+        self.optim = self._get_optimizer()
+        self.lr_scheduler = None
+        self.loss = torch.nn.CrossEntropyLoss(reduction="mean")
+
         # initialize weight_dictionary
         self.weight_dict, self.ln_list, self.norm_layer_update_func = None, None, None
         if self.use_cbpw:
@@ -145,11 +150,6 @@ class IncrementalCIFARExperiment(Experiment):
         if self.use_cbpw_ln:
             self.ln_list = initialize_ln_list_vit(self.net)
             self.norm_layer_update_func = setup_cbpw_layer_norm_update_function(self.prune_method, self.ln_drop_factor,True)
-
-        # initialize optimizer and loss function
-        self.optim = self._get_optimizer()
-        self.lr_scheduler = None
-        self.loss = torch.nn.CrossEntropyLoss(reduction="mean")
 
         # initialize training counters
         self.current_epoch = 0
