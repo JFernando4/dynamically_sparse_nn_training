@@ -70,6 +70,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.ln_drop_factor = access_dict(exp_params, "ln_drop_factor", default=0.0, val_type=float)
         self.df_as_rate = access_dict(exp_params, "df_as_rate", default=False, val_type=bool)
         self.reset_buffers_afer_reinit = access_dict(exp_params, "reset_buffers_afer_reinit", default=False, val_type=bool)
+        self.scale_drop_factor_by_lr_scheduler = access_dict(exp_params, "scale_drop_factor_by_lr_scheduler", default=False, val_type=bool)
         self.use_cbpw = self.prune_method != "none" and self.grow_method != "none"
 
         self.msa_cbpw = access_dict(exp_params, "msa_cbpw", default=False, val_type=bool)       # use cbpw in self-attention
@@ -139,12 +140,7 @@ class IncrementalCIFARExperiment(Experiment):
         # initialize weight_dictionary
         self.weight_dict, self.ln_list, self.norm_layer_update_func = None, None, None
         if self.use_cbpw:
-            self.weight_dict = initialize_weight_dict(self.net, architecture_type="vit", prune_method=self.prune_method,
-                                                      grow_method=self.grow_method, drop_factor=self.drop_factor,
-                                                      ln_drop_factor=self.ln_drop_factor,
-                                                      include_class_token=self.ct_cbpw, include_conv_proj=self.conv_cbpw,
-                                                      include_pos_embedding=self.pe_cbpw, include_self_attention=self.msa_cbpw,
-                                                      include_head=self.head_cbpw, df_as_rate=self.df_as_rate)
+            self.weight_dict = self.initialize_cbpw_weight_dict()
 
         if self.use_cbpw_ln:
             self.ln_list = initialize_ln_list_vit(self.net)
@@ -180,6 +176,21 @@ class IncrementalCIFARExperiment(Experiment):
         self._initialize_summaries()
 
     # ------------------------------ Methods for initializing the experiment ------------------------------
+    def initialize_cbpw_weight_dict(self):
+        """ Initializes the weight dictionary for cbpw """
+
+        df = self.drop_factor
+        ln_df = self.ln_drop_factor
+        if self.use_lr_schedule and (self.lr_scheduler is not None) and self.scale_drop_factor_by_lr_scheduler:
+            scale = self.lr_scheduler.get_last_lr()[0] / self.stepsize
+            df = self.drop_factor * scale
+            ln_df = self.ln_drop_factor * scale
+
+        return initialize_weight_dict(self.net, architecture_type="vit", prune_method=self.prune_method,
+                                      grow_method=self.grow_method, drop_factor=df, ln_drop_factor=ln_df,
+                                      include_class_token=self.ct_cbpw, include_conv_proj=self.conv_cbpw,
+                                      include_pos_embedding=self.pe_cbpw, include_self_attention=self.msa_cbpw,
+                                      include_head=self.head_cbpw, df_as_rate=self.df_as_rate)
     def _initialize_summaries(self):
         """
         Initializes the summaries for the experiment
@@ -297,14 +308,7 @@ class IncrementalCIFARExperiment(Experiment):
             self.net.apply(initialize_layer_norm_module)
 
         if self.use_cbpw:
-            self.weight_dict = initialize_weight_dict(self.net, architecture_type="vit", prune_method=self.prune_method,
-                                                      grow_method=self.grow_method, drop_factor=self.drop_factor,
-                                                      include_class_token=self.ct_cbpw,
-                                                      include_conv_proj=self.conv_cbpw,
-                                                      include_pos_embedding=self.pe_cbpw,
-                                                      include_self_attention=self.msa_cbpw,
-                                                      include_head=self.head_cbpw,
-                                                      df_as_rate=self.df_as_rate)
+            self.weight_dict = self.initialize_cbpw_weight_dict()
 
         if self.use_cbpw_ln:
             self.ln_list = initialize_ln_list_vit(self.net)
@@ -469,6 +473,8 @@ class IncrementalCIFARExperiment(Experiment):
         """
         Updates the neural network topology according to the chosen cbpw parameters
         """
+        if self.scale_drop_factor_by_lr_scheduler:
+            self.weight_dict = self.initialize_cbpw_weight_dict()
         # update topology
         temp_summaries_dict = update_weights(self.weight_dict)
         removed_masks = [v[0] for v in temp_summaries_dict.values()]

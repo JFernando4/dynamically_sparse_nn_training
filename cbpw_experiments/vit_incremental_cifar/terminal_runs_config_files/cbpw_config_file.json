@@ -3,7 +3,7 @@
   "stepsize": 0.01,
   "weight_decay": 2e-6,
   "dropout_prob": 0.1,
-  "use_lr_schedule": false,
+  "use_lr_schedule": true,
   "__comment_2__": "Parameter value used in the original vit paper section B.1.1.",
   "momentum": 0.9,
   "__comment_3__": "Incremental experiment parameters. Classes increase by 5 every 100 epochs.",
@@ -18,7 +18,7 @@
   "drop_factor": 0.01,
   "ln_drop_factor": 0.01,
   "df_as_rate": true,
-  "reset_layer_norm": false,
+  "scale_drop_factor_by_lr_scheduler": true,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
     "num_epochs",
@@ -27,6 +27,6 @@
     "grow_method",
     "drop_factor",
     "ln_drop_factor",
-    "reset_layer_norm"
+    "scale_drop_factor_by_lr_scheduler"
   ]
 }
