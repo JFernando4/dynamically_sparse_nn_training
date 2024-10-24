@@ -183,6 +183,7 @@ class IncrementalCIFARExperiment(Experiment):
         ln_df = self.ln_drop_factor
         if self.use_lr_schedule and (self.lr_scheduler is not None) and self.scale_drop_factor_by_lr_scheduler:
             scale = self.lr_scheduler.get_last_lr()[0] / self.stepsize
+            print(f"\t\t{scale = }")
             df = self.drop_factor * scale
             ln_df = self.ln_drop_factor * scale
 
