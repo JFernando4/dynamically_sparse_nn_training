@@ -69,6 +69,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.drop_factor = access_dict(exp_params, "drop_factor", default=0.0, val_type=float)
         self.ln_drop_factor = access_dict(exp_params, "ln_drop_factor", default=0.0, val_type=float)
         self.df_as_rate = access_dict(exp_params, "df_as_rate", default=False, val_type=bool)
+        self.reset_buffers_afer_reinit = access_dict(exp_params, "reset_buffers_afer_reinit", default=False, val_type=bool)
         self.use_cbpw = self.prune_method != "none" and self.grow_method != "none"
 
         self.msa_cbpw = access_dict(exp_params, "msa_cbpw", default=False, val_type=bool)       # use cbpw in self-attention
@@ -472,7 +473,6 @@ class IncrementalCIFARExperiment(Experiment):
         temp_summaries_dict = update_weights(self.weight_dict)
         removed_masks = [v[0] for v in temp_summaries_dict.values()]
         # reset momentum buffers
-        self.reset_buffers_afer_reinit = True
         if self.reset_buffers_afer_reinit:
             for i, p in enumerate(self.optim.param_groups[0]['params']):
                 self.optim.state[p]['momentum_buffer'] = None
