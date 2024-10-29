@@ -78,8 +78,6 @@ class IncrementalCIFARExperiment(Experiment):
         self.pe_cbpw = access_dict(exp_params, "pe_cbpw", default=False, val_type=bool)         # use cbpw in pos-embedding
         self.head_cbpw = access_dict(exp_params, "head_cbpw", default=False, val_type=bool)     # use cbpw in head
 
-        self.use_cbpw_ln = access_dict(exp_params, "use_cbpw_ln", default=False, val_type=bool) # use cbpw on weight of layer norm
-        self.ln_update_freq = access_dict(exp_params, "ln_update_freq", default=self.topology_update_freq, val_type=int)
         self.ln_drop_factor = access_dict(exp_params, "ln_drop_factor", default=self.drop_factor, val_type=float)
 
         self.previously_removed_weights = None
@@ -145,10 +143,6 @@ class IncrementalCIFARExperiment(Experiment):
         self.weight_dict, self.ln_list, self.norm_layer_update_func = None, None, None
         if self.use_cbpw:
             self.weight_dict = self.initialize_cbpw_weight_dict()
-
-        if self.use_cbpw_ln:
-            self.ln_list = initialize_ln_list_vit(self.net)
-            self.norm_layer_update_func = setup_cbpw_layer_norm_update_function(self.prune_method, self.ln_drop_factor,True)
 
         # initialize training counters
         self.current_epoch = 0
@@ -307,10 +301,6 @@ class IncrementalCIFARExperiment(Experiment):
         if self.use_cbpw:
             self.weight_dict = self.initialize_cbpw_weight_dict()
 
-        if self.use_cbpw_ln:
-            self.ln_list = initialize_ln_list_vit(self.net)
-            self.norm_layer_update_func = setup_cbpw_layer_norm_update_function(self.prune_method, self.ln_drop_factor,True)
-
     # --------------------------------------- For storing summaries --------------------------------------- #
     def _store_training_summaries(self):
         self.results_dict["train_loss_per_checkpoint"][self.current_running_avg_step] += self.running_loss / self.running_avg_window
@@ -421,8 +411,6 @@ class IncrementalCIFARExperiment(Experiment):
                 self.current_minibatch += 1
                 if self.time_to_update_topology():
                     self.update_topology()
-                if self.use_cbpw_ln and (self.current_minibatch % self.ln_update_freq) == 0:
-                    for ln_layer in self.ln_list: self.norm_layer_update_func(ln_layer)
 
             epoch_end = time.perf_counter()
 
@@ -453,7 +441,11 @@ class IncrementalCIFARExperiment(Experiment):
     def time_to_update_topology(self):
         if not self.use_cbpw:
             return False
-        return (self.current_minibatch % self.topology_update_freq) == 0
+
+        time_to_update = self.current_minibatch >= self.topology_update_freq
+        if time_to_update:
+            self.current_minibatch = 0
+        return time_to_update
 
     def update_topology(self):
         """
