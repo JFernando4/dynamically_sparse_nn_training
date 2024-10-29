@@ -144,7 +144,7 @@ class IncrementalCIFARExperiment(Experiment):
 
         # initialize training counters
         self.current_epoch = 0
-        self.current_minibatch = 0
+        self.cumulative_stepsize = 0.0
 
         """ For data partitioning """
         self.class_increase = 5
@@ -257,7 +257,7 @@ class IncrementalCIFARExperiment(Experiment):
             "numpy_rng_state": np.random.get_state(),
             "cuda_rng_state": torch.cuda.get_rng_state(),
             "epoch_number": self.current_epoch,
-            "minibatch_number": self.current_minibatch,
+            "cumulative_stepsize": self.cumulative_stepsize,
             "current_num_classes": self.current_num_classes,
             "all_classes": self.all_classes,
             "current_running_avg_step": self.current_running_avg_step,
@@ -282,7 +282,7 @@ class IncrementalCIFARExperiment(Experiment):
         torch.cuda.set_rng_state(checkpoint["cuda_rng_state"])
         np.random.set_state(checkpoint["numpy_rng_state"])
         self.current_epoch = checkpoint["epoch_number"]
-        self.current_minibatch = checkpoint["minibatch_number"]
+        self.cumulative_stepsize = checkpoint["cumulative_stepsize"]
         self.current_num_classes = checkpoint["current_num_classes"]
         self.all_classes = checkpoint["all_classes"]
         self.current_running_avg_step = checkpoint["current_running_avg_step"]
@@ -406,7 +406,6 @@ class IncrementalCIFARExperiment(Experiment):
                     self._print("\t\tStep Number: {0}".format(step_number + 1))
                     self._store_training_summaries()
 
-                self.current_minibatch += 1
                 if self.time_to_update_topology():
                     self.update_topology()
 
@@ -440,9 +439,10 @@ class IncrementalCIFARExperiment(Experiment):
         if not self.use_cbpw:
             return False
 
-        time_to_update = self.current_minibatch >= self.topology_update_freq
+        self.cumulative_stepsize += self.stepsize
+        time_to_update = self.cumulative_stepsize >= (self.topology_update_freq * self.stepsize)
         if time_to_update:
-            self.current_minibatch = 0
+            self.cumulative_stepsize = 0.0
         return time_to_update
 
     def update_topology(self):
