@@ -67,7 +67,6 @@ class IncrementalCIFARExperiment(Experiment):
         self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str, choices=grow_methods)
         assert not ((self.prune_method != "none" and self.grow_method == "none") or (self.prune_method == "none" and self.grow_method != "none"))
         self.drop_factor = access_dict(exp_params, "drop_factor", default=0.0, val_type=float)
-        self.ln_drop_factor = access_dict(exp_params, "ln_drop_factor", default=0.0, val_type=float)
         self.df_as_rate = access_dict(exp_params, "df_as_rate", default=False, val_type=bool)
         self.reset_buffers_afer_reinit = access_dict(exp_params, "reset_buffers_afer_reinit", default=False, val_type=bool)
         self.scale_drop_factor_by_lr_scheduler = access_dict(exp_params, "scale_drop_factor_by_lr_scheduler", default=False, val_type=bool)
@@ -172,15 +171,13 @@ class IncrementalCIFARExperiment(Experiment):
         """ Initializes the weight dictionary for cbpw """
 
         df = self.drop_factor
-        ln_df = self.ln_drop_factor
         if self.use_lr_schedule and (self.lr_scheduler is not None) and self.scale_drop_factor_by_lr_scheduler:
             scale = self.lr_scheduler.get_last_lr()[0] / self.stepsize
             print(f"\t\t{scale = }")
             df = self.drop_factor * scale
-            ln_df = self.ln_drop_factor * scale
 
         return initialize_weight_dict(self.net, architecture_type="vit", prune_method=self.prune_method,
-                                      grow_method=self.grow_method, drop_factor=df, ln_drop_factor=ln_df,
+                                      grow_method=self.grow_method, drop_factor=df, ln_drop_factor=df,
                                       include_class_token=self.ct_cbpw, include_conv_proj=self.conv_cbpw,
                                       include_pos_embedding=self.pe_cbpw, include_self_attention=self.msa_cbpw,
                                       include_head=self.head_cbpw, df_as_rate=self.df_as_rate)
