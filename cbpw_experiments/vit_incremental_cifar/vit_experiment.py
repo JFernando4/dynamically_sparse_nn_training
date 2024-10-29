@@ -419,8 +419,7 @@ class IncrementalCIFARExperiment(Experiment):
                     self._store_training_summaries()
 
                 self.current_minibatch += 1
-                is_time_to_update = self.time_to_update_topology(minibatch_loop=True)
-                if is_time_to_update:
+                if self.time_to_update_topology():
                     self.update_topology()
                 if self.use_cbpw_ln and (self.current_minibatch % self.ln_update_freq) == 0:
                     for ln_layer in self.ln_list: self.norm_layer_update_func(ln_layer)
