@@ -444,6 +444,7 @@ class IncrementalCIFARExperiment(Experiment):
 
         time_to_update = self.cumulative_stepsize >= (self.topology_update_freq * self.stepsize)
         if time_to_update:
+            print("\t\treinitializing...")
             self.cumulative_stepsize = 0.0
         return time_to_update
 
