@@ -16,10 +16,10 @@
   "prune_method": "gr",
   "grow_method": "median_truncated",
   "drop_factor": 0.01,
-  "ln_drop_factor": 0.01,
   "df_as_rate": true,
-  "scale_drop_factor_by_lr_scheduler": true,
+  "scale_drop_factor_by_lr_scheduler": false,
   "reset_buffers_afer_reinit": true,
+  "reinit_freq_scheduler": true,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
     "num_epochs",
@@ -29,6 +29,7 @@
     "drop_factor",
     "ln_drop_factor",
     "scale_drop_factor_by_lr_scheduler",
-    "reset_buffers_afer_reinit"
+    "reset_buffers_afer_reinit",
+    "reinit_freq_scheduler"
   ]
 }
