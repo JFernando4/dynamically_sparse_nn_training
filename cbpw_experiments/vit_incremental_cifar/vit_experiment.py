@@ -60,7 +60,6 @@ class IncrementalCIFARExperiment(Experiment):
 
         # CBPw parameters
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
-        self.epoch_freq = access_dict(exp_params, "epoch_freq", default=False, val_type=bool)
         pruning_functions_names = ["none", "magnitude", "gf", "mr", "gr"]
         grow_methods = ["none", "kaiming_normal", "zero", "median_truncated"]
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str, choices=pruning_functions_names)
@@ -220,10 +219,7 @@ class IncrementalCIFARExperiment(Experiment):
 
         # dst masks summaries
         if self.use_cbpw:
-            if self.epoch_freq:
-                tensor_size = self.num_epochs // self.topology_update_freq
-            else:
-                tensor_size = total_checkpoints * self.running_avg_window // self.topology_update_freq
+            tensor_size = total_checkpoints * self.running_avg_window // self.topology_update_freq
             self.results_dict["prop_added_then_removed"] = torch.zeros(tensor_size, device=self.device, dtype=torch.float32)
 
     def _get_optimizer(self):
@@ -434,9 +430,6 @@ class IncrementalCIFARExperiment(Experiment):
             self._store_test_summaries(test_dataloader, val_dataloader, epoch_number=e, epoch_runtime=epoch_end - epoch_start)
             self.current_epoch += 1
 
-            if self.time_to_update_topology(minibatch_loop=False):
-                self.update_topology()
-
             self.extend_classes(training_data, test_data, val_data, train_dataloader)
 
             if self.current_epoch % self.checkpoint_save_frequency == 0:
@@ -458,17 +451,10 @@ class IncrementalCIFARExperiment(Experiment):
             self.optim.param_groups[0]['weight_decay'] = self.weight_decay / scheduler.get_last_lr()[0]
         return scheduler
 
-    def time_to_update_topology(self, minibatch_loop: bool = True):
+    def time_to_update_topology(self):
         if not self.use_cbpw:
             return False
-        if minibatch_loop and self.epoch_freq:
-            return False
-        if not minibatch_loop and not self.epoch_freq:
-            return False
-
-        if minibatch_loop:
-            return (self.current_minibatch % self.topology_update_freq) == 0
-        return (self.current_epoch % self.topology_update_freq) == 0
+        return (self.current_minibatch % self.topology_update_freq) == 0
 
     def update_topology(self):
         """
