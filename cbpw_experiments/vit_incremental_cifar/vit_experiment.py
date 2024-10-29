@@ -78,8 +78,6 @@ class IncrementalCIFARExperiment(Experiment):
         self.pe_cbpw = access_dict(exp_params, "pe_cbpw", default=False, val_type=bool)         # use cbpw in pos-embedding
         self.head_cbpw = access_dict(exp_params, "head_cbpw", default=False, val_type=bool)     # use cbpw in head
 
-        self.ln_drop_factor = access_dict(exp_params, "ln_drop_factor", default=self.drop_factor, val_type=float)
-
         self.previously_removed_weights = None
         self.current_topology_update = 0
 
