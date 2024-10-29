@@ -27,7 +27,6 @@
     "prune_method",
     "grow_method",
     "drop_factor",
-    "ln_drop_factor",
     "scale_drop_factor_by_lr_scheduler",
     "reset_buffers_afer_reinit",
     "reinit_freq_scheduler"
