@@ -60,6 +60,7 @@ class IncrementalCIFARExperiment(Experiment):
 
         # CBPw parameters
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
+        self.reinit_freq_scheduler = access_dict(exp_params, "reinit_freq_scheduler", default=0, val_type=int)
         pruning_functions_names = ["none", "magnitude", "gf", "mr", "gr"]
         grow_methods = ["none", "kaiming_normal", "zero", "median_truncated"]
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str, choices=pruning_functions_names)
@@ -439,7 +440,11 @@ class IncrementalCIFARExperiment(Experiment):
         if not self.use_cbpw:
             return False
 
-        self.cumulative_stepsize += self.stepsize
+        increment = self.stepsize
+        if self.use_lr_schedule and self.reinit_freq_scheduler:
+            increment = self.lr_scheduler.get_last_lr()[0]
+        self.cumulative_stepsize += increment
+
         time_to_update = self.cumulative_stepsize >= (self.topology_update_freq * self.stepsize)
         if time_to_update:
             self.cumulative_stepsize = 0.0
