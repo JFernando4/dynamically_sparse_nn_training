@@ -33,7 +33,7 @@ def get_layer_bound(layer, init, gain):
         return bound
 
 
-class CBPLinear(nn.Module):
+class ReDoLinear(nn.Module):
 
     def __init__(
             self,
