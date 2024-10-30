@@ -136,7 +136,6 @@ class ReDoLinear(nn.Module):
             self.in_layer.bias.data[features_to_replace] *= 0
 
             self.out_layer.weight.data[:, features_to_replace] = 0
-            self.ages[features_to_replace] = 0
             self.replace_feature_event_indicator = True
 
             """
