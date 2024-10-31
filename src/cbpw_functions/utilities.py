@@ -81,6 +81,7 @@ def initialize_weights_dict_df_as_rate(net: Union[VisionTransformer, ResNet],
     ln_weight_grow_name = "fixed" if grow_method != "fixed_with_noise" else grow_method
     weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor,
                                                             as_rate=True, reinit_val=0.0, noise_std=noise_std)
+    output_update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor="zero", as_rate=True)
     bias_update_func = setup_cbpw_weight_update_function(prune_method, grow_name=bias_grow_name, drop_factor=drop_factor,
                                                          as_rate=True, reinit_val=0.0, noise_std=noise_std)
     ln_weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_name=ln_weight_grow_name,
@@ -98,7 +99,10 @@ def initialize_weights_dict_df_as_rate(net: Union[VisionTransformer, ResNet],
         elif is_bias:
             weight_dict[n] = (p, bias_update_func)
         else:
-            weight_dict[n] = (p, weight_update_func)
+            if ("heads" in n) or ("fc" in n):       # heads = output layer of ViT, fc = output layer of ResNet-18
+                weight_dict[n] = (p, output_update_func)
+            else:
+                weight_dict[n] = (p, weight_update_func)
 
     return weight_dict
 
