@@ -8,7 +8,8 @@
       "prune_method",
       "grow_method",
       "drop_factor",
-      "df_as_rate"
+      "reset_buffers_afer_reinit",
+      "reinit_freq_scheduler"
     ]
   },
 
@@ -30,7 +31,9 @@
     "prune_method": ["str", "gr"],
     "grow_method": ["str", "median_clipped"],
     "drop_factor": ["fixed", 0.005, 0.01],
-    "df_as_rate": true
+    "df_as_rate": true,
+    "reset_buffers_afer_reinit": true,
+    "reinit_freq_scheduler": true
   },
 
   "slurm_parameters": {
