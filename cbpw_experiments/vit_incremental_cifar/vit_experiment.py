@@ -17,7 +17,7 @@ from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, 
 
 from src import initialize_vit, initialize_vit_heads, initialize_layer_norm_module
 from src.plasticity_functions import SGDL2Init, inject_noise
-from src.cbpw_functions import initialize_weight_dict, setup_cbpw_layer_norm_update_function, initialize_ln_list_vit
+from src.cbpw_functions import initialize_weight_dict
 from src.utils import get_cifar_data, compute_accuracy_from_batch
 from src.networks.torchvision_modified_vit import VisionTransformer
 from src.cbpw_functions.weight_matrix_updates import update_weights
