@@ -29,7 +29,7 @@
   "learning_params": {
     "topology_update_freq": ["fixed", 65],
     "prune_method": ["str", "gr"],
-    "grow_method": ["str", "median_clipped"],
+    "grow_method": ["str", "median_truncated"],
     "drop_factor": ["fixed", 0.005, 0.01],
     "df_as_rate": true,
     "reset_buffers_afer_reinit": true,
