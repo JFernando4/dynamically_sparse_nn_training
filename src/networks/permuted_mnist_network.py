@@ -56,42 +56,39 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
         self.ff_1 = torch.nn.Linear(INPUT_DIMS, out_features=hidden_dim, bias=True)
         self.act_1 = torch.nn.ReLU()
         self.neg_act_1 = torch.nn.ReLU()
-        self.cbp_1 = None
-        self.redo_1 = None
+        self.reinit_layer_1 = None          # either CBP or ReDo
         self.ln_1 = torch.nn.LayerNorm(hidden_dim * input_dim_scaling) if self.use_layer_norm else None
         # second layer
         self.ff_2 = torch.nn.Linear(hidden_dim * input_dim_scaling, out_features=hidden_dim, bias=True)
         self.act_2 = torch.nn.ReLU()
         self.neg_act_2 = torch.nn.ReLU()
-        self.cbp_2 = None
-        self.redo_2 = None
+        self.reinit_layer_2 = None
         self.ln_2 = torch.nn.LayerNorm(hidden_dim * input_dim_scaling) if self.use_layer_norm else None
         # third layer
         self.ff_3 = torch.nn.Linear(hidden_dim * input_dim_scaling, out_features=hidden_dim, bias=True)
         self.act_3 = torch.nn.ReLU()
         self.neg_act_3 = torch.nn.ReLU()
-        self.cbp_3 = None
-        self.redo_3 = None
+        self.reinit_layer_3 = None
         self.ln_3 = torch.nn.LayerNorm(hidden_dim * input_dim_scaling) if self.use_layer_norm else None
         self.out = torch.nn.Linear(hidden_dim * input_dim_scaling, OUTPUT_DIMS, bias=True)
 
         if use_cbp:
             assert maturity_threshold is not None and replacement_rate is not None
-            self.cbp_1 = CBPLinear(in_layer=self.ff_1, out_layer=self.ff_2, replacement_rate=self.rr,
-                                   maturity_threshold=self.mt, ln_layer=self.ln_1, util_type=cbp_utility)
-            self.cbp_2 = CBPLinear(in_layer=self.ff_2, out_layer=self.ff_3, replacement_rate=self.rr,
-                                   maturity_threshold=self.mt, ln_layer=self.ln_2, util_type=cbp_utility)
-            self.cbp_3 = CBPLinear(in_layer=self.ff_3, out_layer=self.out, replacement_rate=self.rr,
-                                   maturity_threshold=self.mt, ln_layer=self.ln_3, util_type=cbp_utility)
+            self.reinit_layer_1 = CBPLinear(in_layer=self.ff_1, out_layer=self.ff_2, replacement_rate=self.rr,
+                                            maturity_threshold=self.mt, ln_layer=self.ln_1, util_type=cbp_utility)
+            self.reinit_layer_2 = CBPLinear(in_layer=self.ff_2, out_layer=self.ff_3, replacement_rate=self.rr,
+                                            maturity_threshold=self.mt, ln_layer=self.ln_2, util_type=cbp_utility)
+            self.reinit_layer_3 = CBPLinear(in_layer=self.ff_3, out_layer=self.out, replacement_rate=self.rr,
+                                            maturity_threshold=self.mt, ln_layer=self.ln_3, util_type=cbp_utility)
 
         if self.use_redo:
             assert reinit_frequency is not None and reinit_threshold is not None
-            self.redo_1 = ReDoLinear(in_layer=self.ff_1, out_layer=self.ff_2, reinit_frequency=self.rf,
-                                     reinit_threshold=self.rt, ln_layer=self.ln_1, util_type=redo_utility)
-            self.redo_2 = ReDoLinear(in_layer=self.ff_2, out_layer=self.ff_3, reinit_frequency=self.rf,
-                                     reinit_threshold=self.rt, ln_layer=self.ln_2, util_type=redo_utility)
-            self.redo_3 = ReDoLinear(in_layer=self.ff_3, out_layer=self.out, reinit_frequency=self.rf,
-                                     reinit_threshold=self.rt, ln_layer=self.ln_3, util_type=redo_utility)
+            self.reinit_layer_1 = ReDoLinear(in_layer=self.ff_1, out_layer=self.ff_2, reinit_frequency=self.rf,
+                                             reinit_threshold=self.rt, ln_layer=self.ln_1, util_type=redo_utility)
+            self.reinit_layer_2 = ReDoLinear(in_layer=self.ff_2, out_layer=self.ff_3, reinit_frequency=self.rf,
+                                             reinit_threshold=self.rt, ln_layer=self.ln_2, util_type=redo_utility)
+            self.reinit_layer_3 = ReDoLinear(in_layer=self.ff_3, out_layer=self.out, reinit_frequency=self.rf,
+                                             reinit_threshold=self.rt, ln_layer=self.ln_3, util_type=redo_utility)
 
     def forward(self, x: torch.Tensor, activations: list = None) -> torch.Tensor:
         # first hidden layer
@@ -101,10 +98,8 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
         x = torch.cat([self.act_1, -self.neg_act_1]) if self.use_crelu else self.act_1(x)
         if activations is not None: activations.append(x)               # store activations
         res = x                                                         # store residual connection
-        if self.cbp_1 is not None:                                      # log features using cbp
-            x = self.cbp_1(x)
-        if self.redo_1 is not None:                                     # log features using redo
-            x = self.redo_1(x)
+        if self.reinit_layer_1 is not None:                             # log features using cbp or redo
+            x = self.reinit_layer_1(x)
         if self.use_layer_norm and not self.preactivation_layer_norm:   # use layer norm after activation
             x = self.ln_1(x)
 
@@ -119,10 +114,8 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
         if self.use_skip_connections and not self.preactivation_skip_connection:    # add residual connection after activation
             x = x + res
         res = x
-        if self.cbp_2 is not None:
-            x = self.cbp_2(x)
-        if self.redo_2 is not None:
-            x = self.redo_2(x)
+        if self.reinit_layer_2 is not None:
+            x = self.reinit_layer_2(x)
         if self.use_layer_norm and not self.preactivation_layer_norm:
             x = self.ln_2(x)
 
@@ -136,10 +129,8 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
         if activations is not None: activations.append(x)
         if self.use_skip_connections and not self.preactivation_skip_connection:
             x = x + res
-        if self.cbp_3 is not None:
-            x = self.cbp_3(x)
-        if self.redo_3 is not None:
-            x = self.redo_3(x)
+        if self.reinit_layer_3 is not None:
+            x = self.reinit_layer_3(x)
         if self.use_layer_norm and not self.preactivation_layer_norm:
             x = self.ln_3(x)
 
@@ -148,22 +139,14 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
     def feature_replace_event_indicator(self):
         if not self.use_cbp and not self.use_redo:
             return False
-        if self.use_cbp:
-            return (self.cbp_1.replace_feature_event_indicator or
-                    self.cbp_2.replace_feature_event_indicator or
-                    self.cbp_3.replace_feature_event_indicator)
-        if self.use_redo:
-            return (self.redo_1.replace_feature_event_indicator or
-                    self.redo_2.replace_feature_event_indicator or
-                    self.redo_3.replace_feature_event_indicator)
+
+        return (self.reinit_layer_1.replace_feature_event_indicator or
+                self.reinit_layer_2.replace_feature_event_indicator or
+                self.reinit_layer_3.replace_feature_event_indicator)
 
     def reset_indicators(self):
         if not self.use_cbp and not self.use_redo: return
-        if self.use_cbp:
-            self.cbp_1.replace_feature_event_indicator = False
-            self.cbp_2.replace_feature_event_indicator = False
-            self.cbp_3.replace_feature_event_indicator = False
-        if self.use_redo:
-            self.redo_1.replace_feature_event_indicator = True
-            self.redo_2.replace_feature_event_indicator = True
-            self.redo_3.replace_feature_event_indicator = True
+
+        self.reinit_layer_1.replace_feature_event_indicator = False
+        self.reinit_layer_2.replace_feature_event_indicator = False
+        self.reinit_layer_3.replace_feature_event_indicator = False
