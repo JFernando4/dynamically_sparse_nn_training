@@ -66,7 +66,6 @@ class PermutedMNISTExperiment(Experiment):
         self.use_cbpw = access_dict(exp_params, "use_cbpw", default=False, val_type=bool)
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
         self.reinit_freq_as_rate = access_dict(exp_params, "reinit_freq_as_rate", default=False, val_type=bool)
-        self.epoch_freq = access_dict(exp_params, "epoch_freq", default=False, val_type=bool)
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str,                   # also use in SWR optimizer
                                         choices=["none", "magnitude", "gf", "gr", "mr"])
         self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str,                     # also used in SWR optimizer
@@ -86,6 +85,12 @@ class PermutedMNISTExperiment(Experiment):
         self.maturity_threshold = access_dict(exp_params, "maturity_threshold", default=0, val_type=int)            # also used in SWR optimizer
         self.replacement_rate = access_dict(exp_params, "replacement_rate", default=1e-6, val_type=float)           # also used in SWR optimizer
         self.cbp_utility = access_dict(exp_params, "cbp_utility", default="contribution", val_type=str)
+
+        # ReDo parameters
+        self.reinit_freq = access_dict(exp_params, "reinit_freq", default=None, val_type=int)
+        self.reinit_threshold = access_dict(exp_params, "reinit_threshold", default=None, val_type=float)
+        self.redo_utility = access_dict(exp_params, "redo_utility", default=None, val_type=str)
+        self.use_redo = (self.reinit_freq is not None) and (self.reinit_threshold is not None) and (self.redo_utility is not None)
 
         # Layer Norm parameters
         self.use_ln = access_dict(exp_params, "use_ln", default=False, val_type=bool)
@@ -120,9 +125,13 @@ class PermutedMNISTExperiment(Experiment):
                                            use_cbp=self.use_cbp,
                                            maturity_threshold=self.maturity_threshold,
                                            replacement_rate=self.replacement_rate,
+                                           cbp_utility=self.cbp_utility,
+                                           use_redo=self.use_redo,
+                                           reinit_frequency=self.reinit_freq,
+                                           reinit_threshold=self.reinit_threshold,
+                                           redo_utility=self.redo_utility,
                                            use_layer_norm=self.use_ln,
-                                           preactivation_layer_norm=self.preactivation_ln,
-                                           cbp_utility=self.cbp_utility)
+                                           preactivation_layer_norm=self.preactivation_ln)
         self.net.apply(lambda z: init_weights_kaiming(z, nonlinearity="relu", normal=True))     # initialize weights
 
         # initialize CBPw dictionary
