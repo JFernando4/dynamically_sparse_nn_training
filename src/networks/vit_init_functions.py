@@ -46,6 +46,9 @@ def initialize_self_multihead_attention_module(m: torch.nn.MultiheadAttention):
     """
     Initializes a multihead attention module using xavier normal initialization
     """
+    if not isinstance(m, torch.nn.MultiheadAttention):
+        return
+
     if m._qkv_same_embed_dim:
         torch.nn.init.xavier_uniform_(m.in_proj_weight)
     else:
@@ -68,6 +71,10 @@ def initialize_mlp_block(m: MLPBlock):
     """
     Initializes a visual transformer encoder block's mlp block
     """
+
+    if not isinstance(m, MLPBlock):
+        return
+
     for sub_m in m.modules():
         if isinstance(sub_m, torch.nn.Linear):
             torch.nn.init.xavier_uniform_(sub_m.weight)
