@@ -147,7 +147,7 @@ def redo_prune_weights(weight: torch.Tensor, drop_factor: float, utility_name: s
 
 
 @torch.no_grad()
-def magnitude_prune_weights(weight: torch.Tensor, drop_factor: float, as_rate: bool = False) -> tuple[torch.Tensor, torch.Tensor]:
+def magnitude_prune_weights(weight: torch.Tensor, drop_factor: float, as_rate: bool = True) -> tuple[torch.Tensor, torch.Tensor]:
     """ Creates a mask by dropping the weights with the smallest magnitude """
 
     drop_num = compute_drop_num(weight.numel(), drop_factor, as_rate)
@@ -161,7 +161,7 @@ def magnitude_prune_weights(weight: torch.Tensor, drop_factor: float, as_rate: b
 
 
 @torch.no_grad()
-def gradient_flow_prune_weights(weight: torch.Tensor, drop_factor: float, as_rate: bool = False) -> tuple[torch.Tensor, torch.Tensor]:
+def gradient_flow_prune_weights(weight: torch.Tensor, drop_factor: float, as_rate: bool = True) -> tuple[torch.Tensor, torch.Tensor]:
     """ Creates a mask by dropping the weights with the smallest gradient flow """
 
     drop_num = compute_drop_num(weight.numel(), drop_factor, as_rate)
@@ -188,13 +188,10 @@ def empirical_fisher_information_prune_weights(weight:torch.Tensor, drop_factor:
     return pruned_indices, active_indices
 
 
-def compute_drop_num(num_weights: int, drop_factor: float, as_rate: bool = False) -> int:
+def compute_drop_num(num_weights: int, drop_factor: float, as_rate: bool = True) -> int:
     """ Computes the number of weights dropped """
     fraction_to_prune = num_weights * drop_factor
-    if as_rate:
-        drop_num = int(fraction_to_prune) + np.random.binomial(n=1, p=fraction_to_prune % 1, size=None)
-    else:
-        drop_num = max(int(fraction_to_prune), 1)   # drop at least one weight
+    drop_num = int(fraction_to_prune) + np.random.binomial(n=1, p=fraction_to_prune % 1, size=None)
     return drop_num
 
 # ----- ----- ----- ----- Growing Functions ----- ----- ----- ----- #
