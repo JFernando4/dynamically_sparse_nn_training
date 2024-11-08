@@ -1,5 +1,5 @@
 import torch
-from torchvision.models.vision_transformer import VisionTransformer, EncoderBlock, MLPBlock
+from .torchvision_modified_vit import CustomMLPBlock, EncoderBlock, VisionTransformer
 
 
 def initialize_vit(network: VisionTransformer):
@@ -71,7 +71,7 @@ def initialize_mlp_block(m: torch.nn.Module):
     Initializes a visual transformer encoder block's mlp block
     """
 
-    if not isinstance(m, MLPBlock): return
+    if not isinstance(m, CustomMLPBlock): return
 
     for sub_m in m.modules():
         if isinstance(sub_m, torch.nn.Linear):
