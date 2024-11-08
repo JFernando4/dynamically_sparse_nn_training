@@ -5,6 +5,7 @@ import pickle
 
 # third party libraries
 import torch
+from torch.func import functional_call, vmap, grad
 from torch.utils.data import DataLoader
 import numpy as np
 
@@ -67,7 +68,7 @@ class PermutedMNISTExperiment(Experiment):
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
         self.reinit_freq_as_rate = access_dict(exp_params, "reinit_freq_as_rate", default=False, val_type=bool)
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str,                   # also use in SWR optimizer
-                                        choices=["none", "magnitude", "gf", "gr", "mr"])
+                                        choices=["none", "magnitude", "gf", "efi", "gr", "mr", "er"])
         self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str,                     # also used in SWR optimizer
                                        choices=["none", "kaiming_normal", "zero", "truncated", "clipped", "mad",
                                                 "median_truncated", "median_clipped", "25p_truncated", "25p_clipped",
@@ -212,6 +213,10 @@ class PermutedMNISTExperiment(Experiment):
         # with batch size of 30 and num permutations of 1000, experiment take less than an hour, so why checkpoints?
         self.store_checkpoints = False
 
+        """ For computing per sample gradients """
+        self.compute_grad_func = grad(self.compute_loss)
+        self.per_sample_grad_func = vmap(self.compute_grad_func, in_dims=(None, None, 0, 0))
+
     # ----------------------------- For storing summaries ----------------------------- #
     def _store_training_summaries(self):
         # store train data for checkpoints
@@ -284,6 +289,8 @@ class PermutedMNISTExperiment(Experiment):
 
                 # update topology and apply masks to weights
                 if self.time_to_update_topology(self.current_experiment_step):
+                    if self.prune_method in ["efi", "er"]:
+                        self.compute_empirical_fisher_information(image, label)
                     self.update_topology()
 
                 # store summaries
@@ -446,6 +453,27 @@ class PermutedMNISTExperiment(Experiment):
             self.results_dict["change_in_std_activation_layer_1"] = np.array(self.results_dict["change_in_std_activation_layer_1"], dtype=np.float32)
             self.results_dict["change_in_std_activation_layer_2"] = np.array(self.results_dict["change_in_std_activation_layer_2"], dtype=np.float32)
             self.results_dict["change_in_std_activation_layer_3"] = np.array(self.results_dict["change_in_std_activation_layer_3"], dtype=np.float32)
+
+    def compute_loss(self, params, buffers, sample, target):
+        batch = sample
+        targets = target
+        current_activations = []
+        predictions = functional_call(self.net, (params, buffers), (batch, current_activations))
+        loss = self.loss(predictions, targets)
+        return loss
+
+    def compute_empirical_fisher_information(self, images, labels):
+        params = {k: v.detach() for k, v in self.net.named_parameters()}
+        buffers = {k: v.detach() for k, v in self.net.named_buffers()}
+
+        for p in self.net.parameters():
+            p.empirical_fisher = None
+            p.grad = None
+
+        per_sample_grads = self.per_sample_grad_func(params, buffers, images, labels)
+
+        for n, p in self.net.named_parameters():
+            p.empirical_fisher = per_sample_grads[n].square().sum(axis=0)
 
 
 def main():
