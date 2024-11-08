@@ -8,14 +8,13 @@ from copy import deepcopy
 import torch
 from torch.utils.data import DataLoader
 import numpy as np
-# from torchvision.models.vision_transformer import VisionTransformer
 
 # from ml project manager
 from mlproj_manager.problems import CifarDataSet
 from mlproj_manager.experiments import Experiment
 from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict
 
-from src import initialize_vit, initialize_vit_heads, initialize_layer_norm_module
+from src import initialize_vit, initialize_vit_heads, initialize_layer_norm_module, initialize_self_multihead_attention_module, initialize_mlp_block
 from src.plasticity_functions import SGDL2Init, inject_noise
 from src.cbpw_functions import initialize_weight_dict
 from src.utils import get_cifar_data, compute_accuracy_from_batch
@@ -93,6 +92,8 @@ class IncrementalCIFARExperiment(Experiment):
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
         self.reset_network = access_dict(exp_params, "reset_network", default=False, val_type=bool)
         self.reset_layer_norm = access_dict(exp_params, "reset_layer_norm", default=False, val_type=bool)
+        self.reset_attention_layers = access_dict(exp_params, "reset_attention_layers", default=False, val_type=bool)
+        self.reset_mlp_blocks = access_dict(exp_params, "reset_mlp_blocks", default=False, val_type=bool)
 
         # problem definition parameters
         self.num_epochs = access_dict(exp_params, "num_epochs", default=1, val_type=int)
@@ -523,6 +524,10 @@ class IncrementalCIFARExperiment(Experiment):
                 self.optim = self._get_optimizer()
             if self.reset_layer_norm:
                 self.net.apply(initialize_layer_norm_module)
+            if self.reset_attention_layers:
+                self.net.apply(initialize_self_multihead_attention_module)
+            if self.reset_mlp_blocks:
+                self.net.apply(initialize_mlp_block)
             if self.reset_momentum:
                 self.optim = self._get_optimizer()
             if self.use_lr_schedule:
