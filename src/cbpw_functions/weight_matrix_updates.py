@@ -25,22 +25,26 @@ def prune_and_grow_weights(weight: torch.Tensor,
 
 def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs) -> Callable[[torch.Tensor], tuple]:
     """ Sets up weight update function for CBP-w """
-    prune_function_names = ["magnitude", "gf", "mr", "gr"]
+    prune_function_names = ["magnitude", "gf", "efi", "mr", "gr", "er"]
     grow_function_names = ["kaiming_normal", "xavier_normal", "zero", "kaming_uniform", "xavier_uniform", "fixed", "mad",
                            "clipped", "truncated", "median_clipped", "median_truncated", "25p_clipped", "25p_truncated",
                            "mean_truncated", "mean_clipped"]
     assert prune_name in prune_function_names and grow_name in grow_function_names
     assert "drop_factor" in kwargs.keys()
 
-    as_rate = False if "as_rate" not in kwargs.keys() else kwargs["as_rate"]
+    as_rate = True if "as_rate" not in kwargs.keys() else kwargs["as_rate"]
     if prune_name == "magnitude":
         prune_func = lambda w: magnitude_prune_weights(w, drop_factor=kwargs["drop_factor"], as_rate=as_rate)
     elif prune_name == "gf":    # gradient flow
         prune_func = lambda w: gradient_flow_prune_weights(w, drop_factor=kwargs["drop_factor"], as_rate=as_rate)
+    elif prune_name == "efi":
+        prune_func = lambda w: empirical_fisher_information_prune_weights(w, drop_factor=kwargs["drop_factor"], as_rate=as_rate)
     elif prune_name == "mr":    # magnitude redo
         prune_func = lambda w: redo_prune_weights(w, drop_factor=kwargs["drop_factor"], utility_name="magnitude")
     elif prune_name == "gr":    # gradient redo
         prune_func = lambda w: redo_prune_weights(w, drop_factor=kwargs["drop_factor"], utility_name="gradient")
+    elif prune_name == "er":    # empirical fisher redo
+        prune_func = lambda w: redo_prune_weights(w, drop_factor=kwargs["drop_factor"], utility_name="efi")
 
     if "kaiming" in grow_name or "xavier" in grow_name:
         grow_func = lambda w, pi, ai: random_reinit_weights(w, pruned_indices=pi, active_indices=ai, reinit=grow_name)
@@ -122,13 +126,16 @@ def redo_prune_weights(weight: torch.Tensor, drop_factor: float, utility_name: s
     Prunes the weight that are smaller than (drop_factor * average_absolute_weight_value)
 
     arguments:
-        utility_name (str): "magnitude" or "gradient"
+        utility_name (str): "magnitude", "gradient", "efi" (empirical_fishe_information)
     """
 
     if utility_name == "magnitude":
         utility = weight.abs().flatten()
     elif utility_name == "gradient":
         utility = torch.abs(weight * weight.grad).flatten()
+    elif utility_name == "efi":
+        assert hasattr(weight, "empirical_fisher")
+        utility = weight.empirical_fisher.flatten()
     else:
         raise ValueError(f"{utility_name} is not a valid utility.")
 
@@ -162,6 +169,20 @@ def gradient_flow_prune_weights(weight: torch.Tensor, drop_factor: float, as_rat
 
     gradient_flow = torch.abs(weight * weight.grad).flatten()
     indices = torch.argsort(gradient_flow)
+    pruned_indices = indices[:drop_num]
+    active_indices = indices[drop_num:]
+    return pruned_indices, active_indices
+
+
+def empirical_fisher_information_prune_weights(weight:torch.Tensor, drop_factor: float, as_rate: bool = True) -> tuple[torch.Tensor, torch.Tensor]:
+    """ Creates a mask by dropping the weights with the smallest empirical fisher information entries """
+
+    drop_num = compute_drop_num(weight.numel(), drop_factor, as_rate)
+    if drop_num == 0: return torch.empty(0), torch.empty(0)
+
+    assert hasattr(weight, "empirical_fisher")
+    efi = weight.empirical_fisher.flatten()
+    indices = torch.argsort(efi)
     pruned_indices = indices[:drop_num]
     active_indices = indices[drop_num:]
     return pruned_indices, active_indices
