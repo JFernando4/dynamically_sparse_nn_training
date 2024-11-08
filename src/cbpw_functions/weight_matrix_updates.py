@@ -32,13 +32,12 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     assert prune_name in prune_function_names and grow_name in grow_function_names
     assert "drop_factor" in kwargs.keys()
 
-    as_rate = True if "as_rate" not in kwargs.keys() else kwargs["as_rate"]
     if prune_name == "magnitude":
-        prune_func = lambda w: magnitude_prune_weights(w, drop_factor=kwargs["drop_factor"], as_rate=as_rate)
+        prune_func = lambda w: magnitude_prune_weights(w, drop_factor=kwargs["drop_factor"])
     elif prune_name == "gf":    # gradient flow
-        prune_func = lambda w: gradient_flow_prune_weights(w, drop_factor=kwargs["drop_factor"], as_rate=as_rate)
+        prune_func = lambda w: gradient_flow_prune_weights(w, drop_factor=kwargs["drop_factor"])
     elif prune_name == "efi":
-        prune_func = lambda w: empirical_fisher_information_prune_weights(w, drop_factor=kwargs["drop_factor"], as_rate=as_rate)
+        prune_func = lambda w: empirical_fisher_information_prune_weights(w, drop_factor=kwargs["drop_factor"])
     elif prune_name == "mr":    # magnitude redo
         prune_func = lambda w: redo_prune_weights(w, drop_factor=kwargs["drop_factor"], utility_name="magnitude")
     elif prune_name == "gr":    # gradient redo
@@ -102,8 +101,8 @@ def update_norm_layer(norm_layer: torch.nn.Module,
         norm_layer.bias[pruned_indices] = 0.0
 
 
-def setup_cbpw_layer_norm_update_function(prune_name: str, drop_factor: float, exclude_layer_bias: bool = False,
-                                          as_rate: bool = False) -> Callable[[torch.nn.Module], None]:
+def setup_cbpw_layer_norm_update_function(prune_name: str, drop_factor: float, exclude_layer_bias: bool = False
+                                          ) -> Callable[[torch.nn.Module], None]:
     """ Sets up weight update function for CBP-w for layer or batch norm """
     prune_function_names = ["magnitude", "redo", "gf_redo", "gf"]
     assert prune_name in prune_function_names
@@ -147,10 +146,10 @@ def redo_prune_weights(weight: torch.Tensor, drop_factor: float, utility_name: s
 
 
 @torch.no_grad()
-def magnitude_prune_weights(weight: torch.Tensor, drop_factor: float, as_rate: bool = True) -> tuple[torch.Tensor, torch.Tensor]:
+def magnitude_prune_weights(weight: torch.Tensor, drop_factor: float) -> tuple[torch.Tensor, torch.Tensor]:
     """ Creates a mask by dropping the weights with the smallest magnitude """
 
-    drop_num = compute_drop_num(weight.numel(), drop_factor, as_rate)
+    drop_num = compute_drop_num(weight.numel(), drop_factor)
     if drop_num == 0: return torch.empty(0), torch.empty(0)
 
     abs_weight = torch.abs(weight).flatten()
@@ -161,10 +160,10 @@ def magnitude_prune_weights(weight: torch.Tensor, drop_factor: float, as_rate: b
 
 
 @torch.no_grad()
-def gradient_flow_prune_weights(weight: torch.Tensor, drop_factor: float, as_rate: bool = True) -> tuple[torch.Tensor, torch.Tensor]:
+def gradient_flow_prune_weights(weight: torch.Tensor, drop_factor: float) -> tuple[torch.Tensor, torch.Tensor]:
     """ Creates a mask by dropping the weights with the smallest gradient flow """
 
-    drop_num = compute_drop_num(weight.numel(), drop_factor, as_rate)
+    drop_num = compute_drop_num(weight.numel(), drop_factor)
     if drop_num == 0: return torch.empty(0), torch.empty(0)
 
     gradient_flow = torch.abs(weight * weight.grad).flatten()
@@ -174,10 +173,10 @@ def gradient_flow_prune_weights(weight: torch.Tensor, drop_factor: float, as_rat
     return pruned_indices, active_indices
 
 
-def empirical_fisher_information_prune_weights(weight:torch.Tensor, drop_factor: float, as_rate: bool = True) -> tuple[torch.Tensor, torch.Tensor]:
+def empirical_fisher_information_prune_weights(weight:torch.Tensor, drop_factor: float) -> tuple[torch.Tensor, torch.Tensor]:
     """ Creates a mask by dropping the weights with the smallest empirical fisher information entries """
 
-    drop_num = compute_drop_num(weight.numel(), drop_factor, as_rate)
+    drop_num = compute_drop_num(weight.numel(), drop_factor)
     if drop_num == 0: return torch.empty(0), torch.empty(0)
 
     assert hasattr(weight, "empirical_fisher")
@@ -188,7 +187,7 @@ def empirical_fisher_information_prune_weights(weight:torch.Tensor, drop_factor:
     return pruned_indices, active_indices
 
 
-def compute_drop_num(num_weights: int, drop_factor: float, as_rate: bool = True) -> int:
+def compute_drop_num(num_weights: int, drop_factor: float) -> int:
     """ Computes the number of weights dropped """
     fraction_to_prune = num_weights * drop_factor
     drop_num = int(fraction_to_prune) + np.random.binomial(n=1, p=fraction_to_prune % 1, size=None)
