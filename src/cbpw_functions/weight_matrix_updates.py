@@ -1,8 +1,6 @@
 import torch
 import numpy as np
 from typing import Callable
-from scipy.special import erfinv
-
 
 def prune_and_grow_weights(weight: torch.Tensor,
                            prune_function: Callable[[torch.Tensor], tuple[torch.Tensor, torch.Tensor]],
@@ -28,7 +26,8 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     prune_function_names = ["magnitude", "gf", "efi", "mr", "gr", "er"]
     grow_function_names = ["kaiming_normal", "xavier_normal", "zero", "kaming_uniform", "xavier_uniform", "fixed", "mad",
                            "clipped", "truncated", "median_clipped", "median_truncated", "25p_clipped", "25p_truncated",
-                           "mean_truncated", "mean_clipped"]
+                           "mean_truncated", "mean_clipped", "normal", "truncated_normal", "tx_uniform", "tx_normal",
+                           "tk_uniform", "tk_normal"]
     assert prune_name in prune_function_names and grow_name in grow_function_names
     assert "drop_factor" in kwargs.keys()
 
@@ -45,12 +44,15 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     elif prune_name == "er":    # empirical fisher redo
         prune_func = lambda w: redo_prune_weights(w, drop_factor=kwargs["drop_factor"], utility_name="efi")
 
+    activation = "relu" if "activation" not in kwargs else kwargs["activation"]
+    fan_mode = "fan_in" if "fan_mode" not in kwargs else kwargs["fan_mode"]
+    std = 0.01 if "std" not in kwargs else kwargs["std"]
+
     if "kaiming" in grow_name or "xavier" in grow_name:
-        grow_func = lambda w, pi, ai: random_reinit_weights(w, pruned_indices=pi, active_indices=ai, reinit=grow_name)
+        grow_func = lambda w, pi, ai: random_reinit_weights(w, pruned_indices=pi, active_indices=ai, reinit=grow_name, activation=activation, fan_mode=fan_mode)
     elif grow_name == "zero":
         grow_func = lambda w, pi, ai: fixed_reinit_weights(w, pruned_indices=pi, active_indices=ai, reinit_val=0.0)
     elif grow_name == "fixed":
-        assert "reinit_val" in kwargs.keys()
         grow_func = lambda w, pi, ai: fixed_reinit_weights(w, pruned_indices=pi, active_indices=ai, reinit_val=kwargs["reinit_val"])
     elif grow_name == "clipped":
         grow_func = lambda w, pi, ai: clipped_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="min")
@@ -70,6 +72,18 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
         grow_func = lambda w, pi, ai: truncated_normal_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="25p")
     elif grow_name == "mean_truncated":
         grow_func = lambda w, pi, ai: truncated_normal_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="mean")
+    elif grow_name == "tk_normal":      # truncated kaiming normal
+        grow_func = lambda w, pi, ai: truncated_kaiming_reinit_weights(w, pi, ai, dist_type="normal", mode=fan_mode, activation=activation)
+    elif grow_name == "tk_uniform":     # truncated kaiming uniform
+        grow_func = lambda w, pi, ai: truncated_kaiming_reinit_weights(w, pi, ai, dist_type="uniform", mode=fan_mode, activation=activation)
+    elif grow_name == "tx_normal":      # truncated xavier normal
+        grow_func = lambda w, pi, ai: truncated_xavier_reinit_weights(w, pruned_indices=pi, active_indices=ai, dist_type="normal")
+    elif grow_name == "tx_uniform":     # truncated xavier normal
+        grow_func = lambda w, pi, ai: truncated_xavier_reinit_weights(w, pruned_indices=pi, active_indices=ai, dist_type="uniform")
+    elif grow_name == "normal":
+        grow_func = lambda w, pi, ai: normal_reinit_weights(w, pruned_indices=pi, active_indices=ai, std=std, truncated=False)
+    elif grow_name == "truncated_normal":
+        grow_func = lambda w, pi, ai: normal_reinit_weights(w, pruned_indices=pi, active_indices=ai, std=std, truncated=True)
 
     def temp_prune_and_grow_weights(w: torch.Tensor):
         return prune_and_grow_weights(w, prune_func, grow_func)
@@ -228,6 +242,88 @@ def truncated_normal_reinit_weights(weight: torch.Tensor, pruned_indices: torch.
 
     weight.view(-1)[pruned_indices] = new_weights
 
+
+@torch.no_grad()
+def truncated_kaiming_reinit_weights(weight: torch.Tensor, pruned_indices: torch.Tensor, active_indices: torch.Tensor,
+                             activation: str = "relu", dist_type: str = "normal", mode: str = "fan_in",
+                             bound_method: str = "median") -> None:
+    """
+    Reinitializes entries in teh wegith matrix at the given indices using clipped kaiming reinitialization
+
+    Parameters:
+        activation: should be in ["relu", "leaky_relu"]
+        dist_type: should be in ["normal", "uniform"]
+        mode: should be in ["fan_in", "fan_out"]
+        bound_method: should be in ["median", "min", "mean", "25p"]
+    """
+
+    truncation_value = get_bounding_value(weight, active_indices, bound_method)
+
+    gain = torch.nn.init.calculate_gain(activation)
+    fan = torch.nn.init._calculate_correct_fan(weight, mode)
+
+    new_weights = torch.zeros(size=pruned_indices.size(), dtype=weight.dtype, device=weight.device)
+    if dist_type == "normal":
+        kaiming_normal_std = gain / np.sqrt(fan)
+        torch.nn.init.trunc_normal_(new_weights, mean=0, std=kaiming_normal_std, a=-truncation_value, b=truncation_value)
+    elif dist_type == "uniform":
+        kaiming_uniform_bound = gain * np.sqrt(3) / np.sqrt(fan)
+        bound = min(kaiming_uniform_bound, truncation_value)
+        torch.nn.init.uniform_(new_weights, -bound, bound)
+    else:
+        raise ValueError(f"{dist_type} is not a valid dist_type.")
+
+    weight.view(-1)[pruned_indices] = new_weights
+
+
+@torch.no_grad()
+def truncated_xavier_reinit_weights(weight: torch.Tensor, pruned_indices: torch.Tensor, active_indices: torch.Tensor,
+                                    dist_type: str = "normal", bound_method: str = "median") -> None:
+    """
+    Reinitializes entries in teh wegith matrix at the given indices using clipped kaiming reinitialization
+
+    Parameters:
+        dist_type: should be in ["normal", "uniform"]
+        bound_method: should be in ["median", "min", "mean", "25p"]
+    """
+
+    truncation_value = get_bounding_value(weight, active_indices, bound_method)
+
+    fan_in, fan_out = torch.nn.init._calculate_fan_in_and_fan_out(weight)
+
+    new_weights = torch.zeros(size=pruned_indices.size(), dtype=weight.dtype, device=weight.device)
+    if dist_type == "normal":
+        xavier_normalstd = np.sqrt(2) / np.sqrt(fan_in + fan_out)
+        torch.nn.init.trunc_normal_(new_weights, mean=0, std=xavier_normalstd, a=-truncation_value, b=truncation_value)
+    elif dist_type == "uniform":
+        xavier_uniform_bound = np.sqrt(6) / np.sqrt(fan_in + fan_out)
+        bound = min(truncation_value, xavier_uniform_bound)
+        torch.nn.init.uniform_(new_weights, -bound, bound)
+    else:
+        raise ValueError(f"{dist_type} is not a valid dist_type.")
+
+    weight.view(-1)[pruned_indices] = new_weights
+
+
+@torch.no_grad()
+def normal_reinit_weights(weight: torch.Tensor, pruned_indices: torch.Tensor, active_indices: torch.Tensor,
+                          std: float = 0.01, truncated: bool = False) -> None:
+    """
+    Reinitializes weights using a normal distribution with the given standard deviation. If truncated is true, the
+    weights are reinitialized with a truncated normal distribution with truncation equal to the median of the absolute
+    value of the active weights
+    """
+
+    new_weights = torch.zeros(size=pruned_indices.size(), dtype=weight.dtype, device=weight.device)
+    if truncated:
+        truncation_value = get_bounding_value(weight, active_indices, bound_method="median")
+        torch.nn.init.trunc_normal_(new_weights, mean=0, std=std, a=-truncation_value, b=truncation_value)
+    else:
+        torch.nn.init.normal_(new_weights, mean=0, std=std)
+
+    weight.view(-1)[pruned_indices] = new_weights
+
+
 @torch.no_grad()
 def get_bounding_value(weight: torch.Tensor, active_indices: torch.Tensor, bound_method: str) -> float:
     """
@@ -262,7 +358,8 @@ def magnitude_adjusted_uniform_reinit_weights(weight: torch,  pruned_indices: to
 
 
 @torch.no_grad()
-def random_reinit_weights(weight: torch.Tensor, pruned_indices: torch.Tensor, active_indices: torch.Tensor, reinit) -> None:
+def random_reinit_weights(weight: torch.Tensor, pruned_indices: torch.Tensor, active_indices: torch.Tensor, reinit,
+                          activation: str = "relu", fan_mode: str = "fan_in") -> None:
     """
     Reinitializes entries in the weight matrix at the given indices using the specified reinit function
 
@@ -271,8 +368,8 @@ def random_reinit_weights(weight: torch.Tensor, pruned_indices: torch.Tensor, ac
         reinit: name of reinitialization function. Should be in reinit_functions.key()
     """
     random_reinit_functions = {
-        "kaiming_normal": lambda m: torch.nn.init.kaiming_normal_(m, nonlinearity="relu"),
-        "kaiming_uniform": lambda m: torch.nn.init.kaiming_uniform_(m, nonlinearity="relu"),
+        "kaiming_normal": lambda m: torch.nn.init.kaiming_normal_(m, nonlinearity=activation, mode=fan_mode),
+        "kaiming_uniform": lambda m: torch.nn.init.kaiming_uniform_(m, nonlinearity="relu", mode=fan_mode),
         "xavier_normal": torch.nn.init.xavier_normal_,
         "xavier_uniform": torch.nn.init.xavier_uniform_
     }
