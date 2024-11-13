@@ -65,13 +65,13 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     elif grow_name == "mad":
         grow_func = lambda w, pi, ai: magnitude_adjusted_uniform_reinit_weights(w, pruned_indices=pi, active_indices=ai)
     elif grow_name == "truncated":
-        grow_func = lambda w, pi, ai: truncated_normal_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="min")
+        grow_func = lambda w, pi, ai: bounded_kaiming_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="min")
     elif grow_name == "median_truncated":
-        grow_func = lambda w, pi, ai: truncated_normal_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="median")
+        grow_func = lambda w, pi, ai: bounded_kaiming_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="median")
     elif grow_name == "25p_truncated":
-        grow_func = lambda w, pi, ai: truncated_normal_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="25p")
+        grow_func = lambda w, pi, ai: bounded_kaiming_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="25p")
     elif grow_name == "mean_truncated":
-        grow_func = lambda w, pi, ai: truncated_normal_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="mean")
+        grow_func = lambda w, pi, ai: bounded_kaiming_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="mean")
     elif grow_name == "tk_normal":      # truncated kaiming normal
         grow_func = lambda w, pi, ai: truncated_kaiming_reinit_weights(w, pi, ai, dist_type="normal", mode=fan_mode, activation=activation)
     elif grow_name == "tk_uniform":     # truncated kaiming uniform
@@ -226,10 +226,10 @@ def clipped_reinit_weights(weight: torch.Tensor,  pruned_indices: torch.Tensor, 
 
 
 @torch.no_grad()
-def truncated_normal_reinit_weights(weight: torch.Tensor, pruned_indices: torch.Tensor, active_indices: torch.Tensor,
-                                    activation: str = "relu", bound_method: str = "min") -> None:
+def bounded_kaiming_reinit_weights(weight: torch.Tensor, pruned_indices: torch.Tensor, active_indices: torch.Tensor,
+                                   activation: str = "relu", bound_method: str = "min") -> None:
     """
-    Reinitializes entries in teh wegith matrix at the given indices using clipped kaiming reinitialization
+    Reinitializes entries in the weight tensor at the given indices using truncated or clipped kaiming reinitialization
     """
 
     truncation_value = get_bounding_value(weight, active_indices, bound_method)
