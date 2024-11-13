@@ -18,7 +18,7 @@ def initialize_weight_dict(net: torch.nn.Module,
     if architecture_type == "vit":
         assert isinstance(net, VisionTransformer)
         ln_drop_factor = drop_factor if "ln_drop_factor" not in kwargs.keys() else kwargs["ln_drop_factor"]
-        return initialize_weights_dict_df_as_rate(net, prune_method, grow_method, drop_factor, ln_drop_factor=ln_drop_factor)
+        return initialize_weights_dict_vit(net, prune_method, grow_method, drop_factor, ln_drop_factor=ln_drop_factor)
 
     elif architecture_type == "resnet":
         assert isinstance(net, ResNet)
@@ -102,6 +102,54 @@ def initialize_weights_dict_df_as_rate(net: Union[VisionTransformer, ResNet],
         else:
             if ("heads" in n) or ("fc" in n):       # heads = output layer of ViT, fc = output layer of ResNet-18
                 weight_dict[n] = (p, output_update_func)
+            else:
+                weight_dict[n] = (p, weight_update_func)
+
+    return weight_dict
+
+
+def initialize_weights_dict_vit(net: VisionTransformer,
+                                prune_method: str,
+                                grow_method: str,
+                                drop_factor: float,
+                                ln_drop_factor: float,
+                                noise_std: float = None) -> dict[str, tuple]:
+    """
+    Initializes the weight dictionaries used in SWR for a network
+
+    parameters:
+        grow_method: string in ["truncated", "init", "zero"]
+    """
+    weight_grow_name = {"truncated": "tx_uniform", "zero": "zero", "init": "xavier_uniform"}[grow_method]
+    weight_update_func = setup_cbpw_weight_update_function(prune_method, weight_grow_name, drop_factor=drop_factor)
+    ln_weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="fixed", drop_factor=ln_drop_factor, reinit_val=1.0)
+    zero_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="zero", drop_factor=drop_factor)
+
+    weight_dict = {}
+    for n, p in net.named_parameters():
+        is_class_token = n == "class_token"
+        is_pos_embedding = "pos_embedding" in n
+        is_weight = "weight" in n
+        is_bias = "bias" in n
+        is_layer_or_batch_norm = (".ln_1." in n) or (".ln_2." in n) or (".ln." in n)
+
+        if is_class_token:
+            weight_dict[n] = (p, zero_update_func)
+        elif is_pos_embedding:
+            temp_grow_name = "truncated_normal" if "truncated" in grow_method else "normal"
+            temp_update_func = setup_cbpw_weight_update_function(prune_method, grow_name=temp_grow_name, drop_factor=drop_factor, std=0.02)
+            weight_dict[n] = (p, temp_update_func)
+        elif is_weight and is_layer_or_batch_norm:
+            weight_dict[n] = (p, ln_weight_update_func)
+        elif is_bias:
+            weight_dict[n] = (p, zero_update_func)
+        else:
+            if ("heads" in n) or ("fc" in n):       # heads = output layer of ViT, fc = output layer of ResNet-18
+                weight_dict[n] = (p, zero_update_func)
+            elif ("conv_proj" in n):
+                temp_grow_name = {"truncated": "tk_normal", "zero": "zero", "init": "kaiming_normal"}[grow_method]
+                weight_dict[n] = (p, setup_cbpw_weight_update_function(prune_method, grow_name=temp_grow_name,
+                                                                       drop_factor=drop_factor, activation="linear"))
             else:
                 weight_dict[n] = (p, weight_update_func)
 
