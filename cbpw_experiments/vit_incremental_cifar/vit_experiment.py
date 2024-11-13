@@ -61,7 +61,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
         self.reinit_freq_scheduler = access_dict(exp_params, "reinit_freq_scheduler", default=0, val_type=int)
         pruning_functions_names = ["none", "magnitude", "gf", "mr", "gr"]
-        grow_methods = ["none", "kaiming_normal", "zero", "median_truncated"]
+        grow_methods = ["none", "truncated", "zero", "init"]
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str, choices=pruning_functions_names)
         self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str, choices=grow_methods)
         assert not ((self.prune_method != "none" and self.grow_method == "none") or (self.prune_method == "none" and self.grow_method != "none"))
