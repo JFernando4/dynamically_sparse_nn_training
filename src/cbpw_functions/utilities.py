@@ -136,7 +136,7 @@ def initialize_weights_dict_vit(net: VisionTransformer,
         if is_class_token:
             weight_dict[n] = (p, zero_update_func)
         elif is_pos_embedding:
-            temp_grow_name = "truncated_normal" if "truncated" in grow_method else "normal"
+            temp_grow_name = {"truncated": "truncated_normal", "zero": "zero", "init": "normal"}[grow_method]
             temp_update_func = setup_cbpw_weight_update_function(prune_method, grow_name=temp_grow_name, drop_factor=drop_factor, std=0.02)
             weight_dict[n] = (p, temp_update_func)
         elif is_weight and is_layer_or_batch_norm:
