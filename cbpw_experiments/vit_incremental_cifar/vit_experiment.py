@@ -71,12 +71,6 @@ class IncrementalCIFARExperiment(Experiment):
         self.scale_drop_factor_by_lr_scheduler = access_dict(exp_params, "scale_drop_factor_by_lr_scheduler", default=False, val_type=bool)
         self.use_cbpw = self.prune_method != "none" and self.grow_method != "none"
 
-        self.msa_cbpw = access_dict(exp_params, "msa_cbpw", default=False, val_type=bool)       # use cbpw in self-attention
-        self.conv_cbpw = access_dict(exp_params, "conv_cbpw", default=False, val_type=bool)     # use cbpw in conv projection
-        self.ct_cbpw = access_dict(exp_params, "ct_cbpw", default=False, val_type=bool)         # use cbpw in class token
-        self.pe_cbpw = access_dict(exp_params, "pe_cbpw", default=False, val_type=bool)         # use cbpw in pos-embedding
-        self.head_cbpw = access_dict(exp_params, "head_cbpw", default=False, val_type=bool)     # use cbpw in head
-
         self.previously_removed_weights = None
         self.current_topology_update = 0
 
@@ -178,10 +172,7 @@ class IncrementalCIFARExperiment(Experiment):
             df = self.drop_factor * scale
 
         return initialize_weight_dict(self.net, architecture_type="vit", prune_method=self.prune_method,
-                                      grow_method=self.grow_method, drop_factor=df, ln_drop_factor=df,
-                                      include_class_token=self.ct_cbpw, include_conv_proj=self.conv_cbpw,
-                                      include_pos_embedding=self.pe_cbpw, include_self_attention=self.msa_cbpw,
-                                      include_head=self.head_cbpw, df_as_rate=self.df_as_rate)
+                                      grow_method=self.grow_method, drop_factor=df, ln_drop_factor=df)
     def _initialize_summaries(self):
         """
         Initializes the summaries for the experiment
