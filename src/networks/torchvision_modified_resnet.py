@@ -138,7 +138,7 @@ class Bottleneck(nn.Module):
         self.downsample = downsample
         self.stride = stride
 
-    def forward(self, x: Tensor, , feature_list: list = None) -> Tensor:
+    def forward(self, x: Tensor, feature_list: list = None) -> Tensor:
         identity = x
 
         out = self.conv1(x)
