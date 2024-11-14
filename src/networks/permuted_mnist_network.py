@@ -23,7 +23,8 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
                  redo_utility: str = "original",
                  use_layer_norm: bool = False,
                  preactivation_layer_norm: bool = False,
-                 use_crelu: bool = False):
+                 use_crelu: bool = False,
+                 use_bottleneck: bool = False):
         """
         Three-layer ReLU network with continual backpropagation for MNIST
         """
@@ -59,11 +60,12 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
         self.reinit_layer_1 = None          # either CBP or ReDo
         self.ln_1 = torch.nn.LayerNorm(hidden_dim * input_dim_scaling) if self.use_layer_norm else None
         # second layer
-        self.ff_2 = torch.nn.Linear(hidden_dim * input_dim_scaling, out_features=hidden_dim, bias=True)
+        second_layer_dim = hidden_dim if not use_bottleneck else hidden_dim // 10
+        self.ff_2 = torch.nn.Linear(second_layer_dim * input_dim_scaling, out_features=hidden_dim, bias=True)
         self.act_2 = torch.nn.ReLU()
         self.neg_act_2 = torch.nn.ReLU()
         self.reinit_layer_2 = None
-        self.ln_2 = torch.nn.LayerNorm(hidden_dim * input_dim_scaling) if self.use_layer_norm else None
+        self.ln_2 = torch.nn.LayerNorm(second_layer_dim * input_dim_scaling) if self.use_layer_norm else None
         # third layer
         self.ff_3 = torch.nn.Linear(hidden_dim * input_dim_scaling, out_features=hidden_dim, bias=True)
         self.act_3 = torch.nn.ReLU()
