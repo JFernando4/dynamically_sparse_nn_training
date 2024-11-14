@@ -78,11 +78,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.replacement_rate = access_dict(exp_params, "replacement_rate", default=None, val_type=float)
         self.maturity_threshold = access_dict(exp_params, "maturity_threshold", default=None, val_type=int)
 
-        """ Network Resetting Parameters
-        reset_head: whether to reset the head of the network after each task
-        reset_network: whether to reset the network after each task
-        reset_layer_norm: whether to reset the layer norm modules after each task
-        """
+        """ Network Resetting Parameters """
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
         self.reset_network = access_dict(exp_params, "reset_network", default=False, val_type=bool)
         self.reset_layer_norm = access_dict(exp_params, "reset_layer_norm", default=False, val_type=bool)
