@@ -109,8 +109,8 @@ class Bottleneck(nn.Module):
     # This variant is also known as ResNet V1.5 and improves accuracy according to
     # https://ngc.nvidia.com/catalog/model-scripts/nvidia:resnet_50_v1_5_for_pytorch.
 
-    expansion: int = 1
-    shrinkage: int = 4
+    expansion: int = 4
+    shrinkage: int = 1
 
     def __init__(
         self,
