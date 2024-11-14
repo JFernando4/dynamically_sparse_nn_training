@@ -3,7 +3,7 @@
   "stepsize": 0.05,
   "weight_decay": 0.0005,
   "use_lr_schedule": true,
-  "rescaled_wd": true,
+  "rescaled_wd": false,
   "__comment_2__": "Parameter value used in the original ResNet paper",
   "momentum": 0.9,
   "__comment_3__": "Incremental experiment parameters. Classes increase by 5 every 100 epochs.",
@@ -15,6 +15,7 @@
   "relevant_parameters": [
     "num_epochs",
     "stepsize",
-    "weight_decay"
+    "weight_decay",
+    "rescaled_wd"
   ]
 }
