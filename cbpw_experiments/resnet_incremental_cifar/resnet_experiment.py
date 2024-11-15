@@ -75,6 +75,9 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
         self.net = build_function(num_classes=self.num_classes, norm_layer=torch.nn.BatchNorm2d)
         self.net.apply(kaiming_init_resnet_module)
         self.net.to(self.device)
+        total_params = 0
+        for p in self.net.parameters(): total_params += p.numel()
+        print(f"{total_params = }")
 
         # initializes weight dictionary for CBPw
         self.weight_dict = None
