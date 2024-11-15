@@ -20,6 +20,7 @@ source code:
     - BottleNeck layers have a an expansion of 1 and a shrinkage of four. This implies that instead of expanding the
       output dimension of the layer and then shrinking in the bottleneck layer, as in the original implementation, 
       the output dimension stays the same, but the bottleneck layer shrinks the output dimension by four.  
+    - BottleNeck layers use 3x3 convolutional layers for the first and third convolutional layers instead of 1x1.
 To see the source code, go to: torchvision.models.resnet (for torchvision==0.15.1 and over)
 """
 
