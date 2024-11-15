@@ -31,7 +31,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
         self.momentum = exp_params["momentum"]
         self.use_lr_schedule = access_dict(exp_params, "use_lr_schedule", default=False, val_type=bool)
         self.rescaled_wd = access_dict(exp_params, "rescaled_wd", default=False, val_type=bool)
-        self.omit_bottleneck = access_dict(exp_params, "omit_bottleneck", default=False, val_type=bool)
+        self.use_bottleneck = access_dict(exp_params, "use_bottleneck", default=False, val_type=bool)
 
         # network resetting parameters
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
@@ -71,7 +71,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
 
         """ Network set up """
         # initialize network
-        build_function = build_resnet18 if self.omit_bottleneck else build_resnet18_bottleneck
+        build_function = build_resnet18 if not self.use_bottleneck else build_resnet18_bottleneck
         self.net = build_function(num_classes=self.num_classes, norm_layer=torch.nn.BatchNorm2d)
         self.net.apply(kaiming_init_resnet_module)
         self.net.to(self.device)
