@@ -61,13 +61,13 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
         self.ln_1 = torch.nn.LayerNorm(hidden_dim * input_dim_scaling) if self.use_layer_norm else None
         # second layer
         second_layer_dim = hidden_dim if not use_bottleneck else hidden_dim // 10
-        self.ff_2 = torch.nn.Linear(second_layer_dim * input_dim_scaling, out_features=hidden_dim, bias=True)
+        self.ff_2 = torch.nn.Linear(hidden_dim * input_dim_scaling, out_features=second_layer_dim, bias=True)
         self.act_2 = torch.nn.ReLU()
         self.neg_act_2 = torch.nn.ReLU()
         self.reinit_layer_2 = None
         self.ln_2 = torch.nn.LayerNorm(second_layer_dim * input_dim_scaling) if self.use_layer_norm else None
         # third layer
-        self.ff_3 = torch.nn.Linear(hidden_dim * input_dim_scaling, out_features=hidden_dim, bias=True)
+        self.ff_3 = torch.nn.Linear(second_layer_dim * input_dim_scaling, out_features=hidden_dim, bias=True)
         self.act_3 = torch.nn.ReLU()
         self.neg_act_3 = torch.nn.ReLU()
         self.reinit_layer_3 = None
@@ -97,7 +97,7 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
         x = self.ff_1(x)
         if self.use_layer_norm and self.preactivation_layer_norm:       # use layer norm before activations
             x = self.ln_1(x)
-        x = torch.cat([self.act_1, -self.neg_act_1]) if self.use_crelu else self.act_1(x)
+        x = torch.cat([self.act_1(x), self.neg_act_1(-x)], dim=-1) if self.use_crelu else self.act_1(x)
         if activations is not None: activations.append(x)               # store activations
         res = x                                                         # store residual connection
         if self.reinit_layer_1 is not None:                             # log features using cbp or redo
@@ -111,7 +111,7 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
             x = self.ln_2(x)
         if self.use_skip_connections and self.preactivation_skip_connection:    # add residual connection before activation
             x = x + res
-        x = torch.cat([self.act_2, -self.neg_act_2]) if self.use_crelu else self.act_2(x)
+        x = torch.cat([self.act_2(x), self.neg_act_2(-x)], dim=-1) if self.use_crelu else self.act_2(x)
         if activations is not None: activations.append(x)
         if self.use_skip_connections and not self.preactivation_skip_connection:    # add residual connection after activation
             x = x + res
@@ -127,7 +127,7 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
             x = self.ln_3(x)
         if self.use_skip_connections and self.preactivation_skip_connection:
             x = x + res
-        x = torch.cat([self.act_3 -self.neg_act_3]) if self.use_crelu else self.act_3(x)
+        x = torch.cat([self.act_3(x), self.neg_act_3(-x)], dim=-1) if self.use_crelu else self.act_3(x)
         if activations is not None: activations.append(x)
         if self.use_skip_connections and not self.preactivation_skip_connection:
             x = x + res
