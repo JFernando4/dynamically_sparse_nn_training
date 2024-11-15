@@ -77,7 +77,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
         self.net.to(self.device)
         total_params = 0
         for p in self.net.parameters(): total_params += p.numel()
-        print(f"{total_params = }")
+        print(f"Total number of parameters: {total_params:,}")
 
         # initializes weight dictionary for CBPw
         self.weight_dict = None
