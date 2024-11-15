@@ -55,6 +55,8 @@ class PermutedMNISTExperiment(Experiment):
         # architecture parameters
         self.num_hidden = exp_params["num_hidden"]      # number of hidden units per hidden layer
         self.batch_size = access_dict(exp_params, "batch_size", default=1, val_type=int)
+        self.use_bottleneck = access_dict(exp_params, "use_bottleneck", default=False, val_type=bool)
+        self.use_crelu = access_dict(exp_params, "use_crelu", default=False, val_type=bool)
 
         # problem parameters
         self.num_permutations = exp_params["num_permutations"]      # number of permutations (1 permutation = 1 epoch)
@@ -132,7 +134,9 @@ class PermutedMNISTExperiment(Experiment):
                                            reinit_threshold=self.reinit_threshold,
                                            redo_utility=self.redo_utility,
                                            use_layer_norm=self.use_ln,
-                                           preactivation_layer_norm=self.preactivation_ln)
+                                           preactivation_layer_norm=self.preactivation_ln,
+                                           use_crelu=self.use_crelu,
+                                           use_bottleneck=self.use_bottleneck)
         self.net.apply(lambda z: init_weights_kaiming(z, nonlinearity="relu", normal=True))     # initialize weights
 
         # initialize CBPw dictionary
@@ -318,7 +322,8 @@ class PermutedMNISTExperiment(Experiment):
         prop_dead_units = compute_dead_units_proportion(self.net, training_data, self.num_hidden, self.batch_size)
         self.results_dict["average_weight_magnitude_per_permutation"][self.current_permutation] += avg_weight_magnitude
         self.results_dict["proportion_dead_units_per_permutation"][self.current_permutation] += prop_dead_units
-        self.results_dict["average_ln_weight_magnitude_per_checkpoint"][self.current_permutation] += avg_ln_weight_magnitude
+        if self.use_ln:
+            self.results_dict["average_ln_weight_magnitude_per_checkpoint"][self.current_permutation] += avg_ln_weight_magnitude
 
     def store_extended_summaries(self, current_loss: torch.Tensor, current_activations: list = None) -> None:
         """ Stores the extended summaries related to the topology update of CBP and CBPw """

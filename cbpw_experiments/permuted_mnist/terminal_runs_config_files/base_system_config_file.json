@@ -7,20 +7,24 @@
   "__comment_2__": "Parameters for learning problem and architecture",
     "num_permutations": 100,
     "num_layers": 3,
-    "num_hidden": 10,
+    "num_hidden": 100,
     "batch_size": 30,
     "steps_per_task": 60000,
-    "extended_summaries": true,
+    "extended_summaries": false,
     "store_parameters": false,
     "use_ln": false,
     "use_skip_connections": false,
     "preactivation_skip_connections": false,
+    "use_crelu": false,
+    "use_bottleneck": true,
 
   "__comment_6__": "For creating the results directory.",
   "relevant_parameters": [
     "stepsize",
     "use_ln",
     "use_skip_connections",
-    "preactivation_skip_connections"
+    "preactivation_skip_connections",
+    "use_crelu",
+    "use_bottleneck"
   ]
 }
