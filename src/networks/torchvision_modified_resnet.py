@@ -17,7 +17,7 @@ source code:
       respectively. 
     - Forward calls have a feature list argument to store the features of the network. This is only used for continual 
       backprop and doesn't affect the output of the network.
-    - BottleNeck layers have a an expansion of 1 and a shrinkage of four. This implies that instead of expanding the
+    - BottleNeck layers have a an expansion of one and a shrinkage of four. This implies that instead of expanding the
       output dimension of the layer and then shrinking in the bottleneck layer, as in the original implementation, 
       the output dimension stays the same, but the bottleneck layer shrinks the output dimension by four.  
     - BottleNeck layers use 3x3 convolutional layers for the first and third convolutional layers instead of 1x1.
@@ -329,11 +329,11 @@ class SlimResNet(ResNet):
         self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=3, stride=1, padding=1, bias=True)
         self.bn1 = norm_layer(self.inplanes)
         self.relu = nn.ReLU(inplace=True)
-        self.layer1 = self._make_layer(block, 64, layers[0])
-        self.layer2 = self._make_layer(block, 16, layers[1], stride=2, dilate=replace_stride_with_dilation[0])
-        self.layer3 = self._make_layer(block, 256, layers[2], stride=2, dilate=replace_stride_with_dilation[1])
+        self.layer1 = self._make_layer(block, 8, layers[0])
+        self.layer2 = self._make_layer(block, 32, layers[1], stride=1, dilate=replace_stride_with_dilation[0])
+        self.layer3 = self._make_layer(block, 128, layers[2], stride=1, dilate=replace_stride_with_dilation[1])
         last_layer_planes = 512
-        self.layer4 = self._make_layer(block, last_layer_planes, layers[3], stride=2, dilate=replace_stride_with_dilation[2])
+        self.layer4 = self._make_layer(block, last_layer_planes, layers[3], stride=1, dilate=replace_stride_with_dilation[2])
         self.output_pool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(last_layer_planes * block.expansion, num_classes)
 
