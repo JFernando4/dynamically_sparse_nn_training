@@ -296,6 +296,56 @@ class ResNet(nn.Module):
         return self._forward_impl(x, feature_list)
 
 
+class SlimResNet(ResNet):
+    def __init__(
+        self,
+        block: Type[Union[BasicBlock, Bottleneck]],
+        layers: List[int],
+        num_classes: int = 1000,
+        groups: int = 1,
+        width_per_group: int = 64,
+        replace_stride_with_dilation: Optional[List[bool]] = None,
+        norm_layer: Optional[Callable[..., nn.Module]] = None,
+    ) -> None:
+        super().__init__(block=block, layers=layers, num_classes=num_classes, norm_layer=norm_layer)
+        _log_api_usage_once(self)
+        if norm_layer is None:
+            norm_layer = nn.BatchNorm2d
+        self._norm_layer = norm_layer
+
+        self.inplanes = 16
+        self.dilation = 1
+        if replace_stride_with_dilation is None:
+            # each element in the tuple indicates if we should replace
+            # the 2x2 stride with a dilated convolution instead
+            replace_stride_with_dilation = [False, False, False]
+        if len(replace_stride_with_dilation) != 3:
+            raise ValueError(
+                "replace_stride_with_dilation should be None "
+                f"or a 3-element tuple, got {replace_stride_with_dilation}"
+            )
+        self.groups = groups
+        self.base_width = width_per_group
+        self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=3, stride=1, padding=1, bias=True)
+        self.bn1 = norm_layer(self.inplanes)
+        self.relu = nn.ReLU(inplace=True)
+        self.layer1 = self._make_layer(block, 32, layers[0])
+        self.layer2 = self._make_layer(block, 64, layers[1], stride=2, dilate=replace_stride_with_dilation[0])
+        self.layer3 = self._make_layer(block, 128, layers[2], stride=2, dilate=replace_stride_with_dilation[1])
+        last_layer_planes = 256
+        self.layer4 = self._make_layer(block, last_layer_planes, layers[3], stride=2, dilate=replace_stride_with_dilation[2])
+        self.output_pool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(last_layer_planes * block.expansion, num_classes)
+
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
+            elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm)):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+
+
+
 def build_resnet18(num_classes: int, norm_layer):
     """
     :param num_classes: number of classes for the classification problem
@@ -312,6 +362,10 @@ def build_resnet18_bottleneck(num_classes: int, norm_layer):
     :return: an instance of ResNet with the correct number of layers for ResNet34
     """
     return ResNet(Bottleneck, layers=[4, 4, 4, 4], norm_layer=norm_layer, num_classes=num_classes)
+
+
+def build_slim_resnet18(num_classes: int, norm_layer):
+    return SlimResNet(BasicBlock, layers=[2, 2, 2, 2], norm_layer=norm_layer, num_classes=num_classes)
 
 
 # ----- ----- ----- ----- ----- ----- ----- Initialization Functions ----- ----- ----- ----- ----- -----  ----- #
