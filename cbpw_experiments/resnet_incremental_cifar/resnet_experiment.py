@@ -12,7 +12,7 @@ import numpy as np
 from mlproj_manager.problems import CifarDataSet
 from mlproj_manager.util import access_dict
 
-from src import kaiming_init_resnet_module, build_resnet18, ResGnT, ResNet, init_batch_norm_module, build_slim_resnet18
+from src import kaiming_init_resnet_module, build_resnet18, ResGnT, ResNet, init_batch_norm_module, build_slim_resnet18, build_resnet18_bottleneck
 from src.cbpw_functions import initialize_weight_dict, update_weights
 from src.plasticity_functions import inject_noise
 from src.utils import get_cifar_data, compute_accuracy_from_batch, parse_terminal_arguments
@@ -71,7 +71,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
 
         """ Network set up """
         # initialize network
-        build_function = build_resnet18 if not self.use_slim_resnet else build_slim_resnet18
+        build_function = build_resnet18 if not self.use_slim_resnet else build_resnet18_bottleneck
         self.net = build_function(num_classes=self.num_classes, norm_layer=torch.nn.BatchNorm2d)
         self.net.apply(kaiming_init_resnet_module)
         self.net.to(self.device)
