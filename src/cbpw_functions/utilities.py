@@ -112,8 +112,7 @@ def initialize_weights_dict_vit(net: VisionTransformer,
                                 prune_method: str,
                                 grow_method: str,
                                 drop_factor: float,
-                                ln_drop_factor: float,
-                                noise_std: float = None) -> dict[str, tuple]:
+                                ln_drop_factor: float) -> dict[str, tuple]:
     """
     Initializes the weight dictionaries used in SWR for a network
 
