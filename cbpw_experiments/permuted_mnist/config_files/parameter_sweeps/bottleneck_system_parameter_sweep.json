@@ -9,15 +9,15 @@
   },
 
   "experiment_params": {
-    "num_permutations": 1000,
     "num_hidden": 100,
-    "runs": 10,
+    "use_bottleneck": true,
     "batch_size": 30,
-    "steps_per_task": 60000
+    "num_permutations": 1000,
+    "steps_per_task": 60000,
+    "runs": 10
   },
 
   "learning_params": {
-    "use_bottleneck": true,
     "stepsize": ["fixed", 0.1, 0.05, 0.01, 0.005, 0.001, 0.0005]
   },
 
