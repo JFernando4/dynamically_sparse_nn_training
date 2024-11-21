@@ -4,7 +4,7 @@
   "weight_decay": 0.0005,
   "use_lr_schedule": true,
   "rescaled_wd": true,
-  "use_slim_resnet": true,
+  "use_bottleneck": true,
   "__comment_2__": "Parameter value used in the original ResNet paper",
   "momentum": 0.9,
   "__comment_3__": "Incremental experiment parameters. Classes increase by 5 every 100 epochs.",
