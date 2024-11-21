@@ -9,13 +9,13 @@
   },
 
   "experiment_params": {
-    "num_permutations": 1000,
-    "num_layers": 3,
-    "num_hidden": 10,
-    "stepsize": 0.01,
-    "steps_per_task": 60000,
+    "num_hidden": 100,
+    "use_bottleneck": true,
     "batch_size": 30,
-    "runs": 10
+    "num_permutations": 1000,
+    "steps_per_task": 60000,
+    "runs": 10,
+    "stepsize": 0.01
   },
 
   "learning_params": {
