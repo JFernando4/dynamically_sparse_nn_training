@@ -4,8 +4,9 @@
     "data_path": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/data/",
     "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
     "relevant_parameters": [
-      "maturity_threshold",
-      "replacement_rate"
+      "reinit_freq",
+      "reinit_threshold",
+      "redo_utility"
     ]
   },
 
