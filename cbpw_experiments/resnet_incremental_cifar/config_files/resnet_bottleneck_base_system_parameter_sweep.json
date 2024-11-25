@@ -23,8 +23,8 @@
   },
 
   "learning_params": {
-    "stepsize": ["fixed", 0.2, 0.1, 0.05, 0.01],
-    "weight_decay": ["fixed", 0.001, 0.0005],
+    "stepsize": ["fixed", 0.1, 0.05, 0.01],
+    "weight_decay": ["fixed", 0.005, 0.001, 0.0005],
     "use_bottleneck": true,
     "rescaled_wd": true
   },
