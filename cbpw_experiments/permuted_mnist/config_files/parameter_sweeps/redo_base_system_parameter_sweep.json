@@ -23,7 +23,7 @@
   },
 
   "learning_params": {
-    "reinit_freq": ["fixed", 600, 1200, 2400],
+    "reinit_freq": ["fixed", 150, 300, 600, 1200, 2400],
     "reinit_threshold": ["fixed", 0.0005, 0.001, 0.002],
     "redo_utility": ["str", "original"]
   },
