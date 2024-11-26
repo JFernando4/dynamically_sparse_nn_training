@@ -62,7 +62,6 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
         self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str, choices=grow_methods)
         assert not ((self.prune_method != "none" and self.grow_method == "none") or (self.prune_method == "none" and self.grow_method != "none"))
         self.drop_factor = access_dict(exp_params, "drop_factor", default=0.0, val_type=float)
-        self.df_as_rate = access_dict(exp_params, "df_as_rate", default=False, val_type=bool)
         self.current_topology_update = 0
 
         # shrink and perturb parameters
@@ -86,7 +85,7 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
                                                       self.grow_method, self.drop_factor,
                                                       exclude_downsample=self.exclude_downsample,
                                                       include_output_layer=self.include_output_layer,
-                                                      include_all=self.include_all, df_as_rate=self.df_as_rate,
+                                                      include_all=self.include_all,
                                                       noise_std=self.noise_std)
 
         # initialize optimizer

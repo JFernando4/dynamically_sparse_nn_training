@@ -13,7 +13,6 @@
   "use_best_network": true,
   "__comment_4__": "CBPw Parameters.",
   "use_cbpw": true,
-  "df_as_rate": true,
   "reinit_freq_as_rate": true,
   "topology_update_freq": 2080,
   "prune_method": "gf",
