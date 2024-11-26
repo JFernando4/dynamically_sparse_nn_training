@@ -21,7 +21,7 @@
     "use_best_network": true,
     "use_bottleneck": true,
     "rescaled_wd": true,
-    "runs": 2
+    "runs": 5
   },
 
   "learning_params": {
@@ -31,7 +31,7 @@
 
   "slurm_parameters": {
     "job_name": "resnet_inc",
-    "time": "16:00:00",
+    "time": "14:00:00",
     "max_runs_per_job": 1,
     "output_filename": "resnet_inc-%n-%j.out",
     "mem": "12G",
