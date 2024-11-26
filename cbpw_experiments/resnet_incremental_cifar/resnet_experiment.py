@@ -56,9 +56,9 @@ class ResNetIncrementalCIFARExperiment(IncrementalCIFARExperiment):
         self.include_all = access_dict(exp_params, "include_all", default=False, val_type=bool)
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
         self.reinit_freq_as_rate = access_dict(exp_params, "reinit_freq_as_rate", default=False, val_type=bool)
-        pruning_functions_names = ["none", "magnitude", "gf"]
+        pruning_functions_names = ["none", "magnitude", "gf", "gr", "mr"]
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str, choices=pruning_functions_names)
-        grow_methods = ["none", "kaiming_normal", "zero", "fixed_with_noise", "median_truncated"]
+        grow_methods = ["none", "kaiming_normal", "zero", "median_truncated"]
         self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str, choices=grow_methods)
         assert not ((self.prune_method != "none" and self.grow_method == "none") or (self.prune_method == "none" and self.grow_method != "none"))
         self.drop_factor = access_dict(exp_params, "drop_factor", default=0.0, val_type=float)
