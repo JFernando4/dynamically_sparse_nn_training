@@ -9,3 +9,4 @@ from .data_management import get_cifar_data, subsample_cifar_data_set
 from .experiment_utils import parse_terminal_arguments
 from .cifar100_experiment_utils import *
 from .permuted_mnist_experiment_utils import compute_average_weight_magnitude, compute_dead_units_proportion
+from .analysis_and_plotting import COLOR_DICT, aggregate_over_bins, plot_results
