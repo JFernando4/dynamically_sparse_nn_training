@@ -50,7 +50,7 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
     plot_parameters = access_dict(analysis_parameters, "plot_parameters", default={}, val_type=dict)
     plot_name_prefix = access_dict(analysis_parameters, "plot_name_prefix", default="", val_type=str)
 
-    for sn, bs in summary_names:
+    for sn in summary_names:
         results_data = get_results_data(results_dir, sn, parameter_combinations)
         plot_results(results_data, plot_parameters, plot_dir, sn, save_plots, plot_name_prefix)
 
