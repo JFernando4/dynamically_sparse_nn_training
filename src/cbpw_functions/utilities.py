@@ -22,10 +22,7 @@ def initialize_weight_dict(net: torch.nn.Module,
 
     elif architecture_type == "resnet":
         assert isinstance(net, ResNet)
-        noise_std = None if "noise_std" not in kwargs.keys() else kwargs["noise_std"]
-        ln_drop_factor = drop_factor if "ln_drop_factor" not in kwargs.keys() else kwargs["ln_drop_factor"]
-        return initialize_weights_dict_df_as_rate(net, prune_method, grow_method, drop_factor,
-                                                  ln_drop_factor=ln_drop_factor, noise_std=noise_std)
+        return initialize_weights_dict_df_as_rate(net, prune_method, grow_method, drop_factor)
 
     elif architecture_type == "sequential":
         assert isinstance(net, ThreeHiddenLayerNetwork)
@@ -70,30 +67,25 @@ def initialize_ln_list_bert(net):
 def initialize_weights_dict_df_as_rate(net: Union[VisionTransformer, ResNet],
                                        prune_method: str,
                                        grow_method: str,
-                                       drop_factor: float,
-                                       ln_drop_factor: float,
-                                       noise_std: float = None) -> dict[str, tuple]:
+                                       drop_factor: float) -> dict[str, tuple]:
     """
     Initializes the weight dictionaries used in CBPw for a network. The drop_factor is used as a rate, which
     is relevant if drop_factor * p.numel() is less than 1.
     """
-    bias_grow_name = "zero" if grow_method != "fixed_with_noise" else grow_method
-    ln_weight_grow_name = "fixed" if grow_method != "fixed_with_noise" else grow_method
     weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor,
-                                                            as_rate=True, reinit_val=0.0, noise_std=noise_std)
+                                                            as_rate=True, reinit_val=0.0)
     output_update_func = setup_cbpw_weight_update_function(prune_method, "zero", drop_factor=drop_factor,
                                                            as_rate=True)
-    bias_update_func = setup_cbpw_weight_update_function(prune_method, grow_name=bias_grow_name, drop_factor=drop_factor,
-                                                         as_rate=True, reinit_val=0.0, noise_std=noise_std)
-    ln_weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_name=ln_weight_grow_name,
-                                                              drop_factor=ln_drop_factor, as_rate=True, reinit_val=1.0,
-                                                              noise_std=noise_std)
+    bias_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="zero", drop_factor=drop_factor,
+                                                         as_rate=True, reinit_val=0.0)
+    ln_weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="fixed",
+                                                              drop_factor=drop_factor, as_rate=True, reinit_val=1.0)
 
     weight_dict = {}
     for n, p in net.named_parameters():
         is_weight = "weight" in n
         is_bias = "bias" in n
-        is_layer_or_batch_norm = (".ln_1." in n) or (".ln_2." in n) or (".ln." in n) or ("bn1." in n) or ("bn2." in n) or ("downsample.1." in n)
+        is_layer_or_batch_norm = (".ln_1." in n) or (".ln_2." in n) or ("bn3." in n) or ("bn1." in n) or ("bn2." in n) or ("downsample.1." in n)
 
         if is_weight and is_layer_or_batch_norm:
             weight_dict[n] = (p, ln_weight_update_func)
