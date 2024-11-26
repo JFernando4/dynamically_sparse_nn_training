@@ -22,7 +22,7 @@ def initialize_weight_dict(net: torch.nn.Module,
 
     elif architecture_type == "resnet":
         assert isinstance(net, ResNet)
-        return initialize_weights_dict_df_as_rate(net, prune_method, grow_method, drop_factor)
+        return initialize_weights_dict_resnet(net, prune_method, grow_method, drop_factor)
 
     elif architecture_type == "sequential":
         assert isinstance(net, ThreeHiddenLayerNetwork)
@@ -64,17 +64,16 @@ def initialize_ln_list_bert(net):
     return list_of_layer_norm_layers
 
 
-def initialize_weights_dict_df_as_rate(net: Union[VisionTransformer, ResNet],
-                                       prune_method: str,
-                                       grow_method: str,
-                                       drop_factor: float) -> dict[str, tuple]:
+def initialize_weights_dict_resnet(net: ResNet,
+                                   prune_method: str,
+                                   grow_method: str,
+                                   drop_factor: float) -> dict[str, tuple]:
     """
     Initializes the weight dictionaries used in CBPw for a network. The drop_factor is used as a rate, which
     is relevant if drop_factor * p.numel() is less than 1.
     """
     weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor)
-    output_update_func = setup_cbpw_weight_update_function(prune_method, "zero", drop_factor=drop_factor)
-    bias_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="zero", drop_factor=drop_factor)
+    zero_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="zero", drop_factor=drop_factor)
     ln_weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="fixed", drop_factor=drop_factor,
                                                               reinit_val=1.0)
 
@@ -82,15 +81,15 @@ def initialize_weights_dict_df_as_rate(net: Union[VisionTransformer, ResNet],
     for n, p in net.named_parameters():
         is_weight = "weight" in n
         is_bias = "bias" in n
-        is_layer_or_batch_norm = ("bn3." in n) or ("bn1." in n) or ("bn2." in n) or ("downsample.1." in n)
+        is_batch_norm = ("bn3." in n) or ("bn1." in n) or ("bn2." in n) or ("downsample.1." in n)
 
-        if is_weight and is_layer_or_batch_norm:
+        if is_weight and is_batch_norm:
             weight_dict[n] = (p, ln_weight_update_func)
         elif is_bias:
-            weight_dict[n] = (p, bias_update_func)
+            weight_dict[n] = (p, zero_update_func)
         else:
             if ("heads" in n) or ("fc" in n):       # heads = output layer of ViT, fc = output layer of ResNet-18
-                weight_dict[n] = (p, output_update_func)
+                weight_dict[n] = (p, zero_update_func)
             else:
                 weight_dict[n] = (p, weight_update_func)
 
