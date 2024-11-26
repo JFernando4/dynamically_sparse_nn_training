@@ -32,7 +32,7 @@ def aggregate_over_bins(np_array: np.ndarray, bin_size: int, agg_func: str = "me
 
     if bin_size == 1:
         return np_array
-    if (np_array % bin_size) != 0:
+    if (np_array.size % bin_size) != 0:
         raise ValueError(f"Size of np_array ({np_array.size}) is not divisible by bin_size ({bin_size}).")
     assert agg_func in ["mean", "max", "median", "min"]
 
