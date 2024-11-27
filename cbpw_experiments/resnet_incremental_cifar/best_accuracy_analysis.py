@@ -1,13 +1,12 @@
 import numpy as np
 import argparse
-import matplotlib.pyplot as plt
 
 import os
 
 from mlproj_manager.file_management import read_json_file
 from mlproj_manager.util.experiments_util import access_dict
 
-from src.utils import COLOR_DICT, aggregate_over_bins, plot_results
+from src.utils import aggregate_over_bins, plot_results
 
 DEBUG = False
 BIN_SIZE = {"test_accuracy_per_epoch": 200}
