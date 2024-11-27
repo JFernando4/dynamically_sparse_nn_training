@@ -20,7 +20,7 @@
     "use_best_network": true,
     "use_bottleneck": true,
     "rescaled_wd": true,
-    "runs": 2
+    "runs": 5
   },
 
   "learning_params": {
