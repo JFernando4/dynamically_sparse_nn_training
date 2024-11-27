@@ -3,7 +3,8 @@
 
     "parameter_combinations":
         [
-            "stepsize-0.05_weight_decay-0.001_rescaled_wd-True_use_bottleneck-True_num_epochs-4000"
+            "stepsize-0.05_weight_decay-0.001_rescaled_wd-True_use_bottleneck-True_num_epochs-4000",
+            "reset_network-True_stepsize-0.05_weight_decay-0.001_use_bottleneck-True"
         ],
 
     "summary_names":
@@ -16,8 +17,8 @@
     "plot_parameters": {
         "x_label": "Number of Classes",
         "y_label": "Best accuracy per task",
-        "labels": ["Base System"],
-        "color_order": ["black"]
+        "labels": ["Base System", "Network Resetting"],
+        "color_order": ["black", "gray"]
     },
 
     "plot_name_prefix": "bottleneck_resnet"
