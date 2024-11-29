@@ -23,7 +23,7 @@ def prune_and_grow_weights(weight: torch.Tensor,
 
 def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs) -> Callable[[torch.Tensor], tuple]:
     """ Sets up weight update function for CBP-w """
-    prune_function_names = ["magnitude", "gf", "efi", "mr", "gr", "er"]
+    prune_function_names = ["magnitude", "gf", "efi", "mr", "gr", "er", "tgf", "tgr"]
     grow_function_names = ["kaiming_normal", "xavier_normal", "zero", "kaming_uniform", "xavier_uniform", "fixed",
                            "clipped", "truncated", "median_clipped", "median_truncated", "25p_clipped", "25p_truncated",
                            "mean_truncated", "mean_clipped", "normal", "truncated_normal", "tx_uniform", "tx_normal",
@@ -35,12 +35,16 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
         prune_func = lambda w: fixed_proportion_prune_weights(w, drop_factor=kwargs["drop_factor"], utility_name="magnitude")
     elif prune_name == "gf":    # gradient flow
         prune_func = lambda w: fixed_proportion_prune_weights(w, drop_factor=kwargs["drop_factor"], utility_name="gradient")
+    elif prune_name == "tgf" or prune_name == "tgm":    # traced gradient flow or traced magnitude
+        prune_func = lambda w: fixed_proportion_prune_weights(w, drop_factor=kwargs["drop_factor"], utility_name="gradient")
     elif prune_name == "efi":
         prune_func = lambda w: fixed_proportion_prune_weights(w, drop_factor=kwargs["drop_factor"], utility_name="efi")
     elif prune_name == "mr":    # magnitude redo
         prune_func = lambda w: redo_prune_weights(w, drop_factor=kwargs["drop_factor"], utility_name="magnitude")
     elif prune_name == "gr":    # gradient redo
         prune_func = lambda w: redo_prune_weights(w, drop_factor=kwargs["drop_factor"], utility_name="gradient")
+    elif prune_name == "tgr" or prune_name == "tgm":   # traced gradient redo or traced magnitude redo
+        prune_func = lambda w: redo_prune_weights(w, drop_factor=kwargs["drop_factor"], utility_name="trace")
     elif prune_name == "er":    # empirical fisher redo
         prune_func = lambda w: redo_prune_weights(w, drop_factor=kwargs["drop_factor"], utility_name="efi")
 
@@ -190,7 +194,7 @@ def compute_utility(weight: torch.Tensor, utility_name: str = "magnitude") -> to
         utility = weight.empirical_fisher.flatten()
     elif utility_name == "trace":
         assert hasattr(weight, "utility_trace")
-        utility = torch.abs(weight.utility_trace)
+        utility = weight.utility_trace
     else:
         raise ValueError(f"{utility_name} is not a valid utility.")
 
@@ -209,9 +213,9 @@ def compute_trace_utility(weight:torch.Tensor, decay_rate: float = 0.99, utility
     """ Computes a trace of the utility function and stores it in a new attribute in the weight called utility_trace """
 
     if utility_name == "magnitude":
-        utility = weight.flatten()
-    elif utility_name == "gf":
-        utility = (weight * weight.grad).flatten()
+        utility = torch.abs(weight).flatten()
+    elif utility_name == "gradient":
+        utility = torch.abs(weight * weight.grad).flatten()
     else:
         raise ValueError(f"{utility_name} is not a valid utility function.")
 
