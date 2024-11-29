@@ -32,11 +32,11 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     assert "drop_factor" in kwargs.keys()
 
     if prune_name == "magnitude":
-        prune_func = lambda w: magnitude_prune_weights(w, drop_factor=kwargs["drop_factor"])
+        prune_func = lambda w: fixed_proportion_prune_weights(w, drop_factor=kwargs["drop_factor"], utility_name="magnitude")
     elif prune_name == "gf":    # gradient flow
-        prune_func = lambda w: gradient_flow_prune_weights(w, drop_factor=kwargs["drop_factor"])
+        prune_func = lambda w: fixed_proportion_prune_weights(w, drop_factor=kwargs["drop_factor"], utility_name="gradient")
     elif prune_name == "efi":
-        prune_func = lambda w: empirical_fisher_information_prune_weights(w, drop_factor=kwargs["drop_factor"])
+        prune_func = lambda w: fixed_proportion_prune_weights(w, drop_factor=kwargs["drop_factor"], utility_name="efi")
     elif prune_name == "mr":    # magnitude redo
         prune_func = lambda w: redo_prune_weights(w, drop_factor=kwargs["drop_factor"], utility_name="magnitude")
     elif prune_name == "gr":    # gradient redo
@@ -122,9 +122,9 @@ def setup_cbpw_layer_norm_update_function(prune_name: str, drop_factor: float, e
     assert prune_name in prune_function_names
 
     if prune_name == "magnitude":
-        prune_func = lambda w: magnitude_prune_weights(w, drop_factor=drop_factor)
+        prune_func = lambda w: fixed_proportion_prune_weights(w, drop_factor=drop_factor, utility_name="magnitude")
     elif prune_name == "gf":
-        prune_func = lambda w: gradient_flow_prune_weights(w, drop_factor=drop_factor)
+        prune_func = lambda w: fixed_proportion_prune_weights(w, drop_factor=drop_factor, utility_name="gradient")
 
     def temp_prune_and_grow_weights(w: torch.nn.Module):
         return update_norm_layer(w, prune_func, exclude_layer_bias)
@@ -153,6 +153,7 @@ def redo_prune_weights(weight: torch.Tensor, drop_factor: float, utility_name: s
         weight.utility_trace = None
 
     return prune_indices, active_indices
+
 
 def fixed_proportion_prune_weights(weight: torch.Tensor, drop_factor: float, utility_name: str = "magnitude") \
         -> tuple[torch.Tensor, torch.Tensor]:
