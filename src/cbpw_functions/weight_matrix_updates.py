@@ -199,48 +199,6 @@ def compute_utility(weight: torch.Tensor, utility_name: str = "magnitude") -> to
     return utility
 
 
-@torch.no_grad()
-def magnitude_prune_weights(weight: torch.Tensor, drop_factor: float) -> tuple[torch.Tensor, torch.Tensor]:
-    """ Creates a mask by dropping the weights with the smallest magnitude """
-
-    drop_num = compute_drop_num(weight.numel(), drop_factor)
-    if drop_num == 0: return torch.empty(0), torch.empty(0)
-
-    abs_weight = torch.abs(weight).flatten()
-    indices = torch.argsort(abs_weight)
-    pruned_indices = indices[:drop_num]
-    active_indices = indices[drop_num:]
-    return pruned_indices, active_indices
-
-
-@torch.no_grad()
-def gradient_flow_prune_weights(weight: torch.Tensor, drop_factor: float) -> tuple[torch.Tensor, torch.Tensor]:
-    """ Creates a mask by dropping the weights with the smallest gradient flow """
-
-    drop_num = compute_drop_num(weight.numel(), drop_factor)
-    if drop_num == 0: return torch.empty(0), torch.empty(0)
-
-    gradient_flow = torch.abs(weight * weight.grad).flatten()
-    indices = torch.argsort(gradient_flow)
-    pruned_indices = indices[:drop_num]
-    active_indices = indices[drop_num:]
-    return pruned_indices, active_indices
-
-
-def empirical_fisher_information_prune_weights(weight:torch.Tensor, drop_factor: float) -> tuple[torch.Tensor, torch.Tensor]:
-    """ Creates a mask by dropping the weights with the smallest empirical fisher information entries """
-
-    drop_num = compute_drop_num(weight.numel(), drop_factor)
-    if drop_num == 0: return torch.empty(0), torch.empty(0)
-
-    assert hasattr(weight, "empirical_fisher")
-    efi = weight.empirical_fisher.flatten()
-    indices = torch.argsort(efi)
-    pruned_indices = indices[:drop_num]
-    active_indices = indices[drop_num:]
-    return pruned_indices, active_indices
-
-
 def compute_drop_num(num_weights: int, drop_factor: float) -> int:
     """ Computes the number of weights dropped """
     fraction_to_prune = num_weights * drop_factor
