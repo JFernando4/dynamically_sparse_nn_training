@@ -149,6 +149,9 @@ def redo_prune_weights(weight: torch.Tensor, drop_factor: float, utility_name: s
     elif utility_name == "efi":
         assert hasattr(weight, "empirical_fisher")
         utility = weight.empirical_fisher.flatten()
+    elif utility_name == "trace":
+        assert hasattr(weight, "utility_trace")
+        utility = torch.abs(weight.utility_trace)
     else:
         raise ValueError(f"{utility_name} is not a valid utility.")
 
@@ -156,6 +159,10 @@ def redo_prune_weights(weight: torch.Tensor, drop_factor: float, utility_name: s
     prune_indices = torch.where(utility < prune_threshold)[0]
     # print(f"{prune_indices.numel() = }")
     active_indices = torch.where(utility >= prune_threshold)[0]
+
+    if utility_name == "trace":
+        weight.utility_trace = None
+
     return prune_indices, active_indices
 
 
@@ -206,6 +213,28 @@ def compute_drop_num(num_weights: int, drop_factor: float) -> int:
     fraction_to_prune = num_weights * drop_factor
     drop_num = int(fraction_to_prune) + np.random.binomial(n=1, p=fraction_to_prune % 1, size=None)
     return drop_num
+
+
+@torch.no_grad()
+def compute_trace_utility(weight:torch.Tensor, decay_rate: float = 0.99, utility_name: str = "magnitude"):
+    """ Computes a trace of the utility function and stores it in a new attribute in the weight called utility_trace """
+
+    if utility_name == "magnitude":
+        utility = weight.flatten()
+    elif utility_name == "gf":
+        utility = (weight * weight.grad).flatten()
+    else:
+        raise ValueError(f"{utility_name} is not a valid utility function.")
+
+    if hasattr(weight, "utility_trace"):
+        if weight.utility_trace is None:
+            weight.utility_trace = utility
+        else:
+            weight.utility_trace *= decay_rate
+            weight.utility_trace += (1 - decay_rate) * utility
+    else:
+        weight.utility_trace = utility
+
 
 # ----- ----- ----- ----- Growing Functions ----- ----- ----- ----- #
 @torch.no_grad()
