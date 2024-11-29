@@ -142,18 +142,7 @@ def redo_prune_weights(weight: torch.Tensor, drop_factor: float, utility_name: s
         utility_name (str): "magnitude", "gradient", "efi" (empirical_fishe_information)
     """
 
-    if utility_name == "magnitude":
-        utility = weight.abs().flatten()
-    elif utility_name == "gradient":
-        utility = torch.abs(weight * weight.grad).flatten()
-    elif utility_name == "efi":
-        assert hasattr(weight, "empirical_fisher")
-        utility = weight.empirical_fisher.flatten()
-    elif utility_name == "trace":
-        assert hasattr(weight, "utility_trace")
-        utility = torch.abs(weight.utility_trace)
-    else:
-        raise ValueError(f"{utility_name} is not a valid utility.")
+    utility = compute_utility(weight, utility_name)
 
     prune_threshold = drop_factor * utility.mean()
     prune_indices = torch.where(utility < prune_threshold)[0]
@@ -182,11 +171,20 @@ def fixed_proportion_prune_weights(weight: torch.Tensor, drop_factor: float, uti
 
 @torch.no_grad()
 def compute_utility(weight: torch.Tensor, utility_name: str = "magnitude") -> torch.Tensor:
-    """ Computes the utility of the weights in the given tensor """
+    """
+    Computes the utility of the weights in the given tensor
+
+    arguments:
+        weight (torch.Tensor): tensor with weights
+        utility_name (str): "magnitude", "gradient", "efi" (empirical_fishe_information)
+
+    returns:
+        Tensor of utilities
+    """
 
     if utility_name == "magnitude":
         utility = weight.abs().flatten()
-    elif utility_name == "gf":
+    elif utility_name == "gradient":
         utility = torch.abs(weight * weight.grad).flatten()
     elif utility_name == "efi":
         assert hasattr(weight, "empirical_fisher")
