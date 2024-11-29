@@ -172,8 +172,20 @@ def fixed_proportion_prune_weights(weight: torch.Tensor, drop_factor: float, uti
     drop_num = compute_drop_num(weight.numel(), drop_factor)
     if drop_num == 0: return torch.empty(0), torch.arange(weight.numel())
 
+    utility = compute_utility(weight, utility_name)
+
+    indices = torch.argsort(utility)
+    pruned_indices = indices[:drop_num]
+    active_indices = indices[drop_num:]
+    return pruned_indices, active_indices
+
+
+@torch.no_grad()
+def compute_utility(weight: torch.Tensor, utility_name: str = "magnitude") -> torch.Tensor:
+    """ Computes the utility of the weights in the given tensor """
+
     if utility_name == "magnitude":
-        utility = torch.abs(weight).flatten()
+        utility = weight.abs().flatten()
     elif utility_name == "gf":
         utility = torch.abs(weight * weight.grad).flatten()
     elif utility_name == "efi":
@@ -185,10 +197,8 @@ def fixed_proportion_prune_weights(weight: torch.Tensor, drop_factor: float, uti
     else:
         raise ValueError(f"{utility_name} is not a valid utility.")
 
-    indices = torch.argsort(utility)
-    pruned_indices = indices[:drop_num]
-    active_indices = indices[drop_num:]
-    return pruned_indices, active_indices
+    return utility
+
 
 @torch.no_grad()
 def magnitude_prune_weights(weight: torch.Tensor, drop_factor: float) -> tuple[torch.Tensor, torch.Tensor]:
