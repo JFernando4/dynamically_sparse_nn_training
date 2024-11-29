@@ -24,7 +24,7 @@ def prune_and_grow_weights(weight: torch.Tensor,
 def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs) -> Callable[[torch.Tensor], tuple]:
     """ Sets up weight update function for CBP-w """
     prune_function_names = ["magnitude", "gf", "efi", "mr", "gr", "er"]
-    grow_function_names = ["kaiming_normal", "xavier_normal", "zero", "kaming_uniform", "xavier_uniform", "fixed", "mad",
+    grow_function_names = ["kaiming_normal", "xavier_normal", "zero", "kaming_uniform", "xavier_uniform", "fixed",
                            "clipped", "truncated", "median_clipped", "median_truncated", "25p_clipped", "25p_truncated",
                            "mean_truncated", "mean_clipped", "normal", "truncated_normal", "tx_uniform", "tx_normal",
                            "tk_uniform", "tk_normal"]
@@ -62,8 +62,6 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
         grow_func = lambda w, pi, ai: clipped_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="25p")
     elif grow_name == "mean_clipped":
         grow_func = lambda w, pi, ai: clipped_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="mean")
-    elif grow_name == "mad":
-        grow_func = lambda w, pi, ai: magnitude_adjusted_uniform_reinit_weights(w, pruned_indices=pi, active_indices=ai)
     elif grow_name == "truncated":
         grow_func = lambda w, pi, ai: bounded_kaiming_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="min")
     elif grow_name == "median_truncated":
@@ -360,21 +358,6 @@ def get_bounding_value(weight: torch.Tensor, active_indices: torch.Tensor, bound
         return float(abs_weights.mean())
     else:
         raise ValueError(f"{bound_method} is not a valid bound method!")
-
-
-@torch.no_grad()
-def magnitude_adjusted_uniform_reinit_weights(weight: torch,  pruned_indices: torch.Tensor, active_indices: torch.Tensor):
-    """
-    Reinitializes entries in the weight matrix at the given indices using U(-median_active, median_active)
-    This way, the new weights will have an average magnitude of mean_active
-    """
-
-    mean_pruned_weights = weight.flatten().abs()[pruned_indices].mean()
-    new_weights = torch.randn(size=pruned_indices.size()) * (np.sqrt(np.pi/2) * mean_pruned_weights)
-    # This: (r1 - r2) * torch.rand(a, b) + r2, gives samples from a uniform distribution in interval [r1, r2]
-    # new_weights = - (-2 * torch.rand(size=pruned_indices.size()) + 1) * 2 * mean_active
-    # print(f"Standard Deviation = {np.sqrt(np.pi/2) * mean_pruned_weights}, {mean_pruned_weights = }")
-    weight.view(-1)[pruned_indices] = new_weights
 
 
 @torch.no_grad()
