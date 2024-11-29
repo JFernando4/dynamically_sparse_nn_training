@@ -165,6 +165,30 @@ def redo_prune_weights(weight: torch.Tensor, drop_factor: float, utility_name: s
 
     return prune_indices, active_indices
 
+def fixed_proportion_prune_weights(weight: torch.Tensor, drop_factor: float, utility_name: str = "magnitude") \
+        -> tuple[torch.Tensor, torch.Tensor]:
+    """ Generates a tensor of indices to be pruned according to their utility """
+
+    drop_num = compute_drop_num(weight.numel(), drop_factor)
+    if drop_num == 0: return torch.empty(0), torch.arange(weight.numel())
+
+    if utility_name == "magnitude":
+        utility = torch.abs(weight).flatten()
+    elif utility_name == "gf":
+        utility = torch.abs(weight * weight.grad).flatten()
+    elif utility_name == "efi":
+        assert hasattr(weight, "empirical_fisher")
+        utility = weight.empirical_fisher.flatten()
+    elif utility_name == "trace":
+        assert hasattr(weight, "utility_trace")
+        utility = torch.abs(weight.utility_trace)
+    else:
+        raise ValueError(f"{utility_name} is not a valid utility.")
+
+    indices = torch.argsort(utility)
+    pruned_indices = indices[:drop_num]
+    active_indices = indices[drop_num:]
+    return pruned_indices, active_indices
 
 @torch.no_grad()
 def magnitude_prune_weights(weight: torch.Tensor, drop_factor: float) -> tuple[torch.Tensor, torch.Tensor]:
