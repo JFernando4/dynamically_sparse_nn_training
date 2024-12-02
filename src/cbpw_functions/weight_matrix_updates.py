@@ -69,7 +69,7 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     elif grow_name == "truncated":
         grow_func = lambda w, pi, ai: bounded_kaiming_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="min")
     elif grow_name == "median_truncated":
-        grow_func = lambda w, pi, ai: bounded_kaiming_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="median")
+        grow_func = lambda w, pi, ai: bounded_kaiming_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="median", activation=activation)
     elif grow_name == "25p_truncated":
         grow_func = lambda w, pi, ai: bounded_kaiming_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="25p")
     elif grow_name == "mean_truncated":
