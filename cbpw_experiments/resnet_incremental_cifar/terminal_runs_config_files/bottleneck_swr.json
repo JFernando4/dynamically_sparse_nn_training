@@ -17,7 +17,7 @@
   "topology_update_freq": 260,
   "prune_method": "gr",
   "grow_method": "median_truncated",
-  "drop_factor": 0.01,
+  "drop_factor": 0.005,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
     "num_epochs",
