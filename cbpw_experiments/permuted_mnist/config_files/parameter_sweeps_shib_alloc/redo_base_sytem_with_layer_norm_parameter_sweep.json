@@ -24,7 +24,7 @@
 
   "learning_params": {
     "reinit_freq": ["fixed", 15, 35, 75],
-    "reinit_threshold": ["fixed", 0.01, 0.02, 0.05],
+    "reinit_threshold": ["fixed", 0.002, 0.005, 0.01, 0.02, 0.05],
     "redo_utility": ["str", "original"]
   },
 
