@@ -88,7 +88,8 @@ def initialize_weights_dict_resnet(net: ResNet,
             weight_dict[n] = (p, zero_update_func)
         else:
             if ("heads" in n) or ("fc" in n):       # heads = output layer of ViT, fc = output layer of ResNet-18
-                weight_dict[n] = (p, zero_update_func)
+                temp_func = setup_cbpw_weight_update_function(prune_method, grow_method, drop_factor=drop_factor, activation="linear")
+                weight_dict[n] = (p, temp_func)
             else:
                 weight_dict[n] = (p, weight_update_func)
 
