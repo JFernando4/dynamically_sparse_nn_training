@@ -34,7 +34,7 @@
 
   "slurm_parameters": {
     "job_name": "resnet_inc",
-    "time": "14:00:00",
+    "time": "18:00:00",
     "max_runs_per_job": 1,
     "output_filename": "resnet_inc-%n-%j.out",
     "mem": "12G",
