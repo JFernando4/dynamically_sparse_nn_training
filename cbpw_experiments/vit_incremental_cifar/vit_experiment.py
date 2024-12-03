@@ -138,7 +138,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.cumulative_stepsize = 0.0
 
         """ For data partitioning """
-        self.class_increase = 5
+        self.class_increase = access_dict(exp_params, "class_increase", default=5, val_type=int)
         self.class_increase_frequency = 100
         self.all_classes = np.random.permutation(self.num_classes)  # define order classes
         self.best_accuracy = torch.tensor(0.0, device=self.device, dtype=torch.float32)
