@@ -2,18 +2,18 @@ import numpy as np
 import torch
 from torch import nn
 
-from src.networks.ppo_networks import TwoLayerNetwork
+from src.networks.ppo_networks import MLPPolicy, MLPVF
 
 class PPO(object):
     """
     Implementation of PPO
     """
     def __init__(self,
-                 pol: TwoLayerNetwork,
+                 pol: MLPPolicy,
                  buf,
                  lr,
                  g,
-                 vf: TwoLayerNetwork,
+                 vf: MLPVF,
                  lm,
                  Opt,
                  device='cpu',
