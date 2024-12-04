@@ -6,3 +6,4 @@ from .torchvision_modified_resnet import (build_resnet18, kaiming_init_resnet_mo
                                           build_resnet18_bottleneck, build_slim_resnet18)
 from .permuted_mnist_network import ThreeHiddenLayerNetwork
 from .shifted_layer_norm import ShiftedLayerNorm
+from .ppo_networks import MLPVF, MLPPolicy
