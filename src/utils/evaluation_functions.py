@@ -1,4 +1,16 @@
 import torch
+import numpy as np
+
+from mlproj_manager.util import get_random_seeds
+
+
+def set_random_seed(seed_index: int):
+    """ Sets the random seed of torch, cuda, and numpy """
+    random_seed = get_random_seeds()[seed_index]    # this function produces always the same random integers
+    torch.random.manual_seed(random_seed)
+    torch.cuda.manual_seed(random_seed)
+    np.random.seed(random_seed)
+
 
 @torch.no_grad()
 def compute_accuracy_from_batch(predictions: torch.Tensor, labels: torch.Tensor):
