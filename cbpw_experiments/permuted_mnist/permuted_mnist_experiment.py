@@ -22,8 +22,8 @@ from src.networks import RegularizedSGD, ThreeHiddenLayerNetwork
 from src.cbpw_functions.weight_matrix_updates import update_weights
 from src.utils.experiment_utils import parse_terminal_arguments
 from src.plasticity_functions import FirstOrderGlobalUPGD, inject_noise
-from src.utils.evaluation_functions import compute_average_gradient_magnitude
-from src.utils.permuted_mnist_experiment_utils import compute_average_weight_magnitude, compute_dead_units_proportion
+from src.utils.evaluation_functions import compute_average_gradient_magnitude, compute_average_weight_magnitude
+from src.utils.permuted_mnist_experiment_utils import compute_dead_units_proportion
 
 
 class PermutedMNISTExperiment(Experiment):

@@ -115,3 +115,24 @@ def compute_abs_approximate_rank(sv: torch.Tensor, prop=0.99):
         approximate_rank += 1
     return torch.tensor(approximate_rank, dtype=torch.int32)
 
+
+@torch.no_grad()
+def compute_average_weight_magnitude(net: torch.nn.Module):
+    """ computes the average weight magnitude of the network """
+
+    weight_magnitude = 0.0
+    total_weights = 0.0
+    ln_weight_magnitude = 0.0
+    ln_total_weights = 0.0
+
+    for n, p in net.named_parameters():
+        if p.requires_grad:
+            weight_magnitude += p.abs().sum()
+            total_weights += p.numel()
+            if ("weight" in n) and ("ln" in n):
+                ln_weight_magnitude += p.abs().sum()
+                ln_total_weights += p.numel()
+
+    average_weight_magnitude = weight_magnitude / total_weights
+    average_ln_weight_magnitude = 0.0 if ln_total_weights == 0.0 else ln_weight_magnitude / ln_total_weights
+    return average_weight_magnitude, average_ln_weight_magnitude
