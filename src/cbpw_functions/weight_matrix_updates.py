@@ -24,7 +24,7 @@ def prune_and_grow_weights(weight: torch.Tensor,
 def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs) -> Callable[[torch.Tensor], tuple]:
     """ Sets up weight update function for CBP-w """
     prune_function_names = ["magnitude", "gf", "efi", "mr", "gr", "er", "tgf", "tgr"]
-    grow_function_names = ["kaiming_normal", "xavier_normal", "zero", "kaming_uniform", "xavier_uniform", "fixed",
+    grow_function_names = ["kaiming_normal", "xavier_normal", "zero", "kaiming_uniform", "xavier_uniform", "fixed",
                            "clipped", "truncated", "median_clipped", "median_truncated", "25p_clipped", "25p_truncated",
                            "mean_truncated", "mean_clipped", "normal", "truncated_normal", "tx_uniform", "tx_normal",
                            "tk_uniform", "tk_normal"]
