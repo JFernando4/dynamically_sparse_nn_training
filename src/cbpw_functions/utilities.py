@@ -1,9 +1,10 @@
 import torch
 
 from .weight_matrix_updates import setup_cbpw_weight_update_function
-from src.networks.torchvision_modified_vit import VisionTransformer, EncoderBlock
+from src.networks.torchvision_modified_vit import VisionTransformer
 from src.networks.torchvision_modified_resnet import ResNet, BasicBlock
 from src.networks.permuted_mnist_network import ThreeHiddenLayerNetwork
+from src.networks.ppo_networks import TwoLayerNetwork
 
 
 def initialize_weight_dict(net: torch.nn.Module,
@@ -28,6 +29,10 @@ def initialize_weight_dict(net: torch.nn.Module,
         noise_std = None if "noise_std" not in kwargs.keys() else kwargs["noise_std"]
         return initialize_weights_dict_sequential(net, prune_method=prune_method, grow_method=grow_method,
                                                   drop_factor=drop_factor, noise_std=noise_std)
+    elif architecture_type == "ppo_networks":
+        assert "val_network" in kwargs.keys()
+        return initialize_weights_dict_ppo(policy_net=net, val_network=kwargs["val_network"], prune_method=prune_method,
+                                           grow_method=grow_method, drop_factor=drop_factor)
     elif architecture_type == "bert":
         return initialize_weights_dict_bert_all(net, prune_method=prune_method, grow_method=grow_method, drop_factor=drop_factor)
     else:
@@ -141,6 +146,44 @@ def initialize_weights_dict_vit(net: VisionTransformer,
                 weight_dict[n] = (p, weight_update_func)
 
     return weight_dict
+
+
+def initialize_weights_dict_ppo(policy_net: TwoLayerNetwork,
+                                val_network: TwoLayerNetwork,
+                                prune_method: str,
+                                grow_method: str,
+                                drop_factor: float,
+                                ln_drop_factor: float) -> dict[str, tuple]:
+    """
+    Initializes the weight dictionaries used in SWR for a network
+
+    parameters:
+        grow_method: string in ["truncated", "init", "zero"]
+    """
+    weight_grow_name = {"truncated": "median_truncated", "zero": "zero", "init": "kaiming_uniform"}[grow_method]
+    weight_update_func = setup_cbpw_weight_update_function(prune_method, weight_grow_name, drop_factor=drop_factor)
+    ln_weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="fixed", drop_factor=ln_drop_factor, reinit_val=1.0)
+    zero_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="zero", drop_factor=drop_factor)
+
+    weight_dict = {}
+    network_list = [policy_net, val_network]
+    for net in network_list:
+        for n, p in net.named_parameters():
+            is_weight = "weight" in n
+            is_bias = "bias" in n
+            is_layer_norm = (".ln_1" in n) or (".ln_2." in n)
+
+            if is_weight and is_layer_norm:         # weights of layer norm
+                weight_dict[n] = (p, ln_weight_update_func)
+            elif is_bias:                           # bias terms in the network
+                weight_dict[n] = (p, zero_update_func)
+            else:                                   # all the other weight matrices
+                if ".out" in n:     # out = output layer of TwoLayerNetwork
+                    weight_dict[n] = (p, zero_update_func)
+                else:
+                    weight_dict[n] = (p, weight_update_func)
+
+        return weight_dict
 
 
 def initialize_weights_dict_sequential(net: ThreeHiddenLayerNetwork,
