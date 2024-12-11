@@ -13,7 +13,7 @@ from torch.optim import Adam
 
 from src.rl_agents import Buffer, PPO, Agent
 from src.networks import MLPVF, MLPPolicy
-# from lop.utils.miscellaneous import compute_matrix_rank_summaries
+from src.utils.evaluation_functions import compute_matrix_rank_summaries
 
 
 def save_data(cfg, rets, termination_steps,
