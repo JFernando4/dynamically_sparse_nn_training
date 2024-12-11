@@ -3,6 +3,7 @@ import torch
 from torch import nn
 
 from src.networks.ppo_networks import MLPPolicy, MLPVF
+from src.cbpw_functions import update_weights
 
 class PPO(object):
     """
@@ -31,6 +32,8 @@ class PPO(object):
                  eps=1e-8,
                  no_clipping=False,
                  loss_type='ppo',
+                 weight_dict: dict = None,
+                 swr_reinit_freq: int = 0
                  ):
         self.pol = pol
         self.buf = buf
@@ -51,6 +54,11 @@ class PPO(object):
         self.no_clipping = no_clipping
         self.loss_type = loss_type
         self.to_perturb = self.perturb_scale != 0
+        self.weight_dict = weight_dict
+        self.swr_reinit_freq = swr_reinit_freq
+        self.use_swr = (self.weight_dict is not None) and (self.swr_reinit_freq != 0)
+
+        self.num_parameter_updates = 0
 
     def log(self, o, a, r, op, logpb, dist, done):
         self.buf.store(o, a, r, op, logpb, dist, done)
@@ -123,6 +131,12 @@ class PPO(object):
                 if self.max_grad_norm > 0:
                     nn.utils.clip_grad_norm_(list(self.pol.parameters()) + list(self.vf.parameters()), self.max_grad_norm)
                 self.opt.step()
+
+                self.num_parameter_updates += 1
+                if self.use_swr:
+                    if (self.num_parameter_updates % self.swr_reinit_freq) == 0:
+                        update_weights(self.weight_dict)
+
                 if self.to_perturb:
                     self.perturb(net=self.pol.mean_net)
                     self.perturb(net=self.vf.v_net)
