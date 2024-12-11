@@ -1,0 +1,39 @@
+{
+  "__comment_1__": "Parameters for the environment",
+  "env_name": "Ant-v5",
+  "total_env_steps": 25000000,
+
+  "__comment_2__": "Network parameters",
+  "activation_type": "ReLU",
+  "hidden_dim": 16,
+
+  "__comment_3__": "Optimizer parameters",
+  "stepsize": 0.0001,
+  "weight_decay": 1e-4,
+  "rescaled_wd": false,
+  "adam_beta1": 0.99,
+  "adam_beta2": 0.99,
+
+  "__comment_4__": "PPO parameters",
+  "buffer_size": 2048,
+  "gamma": 0.99,
+  "gae_lambda": 0.95,
+  "num_epochs": 10,
+  "n_slices": 16,
+  "u_adv_scl": true,
+  "clip_eps": 0.2,
+
+  "__comment_5__": "Continual Backprop parameters",
+  "replacement_rate": 0.0,
+  "maturity_threshold": 0,
+  "cbp_utiltiy": "contribution",
+  "decay_rate": 0.0,
+
+    "__comment_6__": "For creating the results directory.",
+  "relevant_parameters": [
+    "stepsize",
+    "weight_decay",
+    "replacement_rate",
+    "maturity_threshold"
+  ]
+}
