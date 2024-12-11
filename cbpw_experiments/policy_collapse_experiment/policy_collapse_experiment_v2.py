@@ -192,13 +192,16 @@ class PolicyCollapseExperiment(Experiment):
             "partial_results": partial_results
         }
 
+        if torch.cuda.is_available():
+            checkpoint["cuda_rng_state"] = torch.cuda.get_rng_state()
+
         return checkpoint
 
     def load_checkpoint_data_and_update_experiment_variables(self, file_path) -> bool:
         """
         Loads the checkpoint and assigns the experiment variables the recovered values
         :param file_path: path to the experiment checkpoint
-        :return: (bool) if the variables were succesfully loaded
+        :return: (bool) if the variables were successfully loaded
         """
 
         try:
@@ -219,12 +222,19 @@ class PolicyCollapseExperiment(Experiment):
         partial_results = checkpoint["partial_results"]
         for k, v in self.results_dict.items():
             if k not in partial_results.keys():
-                print(f"Warning! {k} is not a partial result stored in the checkpoint ")
+                print(f"Warning! {k} is not a partial result stored in the checkpoint!")
                 continue
-            self.results_dict[k] = partial_results[k] if not isinstance(partial_results[k], torch.Tensor) else partial_results[k].to(self.device)
+            if isinstance(partial_results[k], torch.Tensor):
+                self.results_dict[k][:partial_results[k].shape[0]] = partial_results[k].to(self.device)
+            elif isinstance(partial_results[k], np.ndarray):
+                self.results_dict[k][:partial_results[k].shape[0]] = partial_results[k]
+            else:
+                self.results_dict[k] = partial_results[k]
 
         torch.set_rng_state(checkpoint["torch_rng_state"])
         np.random.set_state(checkpoint["numpy_rng_state"])
+        if torch.cuda.is_available():
+            torch.cuda.set_rng_state(checkpoint["cuda_rng_state"])
         return True
 
     def run(self):
