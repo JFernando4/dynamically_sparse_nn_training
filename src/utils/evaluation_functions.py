@@ -3,6 +3,8 @@ import numpy as np
 
 from mlproj_manager.util import get_random_seeds
 from scipy.linalg import svd
+from scipy.stats import bootstrap
+from tqdm import tqdm
 
 
 def set_random_seed(seed_index: int):
@@ -136,3 +138,25 @@ def compute_average_weight_magnitude(net: torch.nn.Module):
     average_weight_magnitude = weight_magnitude / total_weights
     average_ln_weight_magnitude = 0.0 if ln_total_weights == 0.0 else ln_weight_magnitude / ln_total_weights
     return average_weight_magnitude, average_ln_weight_magnitude
+
+
+def bootstrapped_return(episode_length: np.ndarray, episodic_return: np.ndarray, bin_size: int,
+                        total_steps: int, confidence_level: float = 0.95, to_bootstrap: bool = True):
+    assert len(episode_length) == len(episodic_return)
+    num_runs = len(episode_length)
+    avg_ret = np.zeros(total_steps // bin_size)
+    steps = np.arange(bin_size, total_steps + bin_size, bin_size)
+    min_rets, max_rets = np.zeros(total_steps // bin_size), np.zeros(total_steps // bin_size)
+    boot_strapped_ret_low, boot_strapped_ret_high = np.zeros(total_steps // bin_size), np.zeros(total_steps // bin_size)
+    for i in tqdm(range(0, total_steps // bin_size)):
+        rets = []
+        for run in range(num_runs):
+            temp_episode_length = episode_length[run][:np.searchsorted(episode_length[run], total_steps) + 1]
+            temp_sum_of_rewards = episodic_return[run][:temp_episode_length.shape[0]]
+            rets.append(temp_sum_of_rewards[np.logical_and(i * bin_size < temp_episode_length, temp_episode_length <= (i + 1) * bin_size)].mean())
+        rets = np.array([rets])
+        avg_ret[i] = rets.mean()
+        min_rets[i], max_rets[i] = rets.min(), rets.max()
+        bos = bootstrap(data=(rets[0, :],), statistic=np.mean, confidence_level=confidence_level)
+        boot_strapped_ret_low[i], boot_strapped_ret_high[i] = bos.confidence_interval.low, bos.confidence_interval.high
+    return steps, avg_ret, min_rets, max_rets, boot_strapped_ret_low, boot_strapped_ret_high
