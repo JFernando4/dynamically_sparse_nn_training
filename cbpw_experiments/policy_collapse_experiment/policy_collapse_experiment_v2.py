@@ -148,7 +148,7 @@ class PolicyCollapseExperiment(Experiment):
         self.agent = Agent(pol=self.policy_network, learner=self.learner)
 
         """ Initialize summaries """
-        self.to_log = ["dead_units", "pol_weights", "val_weights", "pol_grad_magnitude", "val_grad_magnitude", "stable_rank"]
+        self.to_log = ["dead_units_prop", "pol_weights", "val_weights", "pol_grad_magnitude", "val_grad_magnitude", "stable_rank"]
         self.result_store_frequency = 1000
         self.stable_rank_store_frequency = self.result_store_frequency * 10
 
@@ -159,8 +159,8 @@ class PolicyCollapseExperiment(Experiment):
             self.results_dict["val_weights"] = np.zeros(shape=results_dim)
         feature_activity_summaries_shape = (results_dim, self.num_hidden_layers, self.hidden_dim)
         self.short_term_feature_activity = torch.zeros(size=feature_activity_summaries_shape)
-        if "dead_units" in self.to_log:
-            self.results_dict["dead_units"] = torch.zeros(size=(results_dim,))
+        if "dead_units_prop" in self.to_log:
+            self.results_dict["dead_units_prop"] = torch.zeros(size=(results_dim,))
         if "stable_rank" in self.to_log:
             self.results_dict["stable_rank"] = torch.zeros(size=(self.total_env_steps // self.stable_rank_store_frequency, ))
         self.return_per_episode = []
@@ -306,13 +306,13 @@ class PolicyCollapseExperiment(Experiment):
                     m=self.short_term_feature_activity[:, -1, :], use_scipy=True)
                 self.results_dict["stable_rank"][self.current_step // self.stable_rank_store_frequency] = current_stable_rank
 
-            if "dead_units" in self.to_log:
+            if "dead_units_prop" in self.to_log:
                 reshaped_feature_activity = self.short_term_feature_activity.reshape(-1, self.num_hidden_layers * self.hidden_dim)
-                prop_dead_units = (reshaped_feature_activity.mean(dim=0) == 0).float().mean()
-                if prop_dead_units > 0.0:
-                    print(f"\n\n{prop_dead_units = }\n\n")
-                self.results_dict["prop_dead_units"][result_index] = prop_dead_units
-                # self.results_dict["dead_units"][result_index] = (self.short_term_feature_activity > 0.0).float().mean(dim=0)
+                dead_units_prop = (reshaped_feature_activity.mean(dim=0) == 0).float().mean()
+                if dead_units_prop > 0.0:
+                    print(f"\n\n{dead_units_prop = }\n\n")
+                self.results_dict["dead_units_prop"][result_index] = dead_units_prop
+                # self.results_dict["dead_units_prop"][result_index] = (self.short_term_feature_activity > 0.0).float().mean(dim=0)
 
     def format_results(self):
         """
@@ -320,7 +320,7 @@ class PolicyCollapseExperiment(Experiment):
         """
         self.results_dict["return_per_episode"] = np.array(self.return_per_episode)
         self.results_dict["termination_steps"] = np.array(self.termination_steps)
-        self.results_dict["dead_units"] = self.results_dict["dead_units"].numpy()
+        self.results_dict["dead_units_prop"] = self.results_dict["dead_units_prop"].numpy()
         self.results_dict["stable_rank"] = self.results_dict["stable_rank"].numpy()
 
 
