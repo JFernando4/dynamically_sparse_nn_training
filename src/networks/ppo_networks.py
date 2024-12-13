@@ -36,7 +36,8 @@ class TwoLayerNetwork(nn.Module):
                  use_redo: bool = False,
                  reinit_frequency: int = 0,
                  reinit_threshold: float = 0.0,
-                 decay_rate: float = 0.99):
+                 decay_rate: float = 0.99,
+                 use_ln: bool = True):
         """
         Two-hidden-layer network with continual backpropagation and ReDo for PPO experiments
         """
@@ -44,18 +45,19 @@ class TwoLayerNetwork(nn.Module):
 
         self.act_type = act_type
         self.activation_func = {'Tanh': nn.Tanh, 'ReLU': nn.ReLU, 'elu': nn.ELU, 'sigmoid': nn.Sigmoid}[self.act_type]
+        self.use_ln = use_ln
 
         # first layer
         self.ff_1 = nn.Linear(input_dim, h_dim)
         self.act_1 = self.activation_func()
         self.reinit_layer_1 = None
-        self.ln_1 = nn.LayerNorm(h_dim)
+        self.ln_1 = nn.LayerNorm(h_dim) if self.use_ln else None
 
         # second layer
         self.ff_2 = nn.Linear(h_dim, h_dim)
         self.act_2 = self.activation_func()
         self.reinit_layer_2 = None
-        self.ln_2 = nn.LayerNorm(h_dim)
+        self.ln_2 = nn.LayerNorm(h_dim) if self.use_ln else None
 
         # output layer
         self.out = nn.Linear(h_dim, output_dim)
@@ -83,7 +85,8 @@ class TwoLayerNetwork(nn.Module):
             activations.append(x)
         if self.reinit_layer_1 is not None:
             x = self.reinit_layer_1(x)
-        x = self.ln_1(x)
+        if self.use_ln:
+            x = self.ln_1(x)
 
         # second hidden layer
         x = self.ff_2(x)
@@ -92,7 +95,8 @@ class TwoLayerNetwork(nn.Module):
             activations.append(x)
         if self.reinit_layer_2 is not None:
             x = self.reinit_layer_2(x)
-        x = self.ln_2(x)
+        if self.use_ln:
+            x = self.ln_2(x)
 
         # output layer
         x = self.out(x)
@@ -130,7 +134,8 @@ class MLPVF(nn.Module):
                  use_redo: bool = False,
                  reinit_frequency: int = 0,
                  reinit_threshold: float = 0.0,
-                 decay_rate: float = 0.99):
+                 decay_rate: float = 0.99,
+                 use_ln: bool = True):
 
         super().__init__()
 
@@ -138,7 +143,7 @@ class MLPVF(nn.Module):
         self.v_net = TwoLayerNetwork(input_dim=input_dim, output_dim=1, h_dim=h_dim, act_type=act_type,
                                      use_cbp=use_cbp, maturity_threshold=maturity_threshold, replacement_rate=replacement_rate,
                                      use_redo=use_redo, reinit_frequency=reinit_frequency, reinit_threshold=reinit_threshold,
-                                     decay_rate=decay_rate)
+                                     decay_rate=decay_rate, use_ln=use_ln)
         initialize_two_layer_network(self.v_net)
         self.v_net.to(device)
 
@@ -161,7 +166,8 @@ class MLPPolicy(nn.Module):
                  use_redo: bool = False,
                  reinit_frequency: int = 0,
                  reinit_threshold: float = 0.0,
-                 decay_rate: float = 0.99):
+                 decay_rate: float = 0.99,
+                 use_ln: bool = True):
         super().__init__()
 
         self.act_type = act_type
@@ -170,7 +176,7 @@ class MLPPolicy(nn.Module):
         self.mean_net = TwoLayerNetwork(input_dim=input_dim, output_dim=a_dim, h_dim=h_dim, act_type=act_type,
                                         use_cbp=use_cbp, maturity_threshold=maturity_threshold, replacement_rate=replacement_rate,
                                         use_redo=use_redo, reinit_frequency=reinit_frequency, reinit_threshold=reinit_threshold,
-                                        decay_rate=decay_rate)
+                                        decay_rate=decay_rate, use_ln=use_ln)
 
         self.log_std = nn.Parameter(torch.ones(a_dim) * log_std)
         self.mean_net.to(device)
