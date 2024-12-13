@@ -79,6 +79,7 @@ class PolicyCollapseExperiment(Experiment):
         # network parameters
         self.activation_type = access_dict(exp_params, "activation_type", default="ReLU", val_type=str)
         self.hidden_dim = access_dict(exp_params, "hidden_dim", default=16, val_type=int)
+        self.use_ln = access_dict(exp_params, "use_ln", default=True, val_type=bool)
 
         """ Initialize Environment """
         # self.env = gym.make(self.env_name, render_mode="human")
@@ -101,7 +102,8 @@ class PolicyCollapseExperiment(Experiment):
             "use_redo": self.use_redo,
             "reinit_frequency": self.redo_reinit_freq,
             "reinit_threshold": self.redo_reinit_threshold,
-            "decay_rate": self.decay_rate
+            "decay_rate": self.decay_rate,
+            "use_ln": self.use_ln
         }
         self.policy_network = MLPPolicy(a_dim=a_dim, **network_arguments)
         initialize_two_layer_network(self.policy_network.mean_net)
@@ -158,7 +160,7 @@ class PolicyCollapseExperiment(Experiment):
         feature_activity_summaries_shape = (results_dim, self.num_hidden_layers, self.hidden_dim)
         self.short_term_feature_activity = torch.zeros(size=feature_activity_summaries_shape)
         if "dead_units" in self.to_log:
-            self.results_dict["dead_units"] = torch.zeros(size=feature_activity_summaries_shape)
+            self.results_dict["dead_units"] = torch.zeros(size=(results_dim,))
         if "stable_rank" in self.to_log:
             self.results_dict["stable_rank"] = torch.zeros(size=(self.total_env_steps // self.stable_rank_store_frequency, ))
         self.return_per_episode = []
@@ -305,7 +307,12 @@ class PolicyCollapseExperiment(Experiment):
                 self.results_dict["stable_rank"][self.current_step // self.stable_rank_store_frequency] = current_stable_rank
 
             if "dead_units" in self.to_log:
-                self.results_dict["dead_units"][result_index] = (self.short_term_feature_activity > 0.0).float().mean(dim=0)
+                reshaped_feature_activity = self.short_term_feature_activity.reshape(-1, self.num_hidden_layers * self.hidden_dim)
+                prop_dead_units = (reshaped_feature_activity.mean(dim=0) == 0).float().mean()
+                if prop_dead_units > 0.0:
+                    print(f"\n\n{prop_dead_units = }\n\n")
+                self.results_dict["prop_dead_units"][result_index] = prop_dead_units
+                # self.results_dict["dead_units"][result_index] = (self.short_term_feature_activity > 0.0).float().mean(dim=0)
 
     def format_results(self):
         """
