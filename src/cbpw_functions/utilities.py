@@ -152,17 +152,16 @@ def initialize_weights_dict_ppo(policy_net: TwoLayerNetwork,
                                 val_network: TwoLayerNetwork,
                                 prune_method: str,
                                 grow_method: str,
-                                drop_factor: float,
-                                ln_drop_factor: float) -> dict[str, tuple]:
+                                drop_factor: float) -> dict[str, tuple]:
     """
     Initializes the weight dictionaries used in SWR for a network
 
     parameters:
         grow_method: string in ["truncated", "init", "zero"]
     """
-    weight_grow_name = {"truncated": "median_truncated", "zero": "zero", "init": "kaiming_uniform"}[grow_method]
-    weight_update_func = setup_cbpw_weight_update_function(prune_method, weight_grow_name, drop_factor=drop_factor)
-    ln_weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="fixed", drop_factor=ln_drop_factor, reinit_val=1.0)
+    weight_grow_name = {"truncated": "tk_uniform", "zero": "zero", "init": "kaiming_uniform"}[grow_method]
+    weight_update_func = setup_cbpw_weight_update_function(prune_method, weight_grow_name, drop_factor=drop_factor, activation="relu")
+    ln_weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="fixed", drop_factor=drop_factor, reinit_val=1.0)
     zero_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="zero", drop_factor=drop_factor)
 
     weight_dict = {}
@@ -171,14 +170,14 @@ def initialize_weights_dict_ppo(policy_net: TwoLayerNetwork,
         for n, p in net.named_parameters():
             is_weight = "weight" in n
             is_bias = "bias" in n
-            is_layer_norm = (".ln_1" in n) or (".ln_2." in n)
+            is_layer_norm = ("ln_1" in n) or ("ln_2" in n)
 
             if is_weight and is_layer_norm:         # weights of layer norm
                 weight_dict[n] = (p, ln_weight_update_func)
             elif is_bias:                           # bias terms in the network
                 weight_dict[n] = (p, zero_update_func)
             else:                                   # all the other weight matrices
-                if ".out" in n:     # out = output layer of TwoLayerNetwork
+                if "out" in n:     # out = output layer of TwoLayerNetwork
                     weight_dict[n] = (p, zero_update_func)
                 else:
                     weight_dict[n] = (p, weight_update_func)
