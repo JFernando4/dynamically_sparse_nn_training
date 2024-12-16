@@ -1,0 +1,13 @@
+{
+  "job_name": "pc",
+  "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
+  "output_filename": "pc-%n-%j.out",
+  "time": "20:00:00",
+  "mem": "8G",
+  "mail-type": "BEGIN,END,FAIL",
+  "mail-user":"jfhernan@ualberta.ca",
+  "cpus-per-task": 1,
+  "max_runs_per_job": 1,
+  "main_dir": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/",
+  "account": "def-sutton"
+}

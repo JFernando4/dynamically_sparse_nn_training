@@ -4,39 +4,43 @@
     "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results/",
     "relevant_parameters": [
       "stepsize",
-      "weight_decay"
+      "weight_decay",
+      "use_ln"
     ]
   },
 
   "experiment_params": {
-    "num_epochs": 20,
-    "evaluation_dataset": "validation",
-    "runs": 30
+    "env_name": "Ant-v5",
+    "total_env_steps": 5000000,
+    "activation_type": "ReLU",
+    "hidden_dim": 16,
+    "rescaled_wd": false,
+    "adam_beta1": 0.99,
+    "adam_beta2": 0.99,
+    "buffer_size": 2048,
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "num_epochs": 10,
+    "n_slices": 16,
+    "u_adv_scl": true,
+    "clip_eps": 0.2,
+    "runs": 1
   },
 
   "learning_params": {
-    "stepsize": ["fixed", 2e-5],
-    "weight_decay": ["fixed", 0.05],
-    "topology_update_freq": ["fixed", 1],
-    "reset_adamw_buffers": true
+    "stepsize": ["fixed", 0.0001],
+    "use_ln": false,
+    "weight_decay": 0.0
   },
 
   "slurm_parameters": {
-    "job_name": "bsa_ps",
+    "job_name": "pc",
     "time": "04:00:00",
-    "max_runs_per_job": 10,
-    "output_filename": "bert_sa-%n-%j.out",
-    "output_dir": "/scratch/dohare/dynamically_sparse_nn_training/outputs",
-    "mem": "12G",
-    "mail-type": "BEGIN,END,FAIL",
-    "mail-user":"jfhernan@ualberta.ca",
-    "cpus-per-task": 12,
-    "gpus-per-node": 1,
-    "main_dir": "/home/dohare/projects/def-ashique/dohare/dynamically_sparse_nn_training/",
-    "account": "rrg-ashique",
+    "max_runs_per_job": 1,
+    "mem": "4G",
+    "cpus-per-task": 1,
     "load_modules": [
-      "module load StdEnv/2023  gcc/12.3  openmpi/4.1.5\n",
-      "module load arrow/14.0.1 cuda/12.2\n",
-      "module load python/3.10\n"]
+      " module load mujoco/3.1.6\n"
+    ]
   }
 }
