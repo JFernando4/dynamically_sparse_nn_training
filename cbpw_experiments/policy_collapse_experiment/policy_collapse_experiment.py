@@ -1,268 +1,359 @@
+# built-in libraries
 import os
-import yaml
 import pickle
-import argparse
-import subprocess
-import numpy as np
-import tqdm
+import time
 
+# third party libraries
+import numpy as np
 import gymnasium as gym
 import torch
-from torch.optim import Adam
+from torch.optim import AdamW
+from mlproj_manager.util import access_dict, turn_off_debugging_processes, get_random_seeds
+from mlproj_manager.experiments import Experiment
 
-
+# src import
 from src.rl_agents import Buffer, PPO, Agent
-from src.networks import MLPVF, MLPPolicy
-from src.utils.evaluation_functions import compute_matrix_rank_summaries
+from src.networks.ppo_networks import MLPVF, MLPPolicy, initialize_two_layer_network
+from src.utils import set_random_seed, parse_terminal_arguments, compute_matrix_rank_summaries, compute_average_weight_magnitude
+from src.cbpw_functions.utilities import initialize_weight_dict
 
 
-def save_data(cfg, rets, termination_steps,
-              pol_features_activity, stable_rank, mu, pol_weights, val_weights,
-              action_probs=None, weight_change=[], friction=-1.0, num_updates=0, previous_change_time=0):
-    data_dict = {
-        'rets': np.array(rets),
-        'termination_steps': np.array(termination_steps),
-        'pol_features_activity': pol_features_activity,
-        'stable_rank': stable_rank,
-        'action_output': mu,
-        'pol_weights': pol_weights,
-        'val_weights': val_weights,
-        'action_probs': action_probs,
-        'weight_change': torch.tensor(weight_change).numpy(),
-        'friction': friction,
-        'num_updates': num_updates,
-        'previous_change_time': previous_change_time
-    }
-    with open(cfg['log_path'], 'wb') as f:
-        pickle.dump(data_dict, f, pickle.HIGHEST_PROTOCOL)
+class PolicyCollapseExperiment(Experiment):
 
 
-def load_data(cfg):
-    with open(cfg['log_path'], 'rb') as f:
-        data_dict = pickle.load(f)
-    return data_dict
+    def __init__(self, exp_params: dict, results_dir: str, run_index: int, verbose: bool = True):
+        super().__init__(exp_params, results_dir, run_index, verbose)
 
+        # set debugging options for pytorch
+        turn_off_debugging_processes(access_dict(exp_params, key="debug", default=True, val_type=bool))
+        # define torch device
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        # set random seed for reproducibility
+        set_random_seed(self.run_index)
 
-def save_checkpoint(cfg, step, learner):
-    # Save step, model and optimizer states
-    ckpt_dict = dict(
-        step=step,
-        actor=learner.pol.state_dict(),
-        critic=learner.vf.state_dict(),
-        opt=learner.opt.state_dict()
-    )
-    torch.save(ckpt_dict, cfg['ckpt_path'])
-    print(f'Save checkpoint at step={step}')
+        """ Experiment Parameters """
 
+        # optimizer parameters
+        self.stepsize = exp_params["stepsize"]
+        self.weight_decay = exp_params["weight_decay"]
+        self.rescaled_wd = access_dict(exp_params, "rescaled_wd", default=False, val_type=bool)
+        self.adam_beta1 = access_dict(exp_params, "adam_beta1", default=0.99, val_type=float)
+        self.adam_beta2 = access_dict(exp_params, "adam_beta2", default=0.99, val_type=float)
+        self.adam_eps = access_dict(exp_params, "adam_eps", default=1e-8, val_type=float)
+        # PPO parameters
+        self.no_clipping = access_dict(exp_params, "no_clipping", default=False, val_type=bool)
+        self.max_grad_norm = access_dict(exp_params, "max_grad_norm", default=1e9, val_type=float)
+        self.buffer_size = access_dict(exp_params, "buffer_size", default=1e6, val_type=int)
+        self.gamma = access_dict(exp_params, "gamma", default=0.99, val_type=float)
+        self.gae_lambda = access_dict(exp_params, "gae_lambda", default=0.95, val_type=float)
+        self.num_epochs = access_dict(exp_params, "num_epochs", default=10, val_type=int)
+        self.n_slices = access_dict(exp_params, "n_slices", default=10, val_type=int)
+        self.u_adv_scl = access_dict(exp_params, "u_adv_scl", default=True, val_type=bool)
+        self.clip_epsilon = access_dict(exp_params, "clip_epsilon", default=0.2, val_type=float)
+        # shrink-and-perturb parameters
+        self.perturb_std = access_dict(exp_params, "perturb_std", default=0.0, val_type=float)
+        # continual backprop parameters
+        self.replacement_rate = access_dict(exp_params, "replacement_rate", default=0.0, val_type=float)
+        self.maturity_threshold = access_dict(exp_params, "maturity_threshold", default=0, val_type=int)
+        self.cbp_utility = access_dict(exp_params, "cbp_utiltiy", default="contribution", val_type=str)
+        self.decay_rate = access_dict(exp_params, "decay_rate", default=0.0, val_type=float)    # also for redo
+        self.use_cbp = (self.replacement_rate > 0.0) and (self.maturity_threshold > 0)
+        # ReDo parameters
+        self.redo_reinit_threshold = access_dict(exp_params, "redo_reinit_threshold", default=0.0, val_type=float)
+        self.redo_reinit_freq = access_dict(exp_params, "redo_reinit_freq", default=0, val_type=int)
+        self.redo_utility = access_dict(exp_params, "redo_utility", default="original", val_type=str)
+        self.use_redo = (self.redo_reinit_threshold > 0.0) and (self.redo_reinit_freq > 0)
+        # SWR parameters
+        self.reinit_freq = access_dict(exp_params, "reinit_freq", default=0, val_type=int)
+        self.drop_factor = access_dict(exp_params, "drop_factor", default=float, val_type=float)
+        self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str,
+                                        choices=["none", "magnitude", "gf", "gr", "mr"])
+        self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str,
+                                       choices=["none", "init", "zero", "truncated"])
+        self.use_swr = (self.prune_method != "none") and (self.grow_method != "none")
 
-def load_checkpoint(cfg, device, learner):
-    # Load step, model and optimizer states
-    step = 0
-    ckpt_dict = torch.load(cfg['ckpt_path'], map_location=device)
-    step = ckpt_dict['step']
-    learner.pol.load_state_dict(ckpt_dict['actor'])
-    learner.vf.load_state_dict(ckpt_dict['critic'])
-    learner.opt.load_state_dict(ckpt_dict['opt'])
-    print(f"Successfully restore from checkpoint: {cfg['ckpt_path']}.")
-    return step, learner
+        # environment parameters
+        self.total_env_steps = access_dict(exp_params, "total_env_steps", default=1e6, val_type=int)
+        self.env_name = exp_params["env_name"]
+
+        # network parameters
+        self.activation_type = access_dict(exp_params, "activation_type", default="ReLU", val_type=str)
+        self.hidden_dim = access_dict(exp_params, "hidden_dim", default=16, val_type=int)
+        self.use_ln = access_dict(exp_params, "use_ln", default=True, val_type=bool)
+
+        """ Initialize Environment """
+        # self.env = gym.make(self.env_name, render_mode="human")
+        self.env = gym.make(self.env_name)
+        self.env.name = None
+        input_dim = self.env.observation_space.shape[0]
+        a_dim = self.env.action_space.shape[0]
+        self.current_step = 0
+
+        """ Initialize Networks """
+        self.num_hidden_layers = 2
+        network_arguments = {
+            "input_dim": input_dim,
+            "act_type": self.activation_type,
+            "h_dim": self.hidden_dim,
+            "device": self.device,
+            "use_cbp": self.use_cbp,
+            "maturity_threshold": self.maturity_threshold,
+            "replacement_rate": self.replacement_rate,
+            "use_redo": self.use_redo,
+            "reinit_frequency": self.redo_reinit_freq,
+            "reinit_threshold": self.redo_reinit_threshold,
+            "decay_rate": self.decay_rate,
+            "use_ln": self.use_ln
+        }
+        self.policy_network = MLPPolicy(a_dim=a_dim, **network_arguments)
+        initialize_two_layer_network(self.policy_network.mean_net)
+        self.val_function_network = MLPVF(**network_arguments)
+        initialize_two_layer_network(self.val_function_network.v_net)
+        self.replay_buffer = Buffer(input_dim, a_dim, self.buffer_size, device=self.device)
+        self.optimizer = AdamW
+
+        """ SWR Set Up """
+        weight_dict = None
+        if self.use_swr:
+            weight_dict = initialize_weight_dict(net=self.policy_network.mean_net,
+                                                 val_network=self.val_function_network.v_net,
+                                                 architecture_type="ppo_networks",
+                                                 prune_method=self.prune_method,
+                                                 grow_method=self.grow_method,
+                                                 drop_factor=self.drop_factor)
+
+        """" Initialize PPO Agent """
+        self.learner = PPO(
+            pol=self.policy_network,
+            buf=self.replay_buffer,
+            lr=self.stepsize,
+            g=self.gamma,
+            vf=self.val_function_network,
+            lm=self.gae_lambda,
+            Opt=self.optimizer,
+            u_epi_up=0,
+            device=self.device,
+            n_itrs=self.num_epochs,
+            n_slices=self.n_slices,
+            u_adv_scl=self.u_adv_scl,
+            clip_eps=self.clip_epsilon,
+            max_grad_norm=self.max_grad_norm,
+            wd=self.weight_decay,
+            betas=(self.adam_beta1, self.adam_beta2),
+            eps=self.adam_eps,
+            no_clipping=self.no_clipping,
+            weight_dict=weight_dict,
+            swr_reinit_freq=self.reinit_freq
+        )
+        self.agent = Agent(pol=self.policy_network, learner=self.learner)
+
+        """ Initialize summaries """
+        self.to_log = ["dead_units_prop", "pol_weights", "val_weights", "pol_grad_magnitude", "val_grad_magnitude", "stable_rank"]
+        self.result_store_frequency = 1000
+        self.stable_rank_store_frequency = self.result_store_frequency * 10
+
+        results_dim = self.total_env_steps // self.result_store_frequency
+        if "pol_weights" in self.to_log:
+            self.results_dict["pol_weights"] = np.zeros(shape=results_dim)
+        if "val_weights" in self.to_log:
+            self.results_dict["val_weights"] = np.zeros(shape=results_dim)
+        feature_activity_summaries_shape = (results_dim, self.num_hidden_layers, self.hidden_dim)
+        self.short_term_feature_activity = torch.zeros(size=feature_activity_summaries_shape)
+        if "dead_units_prop" in self.to_log:
+            self.results_dict["dead_units_prop"] = torch.zeros(size=(results_dim,))
+        if "stable_rank" in self.to_log:
+            self.results_dict["stable_rank"] = torch.zeros(size=(self.total_env_steps // self.stable_rank_store_frequency, ))
+        self.return_per_episode = []
+        self.termination_steps = []
+
+        """ For creating experiment checkpoints """
+        self.experiment_checkpoints_dir_path = os.path.join(self.results_dir, "experiment_checkpoints")
+        self.checkpoint_identifier_name = "current_step"
+        self.checkpoint_save_frequency = 1e6                # save 1 million environment steps
+        self.delete_old_checkpoints = True
+
+    # ----------------------------- For saving and loading experiment checkpoints ----------------------------- #
+    def get_experiment_checkpoint(self):
+
+        """ Creates a dictionary with all the necessary information to pause and resume the experiment """
+
+        partial_results = {}
+        for k, v in self.results_dict.items():
+            partial_results[k] = v if not isinstance(v, torch.Tensor) else v.cpu()
+
+        checkpoint = {
+            "torch_rng_state": torch.get_rng_state(),
+            "numpy_rng_state": np.random.get_state(),
+            "pol_weights": self.policy_network.state_dict(),
+            "value_function_weights": self.val_function_network.state_dict(),
+            "optimizer_state": self.learner.opt.state_dict(),
+            "current_step": self.current_step,
+            "short_term_feature_activity": self.short_term_feature_activity,
+            "returns": self.return_per_episode,
+            "termination_steps": self.termination_steps,
+            "partial_results": partial_results
+        }
+
+        if torch.cuda.is_available():
+            checkpoint["cuda_rng_state"] = torch.cuda.get_rng_state()
+
+        return checkpoint
+
+    def load_checkpoint_data_and_update_experiment_variables(self, file_path) -> bool:
+        """
+        Loads the checkpoint and assigns the experiment variables the recovered values
+        :param file_path: path to the experiment checkpoint
+        :return: (bool) if the variables were successfully loaded
+        """
+
+        try:
+            with open(file_path, mode="rb") as experiment_checkpoint_file:
+                checkpoint = pickle.load(experiment_checkpoint_file)
+        except EOFError:
+            print("Couldn't load checkpoint pickle file.")
+            return False
+
+        self.policy_network.load_state_dict(checkpoint["pol_weights"])
+        self.val_function_network.load_state_dict(checkpoint["value_function_weights"])
+        self.learner.opt.load_state_dict(checkpoint["optimizer_state"])
+        self.current_step = checkpoint["current_step"]
+        self.short_term_feature_activity = checkpoint["short_term_feature_activity"]
+        self.return_per_episode = checkpoint["returns"]
+        self.termination_steps = checkpoint["termination_steps"]
+
+        partial_results = checkpoint["partial_results"]
+        for k, v in self.results_dict.items():
+            if k not in partial_results.keys():
+                print(f"Warning! {k} is not a partial result stored in the checkpoint!")
+                continue
+            if isinstance(partial_results[k], torch.Tensor):
+                self.results_dict[k][:partial_results[k].shape[0]] = partial_results[k].to(self.device)
+            elif isinstance(partial_results[k], np.ndarray):
+                self.results_dict[k][:partial_results[k].shape[0]] = partial_results[k]
+            else:
+                self.results_dict[k] = partial_results[k]
+
+        torch.set_rng_state(checkpoint["torch_rng_state"])
+        np.random.set_state(checkpoint["numpy_rng_state"])
+        if torch.cuda.is_available():
+            torch.cuda.set_rng_state(checkpoint["cuda_rng_state"])
+        return True
+
+    def run(self):
+
+        # load checkpoint if available
+        self.load_experiment_checkpoint()
+
+        # train agent
+        self.train_agent()
+
+        # format results
+        self.format_results()
+
+        # summaries are stored in memory by calling exp.store_results()
+
+    def train_agent(self):
+        # trains the agent for self.total_env_steps
+
+        current_return = 0.0
+        observation, info = self.env.reset()
+
+        while self.current_step < self.total_env_steps:
+            # self.env.render()
+            # if self.current_step % self.result_store_frequency == 0:
+            #     self._print(f"Current environment step: {self.current_step}\n\tReturn: {current_return}")
+
+            # get new action
+            action, log_prob, dist, new_features = self.agent.get_action(observation)
+            # receive new observation and reward
+            new_observation, reward, done, truncated, infos = self.env.step(action)
+            # save information in the buffer
+            self.agent.log_update(observation, action, reward, new_observation, log_prob, dist, done or truncated)
+            # compute summaries
+            self.compute_results(new_features)
+            # update state and return
+            observation = new_observation
+            current_return += reward
+
+            if done or truncated:
+                print(f"Episode finished, current step {self.current_step}, return {current_return}")
+                self.return_per_episode.append(current_return)
+                self.termination_steps.append(self.current_step)
+                current_return = 0.0
+                observation, info = self.env.reset()
+
+            self.current_step += 1
+
+            if self.current_step % self.checkpoint_save_frequency == 0:
+                self.save_experiment_checkpoint()
+
+    def compute_results(self, new_features):
+        """ Computes the results of the experiment """
+
+        for layer_idx in range(self.num_hidden_layers):
+            self.short_term_feature_activity[self.current_step % self.result_store_frequency, layer_idx, :] = new_features[layer_idx].detach().clone()
+
+        result_index = self.current_step // self.result_store_frequency
+        if "pol_weights" in self.to_log:
+            self.results_dict["pol_weights"][result_index] += compute_average_weight_magnitude(self.policy_network.mean_net)[0]
+        if "val_weights" in self.to_log:
+            self.results_dict["val_weights"][result_index] += compute_average_weight_magnitude(self.val_function_network.v_net)[0]
+
+        if (self.current_step + 1) % self.result_store_frequency == 0:
+            # store stable rank summaries
+            if "stable_rank" in self.to_log:
+                _, _, _, current_stable_rank = compute_matrix_rank_summaries(
+                    m=self.short_term_feature_activity[:, -1, :], use_scipy=True)
+                self.results_dict["stable_rank"][self.current_step // self.stable_rank_store_frequency] = current_stable_rank
+
+            if "dead_units_prop" in self.to_log:
+                reshaped_feature_activity = self.short_term_feature_activity.reshape(-1, self.num_hidden_layers * self.hidden_dim)
+                dead_units_prop = (reshaped_feature_activity.mean(dim=0) == 0).float().mean()
+                if dead_units_prop > 0.0:
+                    print(f"\n\n{dead_units_prop = }\n\n")
+                self.results_dict["dead_units_prop"][result_index] = dead_units_prop
+                # self.results_dict["dead_units_prop"][result_index] = (self.short_term_feature_activity > 0.0).float().mean(dim=0)
+
+    def format_results(self):
+        """
+        changes all the results array to numpy arrays
+        """
+        self.results_dict["return_per_episode"] = np.array(self.return_per_episode)
+        self.results_dict["termination_steps"] = np.array(self.termination_steps)
+        self.results_dict["dead_units_prop"] = self.results_dict["dead_units_prop"].numpy()
+        self.results_dict["stable_rank"] = self.results_dict["stable_rank"].numpy()
 
 
 def main():
-    # Setup
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config', required=False, type=str, default='./cfg/ant/std.yml')
-    parser.add_argument('-s', '--seed', required=False, type=int, default="1")
-    parser.add_argument('-d', '--device', required=False, default='cpu')
+    """
+    This is a quick demonstration of how to run the experiments. For a more systematic run, use the mlproj_manager
+    scheduler.
+    """
+    from mlproj_manager.file_management.file_and_directory_management import read_json_file
+    terminal_arguments = parse_terminal_arguments()
+    experiment_parameters = read_json_file(terminal_arguments.config_file)
+    file_path = os.path.dirname(os.path.abspath(__file__))
 
-    args = parser.parse_args()
-    if args.device:
-        device = args.device
-    else:
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    cfg = yaml.safe_load(open(args.config))
-    cfg['seed'] = args.seed
-    cfg['log_path'] = cfg['dir'] + str(args.seed) + '.log'
-    cfg['ckpt_path'] = cfg['dir'] + str(args.seed) + '.pth'
-    cfg['done_path'] = cfg['dir'] + str(args.seed) + '.done'
+    print(experiment_parameters)
 
-    bash_command = "mkdir -p " + cfg['dir']
-    subprocess.Popen(bash_command.split(), stdout=subprocess.PIPE)
+    # create result dir from the relevant parameters
+    relevant_parameters = experiment_parameters["relevant_parameters"]
+    results_dir_name = "{0}-{1}".format(relevant_parameters[0], experiment_parameters[relevant_parameters[0]])
+    for relevant_param in relevant_parameters[1:]:
+        results_dir_name += "_" + relevant_param + "-" + str(experiment_parameters[relevant_param])
 
-    # Set default values
-    cfg.setdefault('wd', 0)
-    cfg.setdefault('init', 'lecun')
-    cfg.setdefault('to_log', [])
-    cfg.setdefault('beta_1', 0.9)
-    cfg.setdefault('beta_2', 0.999)
-    cfg.setdefault('eps', 1e-8)
-    cfg.setdefault('no_clipping', False)
-    cfg.setdefault('loss_type', 'ppo')
-    # cfg.setdefault('frictions_file', 'cfg/frictions')
-    cfg.setdefault('max_grad_norm', 1e9)
-    cfg.setdefault('perturb_scale', 0)
-    cfg['n_steps'] = int(float(cfg['n_steps']))
-    cfg['perturb_scale'] = float(cfg['perturb_scale'])
-    n_steps = cfg['n_steps']
-
-    # Set default values for CBP
-    cfg.setdefault('mt', 10000)
-    cfg.setdefault('rr', 0)
-    cfg['rr'] = float(cfg['rr'])
-    cfg.setdefault('decay_rate', 0.0)
-    cfg.setdefault('redo', False)
-    cfg.setdefault('threshold', 0.03)
-    # cfg.setdefault('reset_period', 1000)
-    cfg.setdefault('util_type_val', 'contribution')
-    cfg.setdefault('util_type_pol', 'contribution')
-    cfg.setdefault('pgnt', (cfg['rr'] > 0) or cfg['redo'])
-    cfg.setdefault('vgnt', (cfg['rr'] > 0) or cfg['redo'])
-
-    # Initialize env
-    seed = cfg['seed']
-    friction = -1.0
-    env = gym.make(cfg['env_name'])
-    env.name = None
-
-    # Set random seeds
-    np.random.seed(seed)
-    random_state = np.random.get_state()
-    torch_seed = np.random.randint(1, 2 ** 31 - 1)
-    torch.manual_seed(torch_seed)
-    torch.cuda.manual_seed_all(torch_seed)
-
-    # Initialize algorithm
-    opt = Adam
-    num_layers = 2
-    input_dim = env.observation_space.shape[0]
-    a_dim = env.action_space.shape[0]
-    cbp_redo_args = {"use_cbp": cfg["use_cbp"], "maturity_threshold": cfg["mt"], "replacement_rate": cfg["rr"],
-                     "use_redo": cfg["use_redo"], "reinit_frequency": cfg["rf"], "reinit_threshold": cfg["rt"],
-                     "decay_rate": cfg["decay_rate"]}
-    pol = MLPPolicy(input_dim, a_dim, act_type=cfg['act_type'], h_dim=cfg['h_dim'], device=device, **cbp_redo_args)
-    vf = MLPVF(input_dim, act_type=cfg['act_type'], h_dim=cfg['h_dim'], device=device, **cbp_redo_args)
-    np.random.set_state(random_state)
-    buf = Buffer(input_dim, a_dim, cfg['bs'], device=device)
-
-    learner = PPO(pol, buf, cfg['lr'], g=cfg['g'], vf=vf, lm=cfg['lm'], Opt=opt,
-                  u_epi_up=cfg['u_epi_ups'], device=device, n_itrs=cfg['n_itrs'], n_slices=cfg['n_slices'],
-                  u_adv_scl=cfg['u_adv_scl'], clip_eps=cfg['clip_eps'],
-                  max_grad_norm=cfg['max_grad_norm'],
-                  wd=float(cfg['wd']),
-                  betas=(cfg['beta_1'], cfg['beta_2']), eps=float(cfg['eps']), no_clipping=cfg['no_clipping'],
-                  loss_type=cfg['loss_type'], perturb_scale=cfg['perturb_scale'],
-                  vgnt=cfg['vgnt'], pgnt=cfg['pgnt'])
-
-    to_log = cfg['to_log']
-    agent = Agent(pol, learner, device=device, to_log_features=(len(to_log) > 0))
-
-    # Load checkpoint
-    if os.path.exists(cfg['ckpt_path']):
-        start_step, agent.learner = load_checkpoint(cfg, device, agent.learner)
-    else:
-        start_step = 0
-
-    # Initialize log
-    if os.path.exists(cfg['log_path']):
-        data_dict = load_data(cfg)
-        num_updates = data_dict['num_updates']
-        previous_change_time = data_dict['previous_change_time']
-        for k, v in data_dict.items():
-            try:
-                data_dict[k] = list(v)
-            except:
-                pass
-        rets = data_dict['rets']
-        termination_steps = data_dict['termination_steps']
-        pol_features_activity = data_dict['pol_features_activity']
-        stable_rank = data_dict['stable_rank']
-        if 'pol_features_activity' in to_log:
-            short_term_feature_activity = torch.zeros(size=(1000, num_layers, cfg['h_dim'][0]))
-            pol_features_activity = torch.stack(pol_features_activity)
-        if 'stable_rank' in to_log:
-            stable_rank = torch.stack(stable_rank)
-        mu = data_dict['action_output']
-        if 'mu' in to_log:
-            mu = np.array(mu)
-        pol_weights = data_dict['pol_weights']
-        if 'pol_weights' in to_log:
-            pol_weights = np.array(pol_weights)
-        val_weights = data_dict['val_weights']
-        if 'val_weights' in to_log:
-            val_weights = np.array(val_weights)
-        weight_change = data_dict['weight_change']
-    else:
-        num_updates = 0
-        previous_change_time = 0
-        rets, termination_steps = [], []
-        mu, weight_change, pol_features_activity, stable_rank, pol_weights, val_weights = [], [], [], [], [], []
-        if 'mu' in to_log:
-            mu = np.ones(size=(n_steps, a_dim))
-        if 'pol_weights' in to_log:
-            pol_weights = np.zeros(shape=(n_steps // 1000 + 2, (len(pol.mean_net) + 1) // 2))
-        if 'val_weights' in to_log:
-            val_weights = np.zeros(shape=(n_steps // 1000 + 2, (len(pol.mean_net) + 1) // 2))
-        if 'pol_features_activity' in to_log:
-            short_term_feature_activity = torch.zeros(size=(1000, num_layers, cfg['h_dim'][0]))
-            pol_features_activity = torch.zeros(size=(n_steps // 1000 + 2, num_layers, cfg['h_dim'][0]))
-        if 'stable_rank' in to_log:
-            stable_rank = torch.zeros(size=(n_steps // 10000 + 2,))
-
-    ret = 0
-    epi_steps = 0
-    o, info = env.reset()
-    print('start_step:', start_step)
-    # Interaction loop
-    for step in tqdm.tqdm(range(start_step, n_steps)):
-        a, logp, dist, new_features = agent.get_action(o)
-        op, r, done, truncated, infos = env.step(a)
-        epi_steps += 1
-        op_ = op
-        val_logs = agent.log_update(o, a, r, op_, logp, dist, done)
-        # Logging
-        with torch.no_grad():
-            if 'weight_change' in to_log and 'weight_change' in val_logs.keys(): weight_change.append(
-                val_logs['weight_change'])
-            if 'mu' in to_log: mu[step] = a
-            if step % 1000 == 0:
-                if step % 10000 == 0 and 'stable_rank' in to_log:
-                    _, _, _, stable_rank[step // 10000] = compute_matrix_rank_summaries(
-                        m=short_term_feature_activity[:, -1, :], use_scipy=True)
-                if 'pol_features_activity' in to_log:
-                    pol_features_activity[step // 1000] = (short_term_feature_activity > 0).float().mean(dim=0)
-                    short_term_feature_activity *= 0
-                if 'pol_weights' in to_log:
-                    for layer_idx in range((len(pol.mean_net) + 1) // 2):
-                        pol_weights[step // 1000, layer_idx] = pol.mean_net[2 * layer_idx].weight.data.abs().mean()
-                if 'val_weights' in to_log:
-                    for layer_idx in range((len(learner.vf.v_net) + 1) // 2):
-                        val_weights[step // 1000, layer_idx] = learner.vf.v_net[2 * layer_idx].weight.data.abs().mean()
-            if 'pol_features_activity' in to_log:
-                for i in range(num_layers):
-                    short_term_feature_activity[step % 1000, i] = new_features[i]
-
-        o = op
-        ret += r
-        if done:
-            # print(step, "(", epi_steps, ") {0:.2f}".format(ret))
-            rets.append(ret)
-            termination_steps.append(step)
-            ret = 0
-            epi_steps = 0
-            o, info = env.reset()
-
-        if step % (n_steps // 100) == 0 or step == n_steps - 1:
-            # Save checkpoint
-            save_checkpoint(cfg, step, agent.learner)
-            # Save data logs
-            save_data(cfg=cfg, rets=rets, termination_steps=termination_steps,
-                      pol_features_activity=pol_features_activity, stable_rank=stable_rank, mu=mu,
-                      pol_weights=pol_weights,
-                      val_weights=val_weights, weight_change=weight_change, friction=friction,
-                      num_updates=num_updates, previous_change_time=previous_change_time)
-
-    with open(cfg['done_path'], 'w') as f:
-        f.write('All done!')
-        print('The experiment finished successfully!')
+    # run the experiment
+    initial_time = time.perf_counter()
+    exp = PolicyCollapseExperiment(experiment_parameters,
+                                   results_dir=os.path.join(file_path, "results", results_dir_name),
+                                   run_index=terminal_arguments.run_index,
+                                   verbose=terminal_arguments.verbose)
+    exp.run()
+    # store results
+    exp.store_results()
+    # display runtime
+    final_time = time.perf_counter()
+    print("The running time in minutes is: {0:.2f}".format((final_time - initial_time) / 60))
 
 
 if __name__ == "__main__":
