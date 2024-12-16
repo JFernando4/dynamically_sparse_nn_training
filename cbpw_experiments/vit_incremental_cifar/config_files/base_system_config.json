@@ -4,9 +4,6 @@
     "data_path": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/cbpw_experiments/vit_incremental_cifar/data/",
     "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results/",
     "relevant_parameters": [
-      "stepsize",
-      "weight_decay",
-      "dropout_prob",
       "reset_network",
       "num_epochs",
       "initial_num_classes",
