@@ -36,7 +36,6 @@ class PolicyCollapseExperiment(Experiment):
         # optimizer parameters
         self.stepsize = exp_params["stepsize"]
         self.weight_decay = exp_params["weight_decay"]
-        self.rescaled_wd = access_dict(exp_params, "rescaled_wd", default=False, val_type=bool)
         self.adam_beta1 = access_dict(exp_params, "adam_beta1", default=0.99, val_type=float)
         self.adam_beta2 = access_dict(exp_params, "adam_beta2", default=0.99, val_type=float)
         self.adam_eps = access_dict(exp_params, "adam_eps", default=1e-8, val_type=float)
