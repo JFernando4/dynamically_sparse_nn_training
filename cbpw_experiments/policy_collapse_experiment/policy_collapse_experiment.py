@@ -8,7 +8,7 @@ import numpy as np
 import gymnasium as gym
 import torch
 from torch.optim import AdamW
-from mlproj_manager.util import access_dict, turn_off_debugging_processes, get_random_seeds
+from mlproj_manager.util import access_dict, turn_off_debugging_processes
 from mlproj_manager.experiments import Experiment
 
 # src import
@@ -261,7 +261,7 @@ class PolicyCollapseExperiment(Experiment):
         while self.current_step < self.total_env_steps:
             # self.env.render()
             if (self.current_step % self.result_store_frequency == 0) and (len(self.return_per_episode) > 0):
-                self._print(f"Current step: {self.current_step}\n\tLast sum of rewards: {self.return_per_episode[-1]}")
+                self._print(f"Current step: {self.current_step}\n\tLast sum of rewards: {self.return_per_episode[-1]:.4f}")
 
             # get new action
             action, log_prob, dist, new_features = self.agent.get_action(observation)
