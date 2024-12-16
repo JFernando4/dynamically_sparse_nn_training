@@ -11,7 +11,7 @@
 
   "experiment_params": {
     "env_name": "Ant-v5",
-    "total_env_steps": 5000000,
+    "total_env_steps": 30000000,
     "activation_type": "ReLU",
     "hidden_dim": 16,
     "adam_beta1": 0.99,
@@ -34,7 +34,7 @@
 
   "slurm_parameters": {
     "job_name": "pc",
-    "time": "04:00:00",
+    "time": "15:00:00",
     "max_runs_per_job": 1,
     "mem": "4G",
     "cpus-per-task": 1,
