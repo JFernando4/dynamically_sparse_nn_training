@@ -260,7 +260,7 @@ class PolicyCollapseExperiment(Experiment):
 
         while self.current_step < self.total_env_steps:
             # self.env.render()
-            if (self.current_step % (self.result_store_frequency*100) == 0) and (len(self.return_per_episode) > 0):
+            if (self.current_step % (self.result_store_frequency) == 0) and (len(self.return_per_episode) > 0):
                 self._print(f"Current step: {self.current_step}\n\tLast sum of rewards: {self.return_per_episode[-1]:.4f}")
 
             # get new action
