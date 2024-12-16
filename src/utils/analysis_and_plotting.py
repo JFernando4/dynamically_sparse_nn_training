@@ -107,8 +107,10 @@ def plot_avg_with_shaded_region(results_data: dict = None, results_avg: dict = N
     alpha = access_dict(plot_parameters, "alpha", 0.1, float)
     x_label = access_dict(plot_parameters, "x_label", "Permutation Number", str)
     y_label = access_dict(plot_parameters, "y_label", measurement_name, str)
-    labels = access_dict(plot_parameters, "labels", list(results_data.keys()), list)
-    linestyles = access_dict(plot_parameters, "linestyles", ["-"] * len(results_data), list)
+    default_labels = results_data.keys() if results_data is not None else results_avg.keys()
+    labels = access_dict(plot_parameters, "labels", list(default_labels), list)
+    default_linestyles = ["-"] * len(results_data) if results_data is not None else ["-"] * len(results_avg)
+    linestyles = access_dict(plot_parameters, "linestyles", default_linestyles, list)
     ylim = access_dict(plot_parameters, "ylim", None)
     yticks = access_dict(plot_parameters, "yticks", None)
     xlim = access_dict(plot_parameters, "xlim", None)
@@ -124,7 +126,7 @@ def plot_avg_with_shaded_region(results_data: dict = None, results_avg: dict = N
         else:
             temp_average, temp_low, temp_high = results_avg[pc], results_low[pc], results_high[pc]
 
-        temp_x_axis = np.arange(temp_average.size) if x_axis is None else x_axis[pc]
+        temp_x_axis = np.arange(temp_average.size) if x_axis is None else x_axis
         print(f"\t{pc}\n\tNumber of samples: {num_samples}")
         print(f"\tMax: {np.max(temp_average):.5f}\n\tMin: {np.min(temp_average):.5f}")
         measurement_name += f"_sample_size_{num_samples}"
