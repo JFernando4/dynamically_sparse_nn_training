@@ -116,8 +116,9 @@ def initialize_two_layer_network(net: TwoLayerNetwork):
         torch.nn.init.zeros_(layer.bias)
 
     for layer in ln_layers:
-        torch.nn.init.ones_(layer.weight)
-        torch.nn.init.zeros_(layer.bias)
+        if layer is not None:
+            torch.nn.init.ones_(layer.weight)
+            torch.nn.init.zeros_(layer.bias)
 
     torch.nn.init.zeros_(net.out.weight)
     torch.nn.init.zeros_(net.out.bias)
