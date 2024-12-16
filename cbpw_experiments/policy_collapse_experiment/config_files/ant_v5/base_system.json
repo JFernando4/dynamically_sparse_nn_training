@@ -1,6 +1,6 @@
 {
   "file_management": {
-    "experiment_name": "policy_collapse",
+    "experiment_name": "ant_policy_collapse",
     "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results/",
     "relevant_parameters": [
       "stepsize",
