@@ -1,0 +1,25 @@
+{
+    "results_dir": "/Users/rlai/PycharmProjects/dynamically_sparse_nn_training/cbpw_experiments/policy_collapse_experiment/results/",
+
+    "parameter_combinations":
+        [
+            "stepsize-0.0001_weight_decay-0.0001_reinit_freq-2000_drop_factor-0.001_prune_method-gr_grow_method-truncated"
+        ],
+
+    "summary_names":
+        [
+            "average_return"
+        ],
+
+    "plot_dir": "/Users/rlai/Downloads/",
+    "total_steps": 1000000,
+
+    "plot_parameters": {
+        "x_label": "Training Step",
+        "y_label": "Return per Episode",
+        "labels": ["SWR"],
+        "color_order": ["black"]
+    },
+
+    "plot_name_prefix": "test"
+}
