@@ -260,8 +260,8 @@ class PolicyCollapseExperiment(Experiment):
 
         while self.current_step < self.total_env_steps:
             # self.env.render()
-            # if self.current_step % self.result_store_frequency == 0:
-            #     self._print(f"Current environment step: {self.current_step}\n\tReturn: {current_return}")
+            if (self.current_step % self.result_store_frequency == 0) and (len(self.return_per_episode) > 0):
+                self._print(f"Current step: {self.current_step}\n\tLast sum of rewards: {self.return_per_episode[-1]}")
 
             # get new action
             action, log_prob, dist, new_features = self.agent.get_action(observation)
@@ -276,7 +276,6 @@ class PolicyCollapseExperiment(Experiment):
             current_return += reward
 
             if done or truncated:
-                print(f"Episode finished, current step {self.current_step}, return {current_return}")
                 self.return_per_episode.append(current_return)
                 self.termination_steps.append(self.current_step)
                 current_return = 0.0
