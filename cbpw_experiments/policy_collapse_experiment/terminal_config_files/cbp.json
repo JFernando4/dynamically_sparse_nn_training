@@ -10,7 +10,6 @@
   "__comment_3__": "Optimizer parameters",
   "stepsize": 0.0001,
   "weight_decay": 1e-4,
-  "rescaled_wd": false,
   "adam_beta1": 0.99,
   "adam_beta2": 0.99,
 
