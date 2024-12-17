@@ -169,6 +169,7 @@ class IncrementalCIFARExperiment(Experiment):
 
         return initialize_weight_dict(self.net, architecture_type="vit", prune_method=self.prune_method,
                                       grow_method=self.grow_method, drop_factor=df, ln_drop_factor=df)
+
     def _initialize_summaries(self):
         """
         Initializes the summaries for the experiment
@@ -363,6 +364,7 @@ class IncrementalCIFARExperiment(Experiment):
 
             epoch_start = time.perf_counter()
             for step_number, sample in enumerate(train_dataloader):
+                print(self.lr_scheduler.get_last_lr())
                 # sample observationa and target
                 image = sample["image"].to(self.device)
                 label = sample["label"].to(self.device)
