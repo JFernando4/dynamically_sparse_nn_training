@@ -364,7 +364,6 @@ class IncrementalCIFARExperiment(Experiment):
 
             epoch_start = time.perf_counter()
             for step_number, sample in enumerate(train_dataloader):
-                print(self.lr_scheduler.get_last_lr())
                 # sample observationa and target
                 image = sample["image"].to(self.device)
                 label = sample["label"].to(self.device)
