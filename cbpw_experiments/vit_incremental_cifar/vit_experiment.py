@@ -14,7 +14,7 @@ from mlproj_manager.problems import CifarDataSet
 from mlproj_manager.experiments import Experiment
 from mlproj_manager.util import turn_off_debugging_processes, get_random_seeds, access_dict
 
-from src import initialize_vit, initialize_vit_heads, initialize_layer_norm_module, initialize_self_multihead_attention_module, initialize_mlp_block
+from src import initialize_vit, initialize_vit_heads, initialize_layer_norm_module, initialize_multihead_self_attention_module, initialize_mlp_block
 from src.plasticity_functions import SGDL2Init, inject_noise
 from src.cbpw_functions import initialize_weight_dict
 from src.utils import get_cifar_data, compute_accuracy_from_batch
@@ -512,7 +512,7 @@ class IncrementalCIFARExperiment(Experiment):
             if self.reset_layer_norm:
                 self.net.apply(initialize_layer_norm_module)
             if self.reset_attention_layers:
-                self.net.apply(initialize_self_multihead_attention_module)
+                self.net.apply(initialize_multihead_self_attention_module)
             if self.reset_mlp_blocks:
                 self.net.apply(initialize_mlp_block)
             if self.reset_momentum:

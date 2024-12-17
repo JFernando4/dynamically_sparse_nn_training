@@ -26,7 +26,7 @@ def xavier_vit_initialization(m: torch.nn.Module):
     elif isinstance(m, torch.nn.LayerNorm):
         initialize_layer_norm_module(m)
     elif isinstance(m, EncoderBlock):
-        initialize_self_multihead_attention_module(m.self_attention)
+        initialize_multihead_self_attention_module(m.self_attention)
         initialize_mlp_block(m.mlp)
     else:
         return
@@ -42,7 +42,7 @@ def initialize_layer_norm_module(m: torch.nn.Module):
     torch.nn.init.zeros_(m.bias)
 
 
-def initialize_self_multihead_attention_module(m: torch.nn.Module):
+def initialize_multihead_self_attention_module(m: torch.nn.Module):
     """
     Initializes a multihead attention module using xavier normal initialization
     """
