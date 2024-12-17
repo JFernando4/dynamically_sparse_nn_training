@@ -7,10 +7,10 @@
   "__comment_2__": "Parameter value used in the original vit paper section B.1.1.",
   "momentum": 0.9,
   "__comment_3__": "Incremental experiment parameters. Classes increase by 5 every 100 epochs.",
-  "num_epochs": 2000,
-  "fixed_classes": false,
+  "num_epochs": 100,
+  "fixed_classes": true,
   "class_increase": 10,
-  "initial_num_classes": 10,
+  "initial_num_classes": 100,
   "use_best_network": true,
   "__comment_4__": "Other parameters.",
   "reset_attention_layers": false,
@@ -18,7 +18,7 @@
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
     "num_epochs",
-    "reset_attention_layers",
-    "reset_mlp_blocks"
+    "stepsize",
+    "weight_decay"
   ]
 }
