@@ -6,7 +6,7 @@ import os
 from mlproj_manager.file_management import read_json_file
 from mlproj_manager.util.experiments_util import access_dict
 
-from src.utils import aggregate_over_bins, plot_results
+from src.utils import aggregate_over_bins, plot_results, parse_plots_and_analysis_terminal_arguments
 
 DEBUG = False
 BIN_SIZE = {"test_accuracy_per_epoch": 200}
@@ -54,19 +54,9 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
         plot_results(results_data, plot_parameters, plot_dir, sn, save_plots, plot_name_prefix)
 
 
-def parse_terminal_arguments():
-    """ Reads experiment arguments """
-    argument_parser = argparse.ArgumentParser()
-    argument_parser.add_argument("--config_file", action="store", type=str, required=True,
-                                 help="JSON file with analysis configurations.")
-    argument_parser.add_argument("--save_plot", action="store_true", default=False)
-    argument_parser.add_argument("--debug", action="store_true", default=False)
-    return argument_parser.parse_args()
-
-
 if __name__ == "__main__":
 
-    terminal_arguments = parse_terminal_arguments()
+    terminal_arguments = parse_plots_and_analysis_terminal_arguments()
     analysis_parameters = read_json_file(terminal_arguments.config_file)
     DEBUG = terminal_arguments.debug
     analyse_results(analysis_parameters, save_plots=terminal_arguments.save_plot)
