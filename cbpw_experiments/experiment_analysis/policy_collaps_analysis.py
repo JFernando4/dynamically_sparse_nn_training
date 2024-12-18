@@ -9,7 +9,7 @@ from mlproj_manager.util.experiments_util import access_dict
 from src.utils import aggregate_over_bins, plot_avg_with_shaded_region, bootstrapped_return, parse_plots_and_analysis_terminal_arguments
 
 DEBUG = False
-BIN_SIZE = {"average_return": 1000, "return_per_episode": 1, "termination_steps": 1}
+BIN_SIZE = {"average_return": 25000, "return_per_episode": 1, "termination_steps": 1}
 
 
 def get_results_data(results_dir: str, measurement_name: str, parameter_combination: list[str]):
@@ -22,6 +22,8 @@ def get_results_data(results_dir: str, measurement_name: str, parameter_combinat
     for pc in parameter_combination:
         temp_results_dir = os.path.join(results_dir, pc)
         indices = np.load(os.path.join(temp_results_dir, "experiment_indices.npy"))
+        if len(indices.shape) == 0:
+            indices = indices.reshape(indices.size)
         measurement_dir = os.path.join(temp_results_dir, measurement_name)
 
         results[pc] = []
