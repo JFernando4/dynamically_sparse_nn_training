@@ -129,7 +129,7 @@ class IncrementalCIFARExperiment(Experiment):
         self.loss = torch.nn.CrossEntropyLoss(reduction="mean")
 
         # initialize weight_dictionary
-        self.weight_dict, self.ln_list, self.norm_layer_update_func = None, None, None
+        self.weight_dict = None
         if self.use_cbpw:
             self.weight_dict = self.initialize_cbpw_weight_dict()
 
