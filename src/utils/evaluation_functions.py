@@ -157,6 +157,7 @@ def bootstrapped_return(episode_length: np.ndarray, episodic_return: np.ndarray,
         rets = np.array([rets])
         avg_ret[i] = rets.mean()
         min_rets[i], max_rets[i] = rets.min(), rets.max()
-        bos = bootstrap(data=(rets[0, :],), statistic=np.mean, confidence_level=confidence_level)
-        boot_strapped_ret_low[i], boot_strapped_ret_high[i] = bos.confidence_interval.low, bos.confidence_interval.high
+        if num_runs > 1:
+            bos = bootstrap(data=(rets[0, :],), statistic=np.mean, confidence_level=confidence_level)
+            boot_strapped_ret_low[i], boot_strapped_ret_high[i] = bos.confidence_interval.low, bos.confidence_interval.high
     return steps, avg_ret, min_rets, max_rets, boot_strapped_ret_low, boot_strapped_ret_high
