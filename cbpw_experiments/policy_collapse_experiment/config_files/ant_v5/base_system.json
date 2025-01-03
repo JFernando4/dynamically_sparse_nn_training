@@ -23,7 +23,7 @@
     "n_slices": 16,
     "u_adv_scl": true,
     "clip_eps": 0.2,
-    "runs": 1
+    "runs": 5
   },
 
   "learning_params": {
@@ -39,7 +39,7 @@
     "mem": "4G",
     "cpus-per-task": 1,
     "load_modules": [
-      " module load mujoco/3.1.6\n"
+      "module load mujoco/3.1.6\n"
     ]
   }
 }
