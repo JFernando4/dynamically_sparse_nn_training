@@ -132,7 +132,7 @@ class IncrementalCIFARExperiment(Experiment):
 
         # initialize training counters
         self.current_epoch = 0
-        self.cumulative_stepsize = 0.0
+        self.current_minibatch = 0
 
         """ For data partitioning """
         self.class_increase = access_dict(exp_params, "class_increase", default=5, val_type=int)
@@ -157,11 +157,8 @@ class IncrementalCIFARExperiment(Experiment):
     # ------------------------------ Methods for initializing the experiment ------------------------------
     def initialize_cbpw_weight_dict(self):
         """ Initializes the weight dictionary for cbpw """
-
-        df = self.drop_factor
-
         return initialize_weight_dict(self.net, architecture_type="vit", prune_method=self.prune_method,
-                                      grow_method=self.grow_method, drop_factor=df, ln_drop_factor=df)
+                                      grow_method=self.grow_method, drop_factor=self.drop_factor, ln_drop_factor=self.drop_factor)
 
     def _initialize_summaries(self):
         """
@@ -189,7 +186,7 @@ class IncrementalCIFARExperiment(Experiment):
             self.results_dict[set_type + "_evaluation_runtime"] = torch.zeros_like(prototype_array)
         self.results_dict["class_order"] = self.all_classes
 
-        # dst masks summaries
+        # swr masks summaries
         if self.use_cbpw:
             tensor_size = total_checkpoints * self.running_avg_window // self.topology_update_freq
             self.results_dict["prop_added_then_removed"] = torch.zeros(tensor_size, device=self.device, dtype=torch.float32)
@@ -237,7 +234,7 @@ class IncrementalCIFARExperiment(Experiment):
             "numpy_rng_state": np.random.get_state(),
             "cuda_rng_state": torch.cuda.get_rng_state(),
             "epoch_number": self.current_epoch,
-            "cumulative_stepsize": self.cumulative_stepsize,
+            "minibatch_number": self.current_minibatch,
             "current_num_classes": self.current_num_classes,
             "all_classes": self.all_classes,
             "current_running_avg_step": self.current_running_avg_step,
@@ -262,7 +259,7 @@ class IncrementalCIFARExperiment(Experiment):
         torch.cuda.set_rng_state(checkpoint["cuda_rng_state"])
         np.random.set_state(checkpoint["numpy_rng_state"])
         self.current_epoch = checkpoint["epoch_number"]
-        self.cumulative_stepsize = checkpoint["cumulative_stepsize"]
+        self.current_minibatch = checkpoint["minibatch_number"]
         self.current_num_classes = checkpoint["current_num_classes"]
         self.all_classes = checkpoint["all_classes"]
         self.current_running_avg_step = checkpoint["current_running_avg_step"]
@@ -386,6 +383,7 @@ class IncrementalCIFARExperiment(Experiment):
                     self._print("\t\tStep Number: {0}".format(step_number + 1))
                     self._store_training_summaries()
 
+                self.current_minibatch += 1
                 if self.time_to_update_topology():
                     self.update_topology()
 
@@ -416,19 +414,10 @@ class IncrementalCIFARExperiment(Experiment):
         return scheduler
 
     def time_to_update_topology(self):
+        """ Returns true if it's time to update the weight matrices according to selective weight reinitialization"""
         if not self.use_cbpw:
             return False
-
-        increment = self.stepsize
-        if self.use_lr_schedule and self.reinit_freq_scheduler:
-            increment = self.lr_scheduler.get_last_lr()[0]
-        self.cumulative_stepsize += increment
-
-        time_to_update = self.cumulative_stepsize >= (self.topology_update_freq * self.stepsize)
-        if time_to_update:
-            print("\t\treinitializing...")
-            self.cumulative_stepsize = 0.0
-        return time_to_update
+        return (self.current_minibatch % self.topology_update_freq) == 0
 
     def update_topology(self):
         """
