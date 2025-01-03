@@ -59,7 +59,6 @@ class IncrementalCIFARExperiment(Experiment):
 
         # CBPw parameters
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
-        self.reinit_freq_scheduler = access_dict(exp_params, "reinit_freq_scheduler", default=0, val_type=int)
         pruning_functions_names = ["none", "magnitude", "gf", "mr", "gr"]
         grow_methods = ["none", "truncated", "zero", "init"]
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str, choices=pruning_functions_names)
