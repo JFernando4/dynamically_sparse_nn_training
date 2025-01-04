@@ -63,7 +63,7 @@ class IncrementalCIFARExperiment(Experiment):
         grow_methods = ["none", "truncated", "zero", "init"]
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str, choices=pruning_functions_names)
         self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str, choices=grow_methods)
-        assert not ((self.prune_method != "none" and self.grow_method == "none") or (self.prune_method == "none" and self.grow_method != "none"))
+        assert (self.prune_method == "none" and self.grow_method == "none") or (self.prune_method != "none" and self.grow_method != "none")
         self.drop_factor = access_dict(exp_params, "drop_factor", default=0.0, val_type=float)
         self.use_cbpw = self.prune_method != "none" and self.grow_method != "none"
 
