@@ -56,7 +56,9 @@ def initialize_multihead_self_attention_module(m: torch.nn.Module):
         torch.nn.init.xavier_uniform_(m.k_proj_weight)
         torch.nn.init.xavier_uniform_(m.v_proj_weight)
 
-    torch.nn.init.xavier_uniform_(m.out_proj.weight)
+    # Torchvision encoder block doesn't directly initialize the out_proj.weight, but uses the default initialization
+    # of a linear layer. Strangely, torchvision does initialize the out_proj.bias
+    torch.nn.init.kaiming_uniform_(m.out_proj.weight, a=math.sqrt(5))
 
     if m.in_proj_bias is not None:
         torch.nn.init.zeros_(m.in_proj_bias)
