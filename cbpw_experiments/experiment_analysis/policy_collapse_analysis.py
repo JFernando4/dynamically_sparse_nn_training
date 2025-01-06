@@ -77,7 +77,7 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
             x_axis, avg_return, ci_low, ci_high, num_samples = compute_average_return_statistics(results_dir, parameter_combinations)
             plot_avg_with_shaded_region(results_avg=avg_return, results_low=ci_low, results_high=ci_high,
                                         x_axis=x_axis, num_samples=num_samples, **plot_args)
-        if sn == "average_return_over_run":
+        elif sn == "average_return_over_run":
             results_data = get_results_data(results_dir, "return_per_episode", parameter_combinations)
             for k, v in results_data.items():
                 print(f"Parameter combinations: {k}")
