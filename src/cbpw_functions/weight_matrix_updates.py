@@ -51,6 +51,7 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     activation = "relu" if "activation" not in kwargs else kwargs["activation"]
     fan_mode = "fan_in" if "fan_mode" not in kwargs else kwargs["fan_mode"]
     std = 0.01 if "std" not in kwargs else kwargs["std"]
+    bound = 0.0 if "bound" not in kwargs else kwargs["bound"]
     a = 0 if "a" not in kwargs else kwargs["a"]     # negative slope for leaky relu
 
     if "kaiming" in grow_name or "xavier" in grow_name:
@@ -87,6 +88,10 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
         grow_func = lambda w, pi, ai: normal_reinit_weights(w, pruned_indices=pi, active_indices=ai, std=std, truncated=False)
     elif grow_name == "truncated_normal":
         grow_func = lambda w, pi, ai: normal_reinit_weights(w, pruned_indices=pi, active_indices=ai, std=std, truncated=True)
+    elif grow_name == "uniform":
+        grow_func = lambda w, pi, ai: uniform_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound=bound, truncated=False)
+    elif grow_name == "truncated_uniform":
+        grow_func = lambda w, pi, ai: uniform_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound=bound, truncated=True)
 
     def temp_prune_and_grow_weights(w: torch.Tensor):
         return prune_and_grow_weights(w, prune_func, grow_func)
@@ -344,6 +349,24 @@ def normal_reinit_weights(weight: torch.Tensor, pruned_indices: torch.Tensor, ac
         torch.nn.init.trunc_normal_(new_weights, mean=0, std=std, a=-truncation_value, b=truncation_value)
     else:
         torch.nn.init.normal_(new_weights, mean=0, std=std)
+
+    weight.view(-1)[pruned_indices] = new_weights
+
+
+@torch.no_grad()
+def uniform_reinit_weights(weight: torch.Tensor, pruned_indices: torch.Tensor, active_indices: torch.Tensor,
+                           bound: float = 0.01, truncated: bool = False) -> None:
+    """
+    Reinitializes weights using a uniform distribution with the given bound. If truncated is true, the bound is
+    truncated to the median of the absolute value of the active weights.
+    """
+
+    new_weights = torch.zeros(size=pruned_indices.size(), dtype=weight.dtype, device=weight.device)
+    truncation_value = torch.inf
+    if truncated:
+        truncation_value = get_bounding_value(weight, active_indices, bound_method="median")
+    truncated_bound = min(truncation_value, bound)
+    torch.nn.init.uniform_(new_weights, -truncated_bound, truncated_bound)
 
     weight.view(-1)[pruned_indices] = new_weights
 
