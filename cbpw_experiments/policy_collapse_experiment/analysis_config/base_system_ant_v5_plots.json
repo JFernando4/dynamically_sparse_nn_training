@@ -3,9 +3,8 @@
 
     "parameter_combinations":
         [
-            "stepsize-0.001_weight_decay-0.0_use_ln-False",
             "stepsize-0.0001_weight_decay-0.0_use_ln-False",
-            "stepsize-1e-05_weight_decay-0.0_use_ln-False"
+            "stepsize-0.0001_weight_decay-0.0_use_ln-True"
         ],
 
     "summary_names":
@@ -20,8 +19,8 @@
     "plot_parameters": {
         "x_label": "Training Step",
         "y_label": "Return per Episode",
-        "labels": ["Stepsize = 1e-3", "Stepsize = 1e-4", "Stepsize = 1e-5"],
-        "color_order": ["black", "blue", "orange"],
+        "labels": ["Stepsize = 1e-4", "Stepsize = 1e-4 with LN"],
+        "color_order": ["black", "blue"],
         "ylim": [-100, 5000]
     },
 
