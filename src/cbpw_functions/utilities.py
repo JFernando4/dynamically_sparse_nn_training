@@ -1,3 +1,5 @@
+import math
+
 import torch
 
 from .weight_matrix_updates import setup_cbpw_weight_update_function
@@ -116,32 +118,44 @@ def initialize_weights_dict_vit(net: VisionTransformer,
     weight_update_func = setup_cbpw_weight_update_function(prune_method, weight_grow_name, drop_factor=drop_factor)
     ln_weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="fixed", drop_factor=ln_drop_factor, reinit_val=1.0)
     zero_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="zero", drop_factor=drop_factor)
+    mlp_fan = 0
 
     weight_dict = {}
     for n, p in net.named_parameters():
-        is_class_token = n == "class_token"
-        is_pos_embedding = "pos_embedding" in n
         is_weight = "weight" in n
         is_bias = "bias" in n
         is_layer_or_batch_norm = (".ln_1." in n) or (".ln_2." in n) or (".ln." in n)
 
-        if is_class_token:
+        if n == "class_token":
             weight_dict[n] = (p, zero_update_func)
-        elif is_pos_embedding:
+        elif "pos_embedding" in n:
             temp_grow_name = {"truncated": "truncated_normal", "zero": "zero", "init": "normal"}[grow_method]
             temp_update_func = setup_cbpw_weight_update_function(prune_method, grow_name=temp_grow_name, drop_factor=drop_factor, std=0.02)
             weight_dict[n] = (p, temp_update_func)
         elif is_weight and is_layer_or_batch_norm:
             weight_dict[n] = (p, ln_weight_update_func)
         elif is_bias:
-            weight_dict[n] = (p, zero_update_func)
+            if ".mlp." in n:
+                temp_grow_name = {"truncated": "truncated_uniform", "zero": "zero", "init": "uniform"}[grow_method]
+                bound = 1 / math.sqrt(mlp_fan) if mlp_fan > 0.0 else 0.0
+                weight_dict[n] = (p, setup_cbpw_weight_update_function(prune_method, grow_name=temp_grow_name,
+                                                                       drop_factor=drop_factor, bound=bound))
+            else:
+                weight_dict[n] = (p, zero_update_func)
         else:
             if ("heads" in n) or ("fc" in n):       # heads = output layer of ViT, fc = output layer of ResNet-18
                 weight_dict[n] = (p, zero_update_func)
-            elif ("conv_proj" in n):
+            elif "conv_proj" in n:
                 temp_grow_name = {"truncated": "tk_normal", "zero": "zero", "init": "kaiming_normal"}[grow_method]
                 weight_dict[n] = (p, setup_cbpw_weight_update_function(prune_method, grow_name=temp_grow_name,
                                                                        drop_factor=drop_factor, activation="linear"))
+            elif ("out_proj" in n) or (".mlp." in n):
+                temp_grow_name = {"truncated": "tk_uniform", "zero": "zero", "init": "kaiming_uniform"}[grow_method]
+                weight_dict[n] = (p, setup_cbpw_weight_update_function(prune_method, grow_name=temp_grow_name,
+                                                                       drop_factor=drop_factor, activation="leaky_relu",
+                                                                       a=math.sqrt(5)))
+                if ".mlp." in n:
+                    mlp_fan = torch.nn.init._calculate_correct_fan(p, mode="fan_in")
             else:
                 weight_dict[n] = (p, weight_update_func)
 
