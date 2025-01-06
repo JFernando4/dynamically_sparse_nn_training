@@ -21,7 +21,8 @@
         "x_label": "Training Step",
         "y_label": "Return per Episode",
         "labels": ["Stepsize = 1e-3", "Stepsize = 1e-4", "Stepsize = 1e-5"],
-        "color_order": ["black", "blue", "orange"]
+        "color_order": ["black", "blue", "orange"],
+        "ylim": [-100, 5000]
     },
 
     "plot_name_prefix": "test"
