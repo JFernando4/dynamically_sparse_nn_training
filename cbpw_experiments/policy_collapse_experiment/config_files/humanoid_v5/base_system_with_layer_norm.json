@@ -1,0 +1,45 @@
+{
+  "file_management": {
+    "experiment_name": "humanoid_policy_collapse",
+    "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results/",
+    "relevant_parameters": [
+      "stepsize",
+      "weight_decay",
+      "use_ln"
+    ]
+  },
+
+  "experiment_params": {
+    "env_name": "Humanoid-v5",
+    "total_env_steps": 30000000,
+    "activation_type": "ReLU",
+    "hidden_dim": 16,
+    "adam_beta1": 0.99,
+    "adam_beta2": 0.99,
+    "buffer_size": 2048,
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "num_epochs": 10,
+    "n_slices": 16,
+    "u_adv_scl": true,
+    "clip_eps": 0.2,
+    "runs": 5
+  },
+
+  "learning_params": {
+    "stepsize": ["fixed", 0.0001],
+    "use_ln": true,
+    "weight_decay": 0.0
+  },
+
+  "slurm_parameters": {
+    "job_name": "h_pc",
+    "time": "15:00:00",
+    "max_runs_per_job": 1,
+    "mem": "4G",
+    "cpus-per-task": 1,
+    "load_modules": [
+      "module load mujoco/3.1.6\n"
+    ]
+  }
+}
