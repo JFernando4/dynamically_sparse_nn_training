@@ -51,9 +51,10 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     activation = "relu" if "activation" not in kwargs else kwargs["activation"]
     fan_mode = "fan_in" if "fan_mode" not in kwargs else kwargs["fan_mode"]
     std = 0.01 if "std" not in kwargs else kwargs["std"]
+    a = 0 if "a" not in kwargs else kwargs["a"]     # negative slope for leaky relu
 
     if "kaiming" in grow_name or "xavier" in grow_name:
-        grow_func = lambda w, pi, ai: random_reinit_weights(w, pruned_indices=pi, active_indices=ai, reinit=grow_name, activation=activation, fan_mode=fan_mode)
+        grow_func = lambda w, pi, ai: random_reinit_weights(w, pruned_indices=pi, active_indices=ai, reinit=grow_name, activation=activation, fan_mode=fan_mode, a=a)
     elif grow_name == "zero":
         grow_func = lambda w, pi, ai: fixed_reinit_weights(w, pruned_indices=pi, active_indices=ai, reinit_val=0.0)
     elif grow_name == "fixed":
@@ -75,9 +76,9 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     elif grow_name == "mean_truncated":
         grow_func = lambda w, pi, ai: bounded_kaiming_reinit_weights(w, pruned_indices=pi, active_indices=ai, bound_method="mean")
     elif grow_name == "tk_normal":      # truncated kaiming normal
-        grow_func = lambda w, pi, ai: truncated_kaiming_reinit_weights(w, pi, ai, dist_type="normal", mode=fan_mode, activation=activation)
+        grow_func = lambda w, pi, ai: truncated_kaiming_reinit_weights(w, pi, ai, dist_type="normal", mode=fan_mode, activation=activation, a=a)
     elif grow_name == "tk_uniform":     # truncated kaiming uniform
-        grow_func = lambda w, pi, ai: truncated_kaiming_reinit_weights(w, pi, ai, dist_type="uniform", mode=fan_mode, activation=activation)
+        grow_func = lambda w, pi, ai: truncated_kaiming_reinit_weights(w, pi, ai, dist_type="uniform", mode=fan_mode, activation=activation, a=a)
     elif grow_name == "tx_normal":      # truncated xavier normal
         grow_func = lambda w, pi, ai: truncated_xavier_reinit_weights(w, pruned_indices=pi, active_indices=ai, dist_type="normal")
     elif grow_name == "tx_uniform":     # truncated xavier normal
@@ -268,7 +269,7 @@ def bounded_kaiming_reinit_weights(weight: torch.Tensor, pruned_indices: torch.T
 @torch.no_grad()
 def truncated_kaiming_reinit_weights(weight: torch.Tensor, pruned_indices: torch.Tensor, active_indices: torch.Tensor,
                              activation: str = "relu", dist_type: str = "normal", mode: str = "fan_in",
-                             bound_method: str = "median") -> None:
+                             bound_method: str = "median", a: float = 0.0) -> None:
     """
     Reinitializes entries in teh wegith matrix at the given indices using clipped kaiming reinitialization
 
@@ -277,11 +278,12 @@ def truncated_kaiming_reinit_weights(weight: torch.Tensor, pruned_indices: torch
         dist_type: should be in ["normal", "uniform"]
         mode: should be in ["fan_in", "fan_out"]
         bound_method: should be in ["median", "min", "mean", "25p"]
+        a: the negative slope for leaky relu
     """
 
     truncation_value = get_bounding_value(weight, active_indices, bound_method)
 
-    gain = torch.nn.init.calculate_gain(activation)
+    gain = torch.nn.init.calculate_gain(activation, param=a)
     fan = torch.nn.init._calculate_correct_fan(weight, mode)
 
     new_weights = torch.zeros(size=pruned_indices.size(), dtype=weight.dtype, device=weight.device)
@@ -366,7 +368,7 @@ def get_bounding_value(weight: torch.Tensor, active_indices: torch.Tensor, bound
 
 @torch.no_grad()
 def random_reinit_weights(weight: torch.Tensor, pruned_indices: torch.Tensor, active_indices: torch.Tensor, reinit,
-                          activation: str = "relu", fan_mode: str = "fan_in") -> None:
+                          activation: str = "relu", fan_mode: str = "fan_in", a: float = 0.0) -> None:
     """
     Reinitializes entries in the weight matrix at the given indices using the specified reinit function
 
@@ -375,8 +377,8 @@ def random_reinit_weights(weight: torch.Tensor, pruned_indices: torch.Tensor, ac
         reinit: name of reinitialization function. Should be in reinit_functions.key()
     """
     random_reinit_functions = {
-        "kaiming_normal": lambda m: torch.nn.init.kaiming_normal_(m, nonlinearity=activation, mode=fan_mode),
-        "kaiming_uniform": lambda m: torch.nn.init.kaiming_uniform_(m, nonlinearity="relu", mode=fan_mode),
+        "kaiming_normal": lambda m: torch.nn.init.kaiming_normal_(m, nonlinearity=activation, mode=fan_mode, a=a),
+        "kaiming_uniform": lambda m: torch.nn.init.kaiming_uniform_(m, nonlinearity=activation, mode=fan_mode, a=a),
         "xavier_normal": torch.nn.init.xavier_normal_,
         "xavier_uniform": torch.nn.init.xavier_uniform_
     }
