@@ -79,7 +79,7 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
                                         x_axis=x_axis, num_samples=num_samples, **plot_args)
         if sn == "average_return_over_run":
             results_data = get_results_data(results_dir, "return_per_episode", parameter_combinations)
-            for k, v in results_data:
+            for k, v in results_data.items():
                 print(f"Parameter combinations: {k}")
                 print(f"\tAverage return over entire experiment: {np.average(v)}\tSample size: {v.shape[0]}")
         else:
