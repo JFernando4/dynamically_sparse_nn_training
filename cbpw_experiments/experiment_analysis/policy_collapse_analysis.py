@@ -81,7 +81,13 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
             results_data = get_results_data(results_dir, "return_per_episode", parameter_combinations)
             for k, v in results_data.items():
                 print(f"Parameter combinations: {k}")
-                print(f"\tAverage return over entire experiment: {np.average(v)}\tSample size: {v.shape[0]}")
+                num_runs = 0
+                average_return = 0.0
+                for run_array in v:
+                    num_runs += 1
+                    average_return += np.average(run_array)
+                average_return /= num_runs
+                print(f"\tAverage return over entire experiment: {average_return}\tSample size: {num_runs}")
         else:
             results_data = get_results_data(results_dir, sn, parameter_combinations)
             plot_avg_with_shaded_region(results_data=results_data, **plot_args)
