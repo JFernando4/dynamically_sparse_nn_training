@@ -77,20 +77,20 @@ def initialize_mlp_block(m: torch.nn.Module):
     if not isinstance(m, CustomMLPBlock): return
 
     # This is what I ended up doing by accident, which surprisingly results in 58.9% accuracy
-    for sub_m in m.modules():
-        if isinstance(sub_m, torch.nn.Linear):
-            torch.nn.init.kaiming_uniform_(sub_m.weight, a=math.sqrt(5))
-            if sub_m.bias is not None:
-                fan_in, _ = torch.nn.init._calculate_fan_in_and_fan_out(sub_m.weight)
-                bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
-                torch.nn.init.uniform_(sub_m.bias, -bound, bound)
-
-    # This is how torchvision does it, which give about 57.4% accuracy in CIFAR-100
     # for sub_m in m.modules():
     #     if isinstance(sub_m, torch.nn.Linear):
-    #         torch.nn.init.xavier_uniform_(sub_m.weight)
+    #         torch.nn.init.kaiming_uniform_(sub_m.weight, a=math.sqrt(5))
     #         if sub_m.bias is not None:
-    #             torch.nn.init.normal_(sub_m.bias, std=1e-6)
+    #             fan_in, _ = torch.nn.init._calculate_fan_in_and_fan_out(sub_m.weight)
+    #             bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
+    #             torch.nn.init.uniform_(sub_m.bias, -bound, bound)
+
+    # This is how torchvision does it, which give about 57.4% accuracy in CIFAR-100
+    for sub_m in m.modules():
+        if isinstance(sub_m, torch.nn.Linear):
+            torch.nn.init.xavier_uniform_(sub_m.weight)
+            if sub_m.bias is not None:
+                torch.nn.init.normal_(sub_m.bias, std=1e-6)
 
 
 def initialize_vit_heads(m: torch.nn.Sequential):
