@@ -9,7 +9,7 @@ from mlproj_manager.util.experiments_util import access_dict
 from src.utils import aggregate_over_bins, plot_avg_with_shaded_region, bootstrapped_return, parse_plots_and_analysis_terminal_arguments
 
 DEBUG = False
-BIN_SIZE = {"average_return": 25000, "return_per_episode": 1, "termination_steps": 1}
+BIN_SIZE = {"average_return": 100000, "return_per_episode": 1, "termination_steps": 1}
 
 
 def get_results_data(results_dir: str, measurement_name: str, parameter_combination: list[str]):
@@ -77,6 +77,11 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
             x_axis, avg_return, ci_low, ci_high, num_samples = compute_average_return_statistics(results_dir, parameter_combinations)
             plot_avg_with_shaded_region(results_avg=avg_return, results_low=ci_low, results_high=ci_high,
                                         x_axis=x_axis, num_samples=num_samples, **plot_args)
+        if sn == "average_return_over_run":
+            results_data = get_results_data(results_dir, "return_per_episode", parameter_combinations)
+            for k, v in results_data:
+                print(f"Parameter combinations: {k}")
+                print(f"\tAverage return over entire experiment: {np.average(v)}\tSample size: {v.shape[0]}")
         else:
             results_data = get_results_data(results_dir, sn, parameter_combinations)
             plot_avg_with_shaded_region(results_data=results_data, **plot_args)
