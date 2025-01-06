@@ -10,6 +10,7 @@
 
     "summary_names":
         [
+            "average_return",
             "average_return_over_run"
         ],
 
