@@ -27,7 +27,7 @@ def setup_cbpw_weight_update_function(prune_name: str, grow_name: str, **kwargs)
     grow_function_names = ["kaiming_normal", "xavier_normal", "zero", "kaiming_uniform", "xavier_uniform", "fixed",
                            "clipped", "truncated", "median_clipped", "median_truncated", "25p_clipped", "25p_truncated",
                            "mean_truncated", "mean_clipped", "normal", "truncated_normal", "tx_uniform", "tx_normal",
-                           "tk_uniform", "tk_normal"]
+                           "tk_uniform", "tk_normal", "truncated_uniform", "uniform"]
     assert prune_name in prune_function_names and grow_name in grow_function_names
     assert "drop_factor" in kwargs.keys()
 
