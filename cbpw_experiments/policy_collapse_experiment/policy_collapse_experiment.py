@@ -307,8 +307,6 @@ class PolicyCollapseExperiment(Experiment):
             if "dead_units_prop" in self.to_log:
                 reshaped_feature_activity = self.short_term_feature_activity.reshape(-1, self.num_hidden_layers * self.hidden_dim)
                 dead_units_prop = (reshaped_feature_activity.mean(dim=0) == 0).float().mean()
-                if dead_units_prop > 0.0:
-                    print(f"\n\n{dead_units_prop = }\n\n")
                 self.results_dict["dead_units_prop"][result_index] = dead_units_prop
                 # self.results_dict["dead_units_prop"][result_index] = (self.short_term_feature_activity > 0.0).float().mean(dim=0)
 
@@ -320,6 +318,7 @@ class PolicyCollapseExperiment(Experiment):
         self.results_dict["termination_steps"] = np.array(self.termination_steps)
         self.results_dict["dead_units_prop"] = self.results_dict["dead_units_prop"].numpy()
         self.results_dict["stable_rank"] = self.results_dict["stable_rank"].numpy()
+        self._print(f"\nAverage return per episode: {np.average(self.results_dict['return_per_episode']): .4f}\n")
 
 
 def main():
