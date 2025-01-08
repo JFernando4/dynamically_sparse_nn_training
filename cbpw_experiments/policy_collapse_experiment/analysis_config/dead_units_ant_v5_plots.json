@@ -22,7 +22,7 @@
         "y_label": "Return per Episode",
         "labels": ["Stepsize = 1e-4", "Stepsize = 1e-4 with LN", "Stepsize = 5e-4", "Stepsize = 3e-4"],
         "color_order": ["black", "blue", "orange", "vermillion"],
-        "ylim": [0, 1]
+        "ylim": [0, 0.5]
     },
 
     "plot_name_prefix": "ant"
