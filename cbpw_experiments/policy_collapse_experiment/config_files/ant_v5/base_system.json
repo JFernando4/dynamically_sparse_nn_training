@@ -11,7 +11,7 @@
 
   "experiment_params": {
     "env_name": "Ant-v5",
-    "total_env_steps": 30000000,
+    "total_env_steps": 60000000,
     "activation_type": "ReLU",
     "hidden_dim": 16,
     "adam_beta1": 0.99,
@@ -27,7 +27,7 @@
   },
 
   "learning_params": {
-    "stepsize": ["fixed", 0.001, 0.0005, 0.0003, 0.0001, 0.00001],
+    "stepsize": ["fixed", 0.0005, 0.0003, 0.0001],
     "use_ln": false,
     "weight_decay": 0.0
   },
