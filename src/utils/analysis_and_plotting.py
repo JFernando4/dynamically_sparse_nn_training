@@ -65,7 +65,10 @@ def plot_results(results_data: dict, plot_parameters: dict, plot_dir: str, measu
 
         average = np.mean(temp_results, axis=0)
         num_samples = temp_results.shape[0]
-        ste = np.std(temp_results, axis=0, ddof=1) / np.sqrt(num_samples)
+        if num_samples == 1:
+            ste = np.zeros_like(average)
+        else:
+            ste = np.std(temp_results, axis=0, ddof=1) / np.sqrt(num_samples)
         print(f"\t{pc}\n\tNumber of samples: {num_samples}")
         print(f"\tMax: {np.max(average):.5f}\n\tMin: {np.min(average):.5f}")
         if num_samples < 30 and "_temp" not in measurement_name:
