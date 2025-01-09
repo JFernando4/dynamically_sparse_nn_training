@@ -5,9 +5,9 @@
         [
             "stepsize-0.01_weight_decay-2e-06_dropout_prob-0.1_momentum-0.9_reset_network-False",
             "stepsize-0.01_weight_decay-2e-06_dropout_prob-0.1_momentum-0.9_reset_network-True",
-            "topology_update_freq-1040_prune_method-gr_grow_method-init_drop_factor-0.0001",
-            "topology_update_freq-1040_prune_method-gr_grow_method-init_drop_factor-0.001",
-            "topology_update_freq-1040_prune_method-gr_grow_method-init_drop_factor-0.01"
+            "topology_update_freq-1040_prune_method-gr_grow_method-truncated_drop_factor-0.0001",
+            "topology_update_freq-1040_prune_method-gr_grow_method-truncated_drop_factor-0.001",
+            "topology_update_freq-1040_prune_method-gr_grow_method-truncated_drop_factor-0.01"
         ],
 
     "summary_names":
@@ -24,5 +24,5 @@
         "color_order": ["black", "gray", "orange", "blue", "vermillion"]
     },
 
-    "plot_name_prefix": "uf_1040"
+    "plot_name_prefix": "uf_1040_truncated"
 }
