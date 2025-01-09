@@ -22,6 +22,8 @@ def get_results_data(results_dir: str, measurement_name: str, parameter_combinat
     for pc in parameter_combination:
         temp_results_dir = os.path.join(results_dir, pc)
         indices = np.load(os.path.join(temp_results_dir, "experiment_indices.npy"))
+        if len(indices.shape) == 0:
+            indices = indices.reshape(indices.size)
         measurement_dir = os.path.join(temp_results_dir, measurement_name)
 
         results[pc] = []
