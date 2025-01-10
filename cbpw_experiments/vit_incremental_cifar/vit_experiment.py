@@ -19,6 +19,7 @@ from src.plasticity_functions import SGDL2Init, inject_noise
 from src.cbpw_functions import initialize_weight_dict
 from src.utils import get_cifar_data, compute_accuracy_from_batch
 from src.networks.torchvision_modified_vit import VisionTransformer
+from src.networks import ShiftedLayerNorm
 from src.cbpw_functions.weight_matrix_updates import update_weights
 from src import parse_terminal_arguments
 
@@ -81,6 +82,9 @@ class IncrementalCIFARExperiment(Experiment):
         self.reset_attention_layers = access_dict(exp_params, "reset_attention_layers", default=False, val_type=bool)
         self.reset_mlp_blocks = access_dict(exp_params, "reset_mlp_blocks", default=False, val_type=bool)
 
+        # other network parameters
+        self.shifted_ln = access_dict(exp_params, "shifted_ln", default=False, val_type=bool)
+
         # problem definition parameters
         self.num_epochs = access_dict(exp_params, "num_epochs", default=1, val_type=int)
         self.current_num_classes = access_dict(exp_params, "initial_num_classes", default=2, val_type=int)
@@ -113,7 +117,8 @@ class IncrementalCIFARExperiment(Experiment):
             dropout=self.dropout_prob,
             attention_dropout=self.dropout_prob,
             replacement_rate=self.replacement_rate,
-            maturity_threshold=self.maturity_threshold
+            maturity_threshold=self.maturity_threshold,
+            norm_layer=ShiftedLayerNorm if self.shifted_ln else torch.nn.LayerNorm
         )
         initialize_vit(self.net)
         self.net.to(self.device)

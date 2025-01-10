@@ -15,10 +15,12 @@
   "__comment_4__": "Other parameters.",
   "reset_attention_layers": false,
   "reset_mlp_blocks": false,
+  "shifted_ln": true,
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
     "num_epochs",
     "stepsize",
-    "weight_decay"
+    "weight_decay",
+    "shifted_ln"
   ]
 }

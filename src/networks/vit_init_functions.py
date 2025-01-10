@@ -1,6 +1,7 @@
 import torch
 import math
 from .torchvision_modified_vit import CustomMLPBlock, VisionTransformer, EncoderBlock
+from .shifted_layer_norm import ShiftedLayerNorm
 
 
 def initialize_vit(network: VisionTransformer):
@@ -37,10 +38,15 @@ def initialize_layer_norm_module(m: torch.nn.Module):
     """
     Initializes the weights of a layer norm module to one and the bias to zero
     """
-    if not isinstance(m, torch.nn.LayerNorm): return
-    if not m.elementwise_affine: return
-    torch.nn.init.ones_(m.weight)
-    torch.nn.init.zeros_(m.bias)
+    if isinstance(m, torch.nn.LayerNorm):
+        if not m.elementwise_affine: return
+        torch.nn.init.ones_(m.weight)
+        torch.nn.init.zeros_(m.bias)
+    elif isinstance(m, ShiftedLayerNorm):
+        torch.nn.init.zeros_(m.weight)
+        torch.nn.init.zeros_(m.bias)
+    else:
+        pass
 
 
 def initialize_multihead_self_attention_module(m: torch.nn.Module):
