@@ -11,7 +11,7 @@ _shape_t = Union[int, List[int], Size]
 
 class ShiftedLayerNorm(Module):
 
-    def __init__(self, normalized_shape: _shape_t, eps: float = 1e-5, device=None, dtype=None) -> None:
+    def __init__(self, normalized_shape: _shape_t, eps: float = 1e-6, device=None, dtype=None) -> None:
         factory_kwargs = {'device': device, 'dtype': dtype}
         super().__init__()
         if isinstance(normalized_shape, numbers.Integral):
