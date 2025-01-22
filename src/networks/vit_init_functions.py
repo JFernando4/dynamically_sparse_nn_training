@@ -3,7 +3,6 @@ import math
 from .torchvision_modified_vit import CustomMLPBlock, VisionTransformer, EncoderBlock
 from .shifted_layer_norm import ShiftedLayerNorm
 
-
 def initialize_vit(network: VisionTransformer):
     """
     Initializes a visual transformer
@@ -82,7 +81,8 @@ def initialize_mlp_block(m: torch.nn.Module):
 
     if not isinstance(m, CustomMLPBlock): return
 
-    # This is what I ended up doing by accident, which surprisingly results in 58.9% accuracy
+    # This is what I ended up doing by accident, which surprisingly results in about 58.9% accuracy with decoupled
+    # weight decay, stepsize of 0.01, and weight decay of 2e-6, dropout of 0.1, and momentum of 0.9 using SGD
     for sub_m in m.modules():
         if isinstance(sub_m, torch.nn.Linear):
             torch.nn.init.kaiming_uniform_(sub_m.weight, a=math.sqrt(5))
@@ -91,7 +91,8 @@ def initialize_mlp_block(m: torch.nn.Module):
                 bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
                 torch.nn.init.uniform_(sub_m.bias, -bound, bound)
 
-    # This is how torchvision does it, which give about 57.4% accuracy in CIFAR-100
+    # This is how torchvision does it, which give about 57.4% accuracy in CIFAR-100, using the same parameters
+    # described above
     # for sub_m in m.modules():
     #     if isinstance(sub_m, torch.nn.Linear):
     #         torch.nn.init.xavier_uniform_(sub_m.weight)
