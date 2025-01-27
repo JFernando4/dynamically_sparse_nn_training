@@ -3,6 +3,7 @@ import math
 from .torchvision_modified_vit import CustomMLPBlock, VisionTransformer, EncoderBlock
 from .shifted_layer_norm import ShiftedLayerNorm
 
+
 def initialize_vit(network: VisionTransformer):
     """
     Initializes a visual transformer
@@ -24,7 +25,7 @@ def xavier_vit_initialization(m: torch.nn.Module):
         fan_in = m.in_channels * m.kernel_size[0] * m.kernel_size[1]
         torch.nn.init.trunc_normal_(m.weight, std=torch.math.sqrt(1 / fan_in))
         torch.nn.init.zeros_(m.bias)
-    elif isinstance(m, torch.nn.LayerNorm):
+    elif isinstance(m, torch.nn.LayerNorm) or isinstance(m, ShiftedLayerNorm):
         initialize_layer_norm_module(m)
     elif isinstance(m, EncoderBlock):
         initialize_multihead_self_attention_module(m.self_attention)
