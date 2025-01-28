@@ -145,7 +145,6 @@ class IncrementalCIFARExperiment(Experiment):
         self.best_accuracy = torch.tensor(0.0, device=self.device, dtype=torch.float32)
         self.best_loss = torch.ones_like(self.best_accuracy) * torch.inf
         self.best_model_parameters = {}
-        self.best_masks = []
 
         """ For creating experiment checkpoints """
         self.experiment_checkpoints_dir_path = os.path.join(self.results_dir, "experiment_checkpoints")
@@ -474,7 +473,6 @@ class IncrementalCIFARExperiment(Experiment):
             self.best_accuracy = torch.zeros_like(self.best_accuracy)
             self.best_loss = torch.ones_like(self.best_accuracy) * torch.inf
             self.best_model_parameters = {}
-            self.best_masks = []
             save_model_parameters(self.results_dir, self.run_index, self.current_epoch, self.net)
 
             if self.current_num_classes == self.num_classes: return
