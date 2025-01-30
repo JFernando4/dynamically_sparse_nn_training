@@ -161,3 +161,21 @@ def bootstrapped_return(episode_length: np.ndarray, episodic_return: np.ndarray,
             bos = bootstrap(data=(rets[0, :],), statistic=np.mean, confidence_level=confidence_level)
             boot_strapped_ret_low[i], boot_strapped_ret_high[i] = bos.confidence_interval.low, bos.confidence_interval.high
     return steps, avg_ret, min_rets, max_rets, boot_strapped_ret_low, boot_strapped_ret_high
+
+
+def bootstrapped_accuracy(accuracy_per_step: np.ndarray, confidence_level: float = 0.95):
+
+    if len(accuracy_per_step.shape) != 2:
+        if len(accuracy_per_step.shape) == 1:
+            accuracy_per_step = accuracy_per_step.reshape(1, -1)    # reshape to 2D array
+        else:
+            raise ValueError(f"This function only works with 1D and 2D arrays, but got a {len(accuracy_per_step.shape)}D array.")
+
+    num_runs, total_steps = accuracy_per_step.shape
+    bootstrapped_acc_low, bootstrapped_acc_high = np.zeros(total_steps), np.zeros(total_steps)
+    for i in tqdm(range(0, total_steps)):
+        bos = bootstrap(data=(accuracy_per_step[:, i], ), statistic=np.mean, confidence_level=confidence_level)
+        bootstrapped_acc_low[i] = bos.confidence_interval.low
+        bootstrapped_acc_high[i] = bos.confidence_interval.high
+    bootstrap_accuracy = np.average(accuracy_per_step, axis=0)
+    return bootstrap_accuracy, bootstrapped_acc_low, bootstrapped_acc_high
