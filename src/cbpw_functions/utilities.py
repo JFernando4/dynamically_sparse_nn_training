@@ -19,8 +19,8 @@ def initialize_weight_dict(net: torch.nn.Module,
 
     if architecture_type == "vit":
         assert isinstance(net, VisionTransformer)
-        ln_drop_factor = drop_factor if "ln_drop_factor" not in kwargs.keys() else kwargs["ln_drop_factor"]
-        return initialize_weights_dict_vit(net, prune_method, grow_method, drop_factor, ln_drop_factor=ln_drop_factor)
+        shifted_ln = drop_factor if "shifted_ln" not in kwargs.keys() else kwargs["shifted_ln"]
+        return initialize_weights_dict_vit(net, prune_method, grow_method, drop_factor, shifted_ln=shifted_ln)
 
     elif architecture_type == "resnet":
         assert isinstance(net, ResNet)
@@ -107,7 +107,7 @@ def initialize_weights_dict_vit(net: VisionTransformer,
                                 prune_method: str,
                                 grow_method: str,
                                 drop_factor: float,
-                                ln_drop_factor: float) -> dict[str, tuple]:
+                                shifted_ln: bool = False) -> dict[str, tuple]:
     """
     Initializes the weight dictionaries used in SWR for a network
 
@@ -116,7 +116,8 @@ def initialize_weights_dict_vit(net: VisionTransformer,
     """
     weight_grow_name = {"truncated": "tx_uniform", "zero": "zero", "init": "xavier_uniform"}[grow_method]
     weight_update_func = setup_cbpw_weight_update_function(prune_method, weight_grow_name, drop_factor=drop_factor)
-    ln_weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="fixed", drop_factor=ln_drop_factor, reinit_val=1.0)
+    ln_weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="fixed", drop_factor=drop_factor,
+                                                              reinit_val=0.0 if shifted_ln else 1.0)
     zero_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="zero", drop_factor=drop_factor)
     mlp_fan = 0
 

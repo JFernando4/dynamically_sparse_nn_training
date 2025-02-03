@@ -161,7 +161,8 @@ class IncrementalCIFARExperiment(Experiment):
     def initialize_cbpw_weight_dict(self):
         """ Initializes the weight dictionary for cbpw """
         return initialize_weight_dict(self.net, architecture_type="vit", prune_method=self.prune_method,
-                                      grow_method=self.grow_method, drop_factor=self.drop_factor, ln_drop_factor=self.drop_factor)
+                                      grow_method=self.grow_method, drop_factor=self.drop_factor,
+                                      shifted_ln=self.shifted_ln)
 
     def _initialize_summaries(self):
         """
