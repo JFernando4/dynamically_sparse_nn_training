@@ -1,16 +1,16 @@
 {
   "__comment_1__": "Parameters for the environment",
   "env_name": "Ant-v5",
-  "total_env_steps": 1000000,
+  "total_env_steps": 30000000,
 
   "__comment_2__": "Network parameters",
   "activation_type": "ReLU",
-  "hidden_dim": 16,
+  "hidden_dim": 64,
   "use_ln": false,
 
   "__comment_3__": "Optimizer parameters",
-  "stepsize": 0.0001,
-  "weight_decay": 1e-4,
+  "stepsize": 0.0003,
+  "weight_decay": 0.0,
   "adam_beta1": 0.99,
   "adam_beta2": 0.99,
 
@@ -26,6 +26,7 @@
     "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
     "stepsize",
-    "weight_decay"
+    "weight_decay",
+    "hidden_dim"
   ]
 }
