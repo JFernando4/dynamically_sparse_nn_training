@@ -28,13 +28,13 @@ from src.utils import save_model_parameters, evaluate_network
 
 class IncrementalCIFARExperiment(Experiment):
 
-    def __init__(self, exp_params: dict, results_dir: str, run_index: int, verbose=True):
+    def __init__(self, exp_params: dict, results_dir: str, run_index: int, verbose=True, gpu_index: int = 0):
         super().__init__(exp_params, results_dir, run_index, verbose)
 
         # set debugging options for pytorch
         turn_off_debugging_processes(access_dict(exp_params, key="debug", default=True, val_type=bool))
         # define torch device
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device(f"cuda:{gpu_index}" if torch.cuda.is_available() else "cpu")
 
         """ For reproducibility """
         self.random_seed = get_random_seeds()[self.run_index]
@@ -522,7 +522,8 @@ def main():
     exp = IncrementalCIFARExperiment(experiment_parameters,
                                      results_dir=os.path.join(file_path, "results", results_dir_name),
                                      run_index=terminal_arguments.run_index,
-                                     verbose=terminal_arguments.verbose)
+                                     verbose=terminal_arguments.verbose,
+                                     gpu_index=terminal_arguments.gpu_index)
     exp.run()
     exp.store_results()
     final_time = time.perf_counter()

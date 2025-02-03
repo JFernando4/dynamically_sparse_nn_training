@@ -10,6 +10,7 @@ def parse_terminal_arguments():
     argument_parser.add_argument("--run_index", action="store", type=int, default=0,
                                  help="This determines the random seed for the experiment.")
     argument_parser.add_argument("--verbose", action="store_true", default=False)
+    argument_parser.add_argument("--gpu_index", action="store", type=int, default=0)
     return argument_parser.parse_args()
 
 
