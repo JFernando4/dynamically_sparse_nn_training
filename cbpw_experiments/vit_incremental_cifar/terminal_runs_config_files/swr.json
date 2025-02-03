@@ -1,0 +1,32 @@
+{
+  "__comment_1__": "Parameters found in a parameter sweep on the whole CIFAR-100 data set with lr scheduler.",
+  "stepsize": 0.01,
+  "weight_decay": 6e-6,
+  "dropout_prob": 0.1,
+  "shifted_ln": true,
+  "use_lr_schedule": true,
+
+  "__comment_2__": "Parameter value used in the original vit paper section B.1.1.",
+  "momentum": 0.9,
+
+  "__comment_3__": "Incremental experiment parameters. Classes increase by 5 every 100 epochs.",
+  "num_epochs": 2000,
+  "initial_num_classes": 5,
+  "fixed_classes": false,
+  "use_best_network": true,
+
+  "__comment_4__": "SWR Parameters.",
+  "topology_update_freq": 65,
+  "prune_method": "gr",
+  "grow_method": "init",
+  "drop_factor": 0.01,
+
+  "__comment_5__": "For creating the results directory.",
+  "relevant_parameters": [
+    "shifted_ln",
+    "topology_update_freq",
+    "prune_method",
+    "grow_method",
+    "drop_factor"
+  ]
+}
