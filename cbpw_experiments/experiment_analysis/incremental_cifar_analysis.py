@@ -9,7 +9,7 @@ from mlproj_manager.util.experiments_util import access_dict
 from src.utils import aggregate_over_bins, plot_results, parse_plots_and_analysis_terminal_arguments
 
 DEBUG = False
-BIN_SIZE = {"test_accuracy_per_epoch": 200}
+BIN_SIZE = {"test_accuracy_per_epoch": 100}
 
 
 def get_results_data(results_dir: str, measurement_name: str, parameter_combination: list[str]):
