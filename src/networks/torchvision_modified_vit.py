@@ -22,6 +22,7 @@ from torchvision.models._utils import _ovewrite_named_param
 
 from.sequential_kw_arguments import SequentialWithKeywordArguments
 from .cbp_layer import CBPLinear
+from .redo_layer import ReDoLinear
 
 class ConvStemConfig(NamedTuple):
     out_channels: int
@@ -33,8 +34,10 @@ class ConvStemConfig(NamedTuple):
 
 class CustomMLPBlock(torch.nn.Module):
 
-    def __init__(self, in_dim: int, mlp_dim: int, dropout: float, replacement_rate: float = None,
-                 maturity_threshold: int = None) -> None:
+    def __init__(self, in_dim: int, mlp_dim: int, dropout: float,
+                 replacement_rate: float = None, maturity_threshold: int = None,    # CBP parameters
+                 reinit_frequency: int = None, reinit_threshold: float = None,      # ReDo parameters
+                 ) -> None:
         super().__init__()
 
         self.ff_1 = torch.nn.Linear(in_dim, mlp_dim, bias=True)
@@ -50,9 +53,23 @@ class CustomMLPBlock(torch.nn.Module):
                 out_layer=self.ff_2,
                 act_type="linear",
                 replacement_rate=replacement_rate,
-                init="xavier",
+                init="kaiming",
                 maturity_threshold=maturity_threshold
             )
+
+        self.redo = None
+        if (reinit_frequency is not None) and (reinit_threshold is not None):
+            self.redo = ReDoLinear(
+                in_layer=self.ff_1,
+                out_layer=self.ff_2,
+                act_type="linear",
+                reinit_frequency=reinit_frequency,
+                reinit_threshold=reinit_threshold,
+                init="kaiming"
+            )
+
+        if (self.cbp is not None) and (self.redo is not None):
+            raise ValueError("Cannot use both a CBP and a ReDo at the same time.")
 
     def forward(self, x: torch.Tensor, activations: list = None) -> torch.Tensor:
 
@@ -60,6 +77,8 @@ class CustomMLPBlock(torch.nn.Module):
         x = self.act(x)
         if self.cbp is not None:
             x = self.cbp(x)
+        if self.redo is not None:
+            x = self.redo(x)
 
         if activations is not None:
             activations.append(x)
