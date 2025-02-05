@@ -36,7 +36,7 @@ class CustomMLPBlock(torch.nn.Module):
 
     def __init__(self, in_dim: int, mlp_dim: int, dropout: float,
                  replacement_rate: float = None, maturity_threshold: int = None,    # CBP parameters
-                 reinit_frequency: int = None, reinit_threshold: float = None,      # ReDo parameters
+                 reinit_frequency: int = None, reinit_threshold: float = None       # ReDo parameters
                  ) -> None:
         super().__init__()
 
@@ -144,7 +144,9 @@ class EncoderBlock(nn.Module):
         attention_dropout: float,
         norm_layer: Callable[..., torch.nn.Module] = partial(nn.LayerNorm, eps=1e-6),
         replacement_rate: float = None,
-        maturity_threshold: int = None
+        maturity_threshold: int = None,
+        reinit_frequency: int = None,
+        reinit_threshold: float = None
     ):
         super().__init__()
         self.num_heads = num_heads
@@ -157,7 +159,8 @@ class EncoderBlock(nn.Module):
         # MLP block
         self.ln_2 = norm_layer(hidden_dim)
         self.mlp = CustomMLPBlock(hidden_dim, mlp_dim, dropout,
-                                  replacement_rate=replacement_rate, maturity_threshold=maturity_threshold)
+                                  replacement_rate=replacement_rate, maturity_threshold=maturity_threshold, # cbp parameters
+                                  reinit_frequency=reinit_frequency, reinit_threshold=reinit_threshold)     # redo parameters
 
     def forward(self, input: torch.Tensor, activations: list = None):
         torch._assert(input.dim() == 3, f"Expected (batch_size, seq_length, hidden_dim) got {input.shape}")
@@ -188,7 +191,9 @@ class Encoder(nn.Module):
         norm_layer: Callable[..., torch.nn.Module] = partial(nn.LayerNorm, eps=1e-6),
         skip_last_layer_norm: bool = False,
         replacement_rate: float = None,
-        maturity_threshold: int = None
+        maturity_threshold: int = None,
+        reinit_frequency: int = None,
+        reinit_threshold: float = None
     ):
         super().__init__()
         # Note that batch_size is on the first dim because
@@ -205,7 +210,9 @@ class Encoder(nn.Module):
                 attention_dropout,
                 norm_layer,
                 replacement_rate=replacement_rate,
-                maturity_threshold=maturity_threshold
+                maturity_threshold=maturity_threshold,
+                reinit_frequency=reinit_frequency,
+                reinit_threshold=reinit_threshold
             )
         self.layers = SequentialWithKeywordArguments(layers)
 
@@ -240,7 +247,9 @@ class VisionTransformer(nn.Module):
         norm_layer: Callable[..., torch.nn.Module] = partial(nn.LayerNorm, eps=1e-6),
         conv_stem_configs: Optional[List[ConvStemConfig]] = None,
         replacement_rate: float = None,
-        maturity_threshold: int = None
+        maturity_threshold: int = None,
+        reinit_frequency: int = None,
+        reinit_threshold: float = None
     ):
         super().__init__()
         _log_api_usage_once(self)
@@ -298,7 +307,9 @@ class VisionTransformer(nn.Module):
             norm_layer,
             skip_last_layer_norm=skip_last_layer_norm,
             replacement_rate=replacement_rate,
-            maturity_threshold=maturity_threshold
+            maturity_threshold=maturity_threshold,
+            reinit_frequency=reinit_frequency,
+            reinit_threshold=reinit_threshold
         )
         self.seq_length = seq_length
 
