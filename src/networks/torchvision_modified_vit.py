@@ -189,7 +189,6 @@ class Encoder(nn.Module):
         dropout: float,
         attention_dropout: float,
         norm_layer: Callable[..., torch.nn.Module] = partial(nn.LayerNorm, eps=1e-6),
-        skip_last_layer_norm: bool = False,
         replacement_rate: float = None,
         maturity_threshold: int = None,
         reinit_frequency: int = None,
@@ -215,17 +214,13 @@ class Encoder(nn.Module):
                 reinit_threshold=reinit_threshold
             )
         self.layers = SequentialWithKeywordArguments(layers)
-
-        self.skip_last_layer_norm = skip_last_layer_norm
         self.ln = norm_layer(hidden_dim)
 
     def forward(self, input: torch.Tensor, activations: list = None):
         torch._assert(input.dim() == 3, f"Expected (batch_size, seq_length, hidden_dim) got {input.shape}")
         input = input + self.pos_embedding
-        if self.skip_last_layer_norm:
-            return self.layers(self.dropout(input), activations=activations)
-        else:
-            return self.ln(self.layers(self.dropout(input), activations=activations))
+
+        return self.ln(self.layers(self.dropout(input), activations=activations))
 
 
 class VisionTransformer(nn.Module):
@@ -241,7 +236,6 @@ class VisionTransformer(nn.Module):
         mlp_dim: int,
         dropout: float = 0.0,
         attention_dropout: float = 0.0,
-        skip_last_layer_norm: bool = False,
         num_classes: int = 1000,
         representation_size: Optional[int] = None,
         norm_layer: Callable[..., torch.nn.Module] = partial(nn.LayerNorm, eps=1e-6),
@@ -305,7 +299,6 @@ class VisionTransformer(nn.Module):
             dropout,
             attention_dropout,
             norm_layer,
-            skip_last_layer_norm=skip_last_layer_norm,
             replacement_rate=replacement_rate,
             maturity_threshold=maturity_threshold,
             reinit_frequency=reinit_frequency,
