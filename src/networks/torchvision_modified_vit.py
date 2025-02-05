@@ -1,9 +1,9 @@
 """
 This is a modified version of torchvision's code for instantiating vision transformers. Here's a list of the changes
 made to the source code:
-    - Added option to remove last layer normalization.
-    - Forward calls have a feature list argument to store the features of the network. This is only used for continual
-      backprop and doesn't affect the output of the network.
+    - Forward calls have a feature list argument to store the features of the network.
+    - Replaced MLPBlock with CustomMLPBlock which works the same way but can also use continual backpropagation or
+      ReDo on the feedforward layers.
 To see the source code, go to: torchvision.models.vision_transformer (for torchvision==0.15.1)
 """
 
@@ -84,52 +84,6 @@ class CustomMLPBlock(torch.nn.Module):
             activations.append(x)
 
         return self.dropout_2(self.ff_2(self.dropout_1(x)))
-
-
-class MLPBlock(MLP):
-    """Transformer MLP block."""
-
-    _version = 2
-
-    def __init__(self, in_dim: int, mlp_dim: int, dropout: float):
-        super().__init__(in_dim, [mlp_dim, in_dim], activation_layer=nn.GELU, inplace=None, dropout=dropout)
-
-        for m in self.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.xavier_uniform_(m.weight)
-                if m.bias is not None:
-                    nn.init.normal_(m.bias, std=1e-6)
-
-    def _load_from_state_dict(
-        self,
-        state_dict,
-        prefix,
-        local_metadata,
-        strict,
-        missing_keys,
-        unexpected_keys,
-        error_msgs,
-    ):
-        version = local_metadata.get("version", None)
-
-        if version is None or version < 2:
-            # Replacing legacy MLPBlock with MLP. See https://github.com/pytorch/vision/pull/6053
-            for i in range(2):
-                for type in ["weight", "bias"]:
-                    old_key = f"{prefix}linear_{i+1}.{type}"
-                    new_key = f"{prefix}{3*i}.{type}"
-                    if old_key in state_dict:
-                        state_dict[new_key] = state_dict.pop(old_key)
-
-        super()._load_from_state_dict(
-            state_dict,
-            prefix,
-            local_metadata,
-            strict,
-            missing_keys,
-            unexpected_keys,
-            error_msgs,
-        )
 
 
 class EncoderBlock(nn.Module):
@@ -377,37 +331,3 @@ class VisionTransformer(nn.Module):
         x = self.heads(x)
 
         return x
-
-
-def _vision_transformer(
-    patch_size: int,
-    num_layers: int,
-    num_heads: int,
-    hidden_dim: int,
-    mlp_dim: int,
-    weights: Optional[WeightsEnum],
-    progress: bool,
-    **kwargs: Any,
-) -> VisionTransformer:
-    if weights is not None:
-        _ovewrite_named_param(kwargs, "num_classes", len(weights.meta["categories"]))
-        assert weights.meta["min_size"][0] == weights.meta["min_size"][1]
-        _ovewrite_named_param(kwargs, "image_size", weights.meta["min_size"][0])
-    image_size = kwargs.pop("image_size", 224)
-
-    model = VisionTransformer(
-        image_size=image_size,
-        patch_size=patch_size,
-        num_layers=num_layers,
-        num_heads=num_heads,
-        hidden_dim=hidden_dim,
-        mlp_dim=mlp_dim,
-        **kwargs,
-    )
-
-    if weights:
-        model.load_state_dict(weights.get_state_dict(progress=progress))
-
-    return model
-
-
