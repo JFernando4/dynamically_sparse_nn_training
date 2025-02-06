@@ -194,6 +194,8 @@ class IncrementalCIFARExperiment(Experiment):
         if self.use_cbpw:
             tensor_size = total_checkpoints * self.running_avg_window // self.topology_update_freq
             self.results_dict["prop_added_then_removed"] = torch.zeros(tensor_size, device=self.device, dtype=torch.float32)
+            if self.prune_method in ["mr", "gr"]:
+                self.results_dict["total_removed_per_update"] = torch.zeros(tensor_size, device=self.device, dtype=torch.float32)
 
     def _get_optimizer(self):
         """ Creates optimizer object based on the experiment parameters """
@@ -433,7 +435,6 @@ class IncrementalCIFARExperiment(Experiment):
         # compute and store summaries
         num_pruned = sum([v[1] for v in temp_summaries_dict.values()])
         self.store_mask_update_summary(removed_masks, num_pruned)
-
         self.current_topology_update += 1
 
     def store_mask_update_summary(self, removed_masks: list[torch.Tensor], total_removed: int) -> None:
@@ -457,7 +458,7 @@ class IncrementalCIFARExperiment(Experiment):
             # print("Total removed: {0}".format(total_removed))
             # print("Proportion of added then removed: {0:.4f}".format(prop_added_then_removed))
             self.results_dict["prop_added_then_removed"][self.current_topology_update] += prop_added_then_removed
-            if "redo" in self.prune_method:
+            if self.prune_method in ["mr", "gr"]:
                 self.results_dict["total_removed_per_update"][self.current_topology_update] += total_removed
 
         self.previously_removed_weights = removed_masks
