@@ -1,15 +1,15 @@
 {
   "__comment_1__": "Parameters for the environment",
   "env_name": "Ant-v5",
-  "total_env_steps": 20000000,
+  "total_env_steps": 30000000,
 
   "__comment_2__": "Network parameters",
   "activation_type": "ReLU",
-  "hidden_dim": 8,
+  "hidden_dim": 16,
 
   "__comment_3__": "Optimizer parameters",
   "stepsize": 0.0001,
-  "weight_decay": 1e-4,
+  "weight_decay": 0.0,
   "adam_beta1": 0.99,
   "adam_beta2": 0.99,
 
@@ -24,7 +24,7 @@
 
   "__comment_5__": "Selective Weight Reinitialization parameters",
   "reinit_freq": 2000,
-  "drop_factor": 0.001,
+  "drop_factor": 0.0001,
   "prune_method": "gr",
   "grow_method": "truncated",
 
