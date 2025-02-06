@@ -20,7 +20,6 @@ from src.cbpw_functions.utilities import initialize_weight_dict
 
 class PolicyCollapseExperiment(Experiment):
 
-
     def __init__(self, exp_params: dict, results_dir: str, run_index: int, verbose: bool = True):
         super().__init__(exp_params, results_dir, run_index, verbose)
 
