@@ -1,12 +1,12 @@
 {
   "__comment_1__": "Parameters for the environment",
   "env_name": "Ant-v5",
-  "total_env_steps": 30000000,
+  "total_env_steps": 20000000,
 
   "__comment_2__": "Network parameters",
   "activation_type": "ReLU",
   "hidden_dim": 64,
-  "use_ln": false,
+  "use_ln": true,
 
   "__comment_3__": "Optimizer parameters",
   "stepsize": 0.0003,
