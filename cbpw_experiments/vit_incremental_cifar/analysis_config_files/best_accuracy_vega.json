@@ -4,8 +4,8 @@
     "parameter_combinations":
         [
             "stepsize-0.01_weight_decay-6e-06_shifted_ln-True_reset_layer_norm-False_replacement_rate-0.0001_maturity_threshold-1000_reset_layer_norm-False",
-            "stepsize-0.01_weight_decay-6e-06_shifted_ln-True_reset_layer_norm-False_replacement_rate-1e-5_maturity_threshold-1000_reset_layer_norm-False",
-            "stepsize-0.01_weight_decay-6e-06_shifted_ln-True_reset_layer_norm-False_replacement_rate-1e-6_maturity_threshold-1000_reset_layer_norm-False",
+            "stepsize-0.01_weight_decay-6e-06_shifted_ln-True_reset_layer_norm-False_replacement_rate-1e-05_maturity_threshold-1000_reset_layer_norm-False",
+            "stepsize-0.01_weight_decay-6e-06_shifted_ln-True_reset_layer_norm-False_replacement_rate-1e-06_maturity_threshold-1000_reset_layer_norm-False",
             "stepsize-0.01_weight_decay-6e-06_shifted_ln-True_topology_update_freq-260_prune_method-gr_grow_method-init_drop_factor-0.001"
         ],
 
