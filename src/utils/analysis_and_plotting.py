@@ -45,7 +45,7 @@ def aggregate_over_bins(np_array: np.ndarray, bin_size: int, agg_func: str = "me
 
 
 def plot_results(results_data: dict, plot_parameters: dict, plot_dir: str, measurement_name: str,
-                 save_plots: bool = True, plot_name_prefix: str = ""):
+                 save_plots: bool = True, plot_name_prefix: str = "", verbose: bool = True):
     """ Plots the data in results_data accoring to the parameters in plot_parameters """
 
     os.makedirs(plot_dir, exist_ok=True)
@@ -69,8 +69,10 @@ def plot_results(results_data: dict, plot_parameters: dict, plot_dir: str, measu
             ste = np.zeros_like(average)
         else:
             ste = np.std(temp_results, axis=0, ddof=1) / np.sqrt(num_samples)
-        print(f"\t{pc}\n\tNumber of samples: {num_samples}")
-        print(f"\tMax: {np.max(average):.5f}\n\tMin: {np.min(average):.5f}")
+        if verbose:
+            print(f"\t{pc}\n\tNumber of samples: {num_samples}")
+            print(f"\tMax: {np.max(average):.5f}\n\tMin: {np.min(average):.5f}")
+            print(f"\tMean: {average}")
         if num_samples < 30 and "_temp" not in measurement_name:
             measurement_name += "_temp"
 
