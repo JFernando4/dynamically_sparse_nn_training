@@ -23,13 +23,13 @@
     "n_slices": 16,
     "u_adv_scl": true,
     "clip_eps": 0.2,
-    "runs": 15
+    "runs": 5
   },
 
   "learning_params": {
     "stepsize": ["fixed", 0.0003],
     "use_ln": false,
-    "weight_decay": 0.0
+    "weight_decay": ["fixed", 1e-1, 1e-2, 1e-3, 1e-4]
   },
 
   "slurm_parameters": {
