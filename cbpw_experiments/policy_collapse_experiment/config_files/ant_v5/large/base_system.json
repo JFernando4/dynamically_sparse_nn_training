@@ -27,7 +27,7 @@
   },
 
   "learning_params": {
-    "stepsize": ["fixed", 0.0003],
+    "stepsize": ["fixed", 0.0005, 0.0003, 0.0001],
     "use_ln": false,
     "weight_decay": 0.0
   },
