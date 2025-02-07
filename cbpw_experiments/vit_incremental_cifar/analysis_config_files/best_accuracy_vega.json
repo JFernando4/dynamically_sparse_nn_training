@@ -19,7 +19,7 @@
     "plot_parameters": {
         "x_label": "Number of Classes",
         "y_label": "Best accuracy per task",
-        "labels": ["CBP RR = 1e-4", "SWR"," CBP RR = 1e-5", "CBP RR = 1e-6"],
+        "labels": ["CBP RR = 1e-4", " CBP RR = 1e-5", "CBP RR = 1e-6", "SWR"],
         "color_order": ["blue", "orange", "blue_green", "vermillion"]
     },
 
