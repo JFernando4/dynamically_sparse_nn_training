@@ -15,6 +15,7 @@ BIN_SIZE = {"average_return": 100000, "return_per_episode": 1, "termination_step
 def get_results_data(results_dir: str, measurement_name: str, parameter_combination: list[str]):
 
     valid_measurements = BIN_SIZE.keys()
+    if DEBUG: print(measurement_name, valid_measurements)
     assert measurement_name in valid_measurements
     bin_size = BIN_SIZE[measurement_name]
 
