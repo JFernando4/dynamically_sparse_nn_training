@@ -4,7 +4,9 @@
     "parameter_combinations":
         [
             "stepsize-0.0003_weight_decay-0.0_use_ln-False",
-            "stepsize-0.0003_weight_decay-0.0_use_ln-True"
+            "stepsize-0.0003_weight_decay-0.0_use_ln-True",
+            "stepsize-0.0003_weight_decay-0.01_use_ln-False",
+            "stepsize-0.0003_weight_decay-0.01_use_ln-True"
         ],
 
     "summary_names":
@@ -19,10 +21,10 @@
     "plot_parameters": {
         "x_label": "Training Step",
         "y_label": "Return per Episode",
-        "labels": ["Base System", "With Layer Norm"],
-        "color_order": ["black", "orange", "blue"],
+        "labels": ["Base System", "With Layer Norm", "With Reg", "With LN and Reg"],
+        "color_order": ["black", "orange", "blue", "vermillion"],
         "ylim": [-100, 5000]
     },
 
-    "plot_name_prefix": "large_ant"
+    "plot_name_prefix": "main_large_ant"
 }
