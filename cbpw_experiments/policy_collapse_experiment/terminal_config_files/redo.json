@@ -23,19 +23,14 @@
   "u_adv_scl": true,
   "clip_eps": 0.2,
 
-  "__comment_5__": "Selective Weight Reinitialization parameters",
-  "reinit_freq": 512,
-  "drop_factor": 1e-3,
-  "prune_method": "gr",
-  "grow_method": "init",
+  "__comment_5__": "ReDo parameters",
+  "redo_reinit_freq": 512,
+  "redo_reinit_threshold": 1e-1,
+  "redo_utility": "original",
 
-  "__comment_6__": "For creating the results directory.",
+    "__comment_6__": "For creating the results directory.",
   "relevant_parameters": [
     "stepsize",
-    "weight_decay",
-    "reinit_freq",
-    "drop_factor",
-    "prune_method",
-    "grow_method"
+    "weight_decay"
   ]
 }
