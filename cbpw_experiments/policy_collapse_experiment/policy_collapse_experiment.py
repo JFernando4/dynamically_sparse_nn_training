@@ -53,7 +53,7 @@ class PolicyCollapseExperiment(Experiment):
         # continual backprop parameters
         self.replacement_rate = access_dict(exp_params, "replacement_rate", default=0.0, val_type=float)
         self.maturity_threshold = access_dict(exp_params, "maturity_threshold", default=0, val_type=int)
-        self.cbp_utility = access_dict(exp_params, "cbp_utiltiy", default="contribution", val_type=str)
+        self.cbp_utility = access_dict(exp_params, "cbp_utility", default="contribution", val_type=str)
         self.decay_rate = access_dict(exp_params, "decay_rate", default=0.0, val_type=float)    # also for redo
         self.use_cbp = (self.replacement_rate > 0.0) and (self.maturity_threshold > 0)
         # ReDo parameters
