@@ -25,5 +25,5 @@
         "ylim": [-100, 5000]
     },
 
-    "plot_name_prefix": "large_ant_with_regularization"
+    "plot_name_prefix": "large_ant_with_ln_and_regularization"
 }
