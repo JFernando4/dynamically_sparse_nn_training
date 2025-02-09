@@ -32,8 +32,8 @@
     "stepsize": 0.0003,
     "use_ln": true,
     "weight_decay": ["fixed", 0.0, 1e-2],
-    "reinit_freq": ["fixed", 128, 256, 512, 1024],
-    "drop_factor": ["fixed", 1e-1, 1e-2, 1e-3, 1e-4],
+    "reinit_freq": ["fixed", 256, 512, 1024, 2048],
+    "drop_factor": ["fixed", 1e-3, 1e-4, 1e-5, 1e-6],
     "prune_method": ["str", "gr"],
     "grow_method": ["str", "init"]
   },
