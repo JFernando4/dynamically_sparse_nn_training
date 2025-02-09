@@ -24,7 +24,7 @@
     "n_slices": 16,
     "u_adv_scl": true,
     "clip_eps": 0.2,
-    "runs": 1
+    "runs": 5
   },
 
   "learning_params": {
@@ -32,7 +32,7 @@
     "use_ln": true,
     "weight_decay": ["fixed", 0.0, 1e-2],
     "redo_reinit_freq": ["fixed", 128, 256, 512, 1024],
-    "redo_reinit_threshold": ["fixed", 1e-0, 1e-1, 1e-2, 1e-3],
+    "redo_reinit_threshold": ["fixed", 1e-0, 1e-1, 1e-2],
     "redo_utility": ["str", "original"]
   },
 
