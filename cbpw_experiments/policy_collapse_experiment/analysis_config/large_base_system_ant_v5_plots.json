@@ -8,7 +8,9 @@
             "stepsize-0.0003_weight_decay-0.01_use_ln-False",
             "stepsize-0.0003_weight_decay-0.01_use_ln-True",
             "weight_decay-0.0_redo_reinit_freq-256_redo_reinit_threshold-0.01_redo_utility-original",
-            "weight_decay-0.01_redo_reinit_freq-1024_redo_reinit_threshold-0.01_redo_utility-original"
+            "weight_decay-0.01_redo_reinit_freq-1024_redo_reinit_threshold-0.01_redo_utility-original",
+            "weight_decay-0.0_maturity_threshold-100_replacement_rate-0.001_cbp_utility-contribution",
+            "weight_decay-0.01_maturity_threshold-100_replacement_rate-0.001_cbp_utility-contribution"
         ],
 
     "summary_names":
@@ -23,7 +25,7 @@
     "plot_parameters": {
         "x_label": "Training Step",
         "y_label": "Return per Episode",
-        "labels": ["Base System", "With Layer Norm", "With Reg", "With LN and Reg", "ReDo", "ReDo with Reg"],
+        "labels": ["Base System", "With Layer Norm", "With Reg", "With LN and Reg", "ReDo", "ReDo with Reg", "CBP", "CBP with Reg"],
         "color_order": ["black", "orange", "sky_blue", "blue_green", "yellow", "blue", "vermilion", "pale_violet", "gray"],
         "ylim": [-100, 5000]
     },
