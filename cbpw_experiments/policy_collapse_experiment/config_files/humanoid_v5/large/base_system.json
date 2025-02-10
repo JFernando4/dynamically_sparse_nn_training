@@ -1,6 +1,6 @@
 {
   "file_management": {
-    "experiment_name": "humanoid_policy_collapse",
+    "experiment_name": "large_humanoid_policy_collapse",
     "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results/",
     "relevant_parameters": [
       "stepsize",
@@ -11,9 +11,9 @@
 
   "experiment_params": {
     "env_name": "Humanoid-v5",
-    "total_env_steps": 30000000,
+    "total_env_steps": 20000000,
     "activation_type": "ReLU",
-    "hidden_dim": 16,
+    "hidden_dim": 64,
     "adam_beta1": 0.99,
     "adam_beta2": 0.99,
     "buffer_size": 2048,
@@ -27,7 +27,7 @@
   },
 
   "learning_params": {
-    "stepsize": ["fixed", 0.0001],
+    "stepsize": ["fixed", 3e-4, 1e-4, 5e-5, 3e-5, 1e-5],
     "use_ln": false,
     "weight_decay": 0.0
   },
