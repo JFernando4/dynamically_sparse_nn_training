@@ -11,7 +11,7 @@ COLOR_DICT = {  # colorblind friendly according to nature
     "blue_green":   "#009e73",
     "yellow":       "#f0e442",
     "blue":         "#0072b2",
-    "vermillion":   "#d55e00",
+    "vermilion":   "#d55e00",
     "pale_violet":  "#cc79a7",
     "gray":         "#808080"
 }
