@@ -33,7 +33,7 @@
   },
 
   "slurm_parameters": {
-    "job_name": "h_pc",
+    "job_name": "hum",
     "time": "15:00:00",
     "max_runs_per_job": 1,
     "mem": "4G",
