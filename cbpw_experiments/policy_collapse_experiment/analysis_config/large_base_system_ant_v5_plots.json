@@ -7,7 +7,7 @@
             "stepsize-0.0003_weight_decay-0.0_use_ln-True",
             "stepsize-0.0003_weight_decay-0.01_use_ln-False",
             "stepsize-0.0003_weight_decay-0.01_use_ln-True",
-            "weight_decay-0.0_redo_reinit_freq-256_redo_reinit_threshold-0.01_redo_utility-original "
+            "weight_decay-0.0_redo_reinit_freq-256_redo_reinit_threshold-0.01_redo_utility-original"
         ],
 
     "summary_names":
