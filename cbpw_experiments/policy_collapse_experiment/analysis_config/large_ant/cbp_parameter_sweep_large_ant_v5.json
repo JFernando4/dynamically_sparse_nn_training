@@ -3,18 +3,28 @@
 
     "parameter_combinations":
         [
+            "weight_decay-0.0_maturity_threshold-10_replacement_rate-0.5_cbp_utility-contribution",
+            "weight_decay-0.0_maturity_threshold-10_replacement_rate-0.1_cbp_utility-contribution",
+            "weight_decay-0.0_maturity_threshold-10_replacement_rate-0.01_cbp_utility-contribution",
+            "weight_decay-0.0_maturity_threshold-10_replacement_rate-0.001_cbp_utility-contribution",
+            "weight_decay-0.0_maturity_threshold-10_replacement_rate-0.0001_cbp_utility-contribution",
+            "weight_decay-0.0_maturity_threshold-10_replacement_rate-1e-05_cbp_utility-contribution",
+
+            "weight_decay-0.0_maturity_threshold-100_replacement_rate-0.5_cbp_utility-contribution",
             "weight_decay-0.0_maturity_threshold-100_replacement_rate-0.1_cbp_utility-contribution",
             "weight_decay-0.0_maturity_threshold-100_replacement_rate-0.01_cbp_utility-contribution",
             "weight_decay-0.0_maturity_threshold-100_replacement_rate-0.001_cbp_utility-contribution",
             "weight_decay-0.0_maturity_threshold-100_replacement_rate-0.0001_cbp_utility-contribution",
             "weight_decay-0.0_maturity_threshold-100_replacement_rate-1e-05_cbp_utility-contribution",
 
+            "weight_decay-0.0_maturity_threshold-1000_replacement_rate-0.5_cbp_utility-contribution",
             "weight_decay-0.0_maturity_threshold-1000_replacement_rate-0.1_cbp_utility-contribution",
             "weight_decay-0.0_maturity_threshold-1000_replacement_rate-0.01_cbp_utility-contribution",
             "weight_decay-0.0_maturity_threshold-1000_replacement_rate-0.001_cbp_utility-contribution",
             "weight_decay-0.0_maturity_threshold-1000_replacement_rate-0.0001_cbp_utility-contribution",
             "weight_decay-0.0_maturity_threshold-1000_replacement_rate-1e-05_cbp_utility-contribution",
 
+            "weight_decay-0.0_maturity_threshold-10000_replacement_rate-0.5_cbp_utility-contribution",
             "weight_decay-0.0_maturity_threshold-10000_replacement_rate-0.1_cbp_utility-contribution",
             "weight_decay-0.0_maturity_threshold-10000_replacement_rate-0.01_cbp_utility-contribution",
             "weight_decay-0.0_maturity_threshold-10000_replacement_rate-0.001_cbp_utility-contribution",
