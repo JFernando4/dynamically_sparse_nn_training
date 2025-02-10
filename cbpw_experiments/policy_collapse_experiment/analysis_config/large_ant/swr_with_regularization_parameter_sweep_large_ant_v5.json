@@ -3,29 +3,18 @@
 
     "parameter_combinations":
         [
-            "weight_decay-0.01_reinit_freq-128_drop_factor-0.1_prune_method-gr_grow_method-init",
-            "weight_decay-0.01_reinit_freq-128_drop_factor-0.01_prune_method-gr_grow_method-init",
-            "weight_decay-0.01_reinit_freq-128_drop_factor-0.001_prune_method-gr_grow_method-init",
-            "weight_decay-0.01_reinit_freq-128_drop_factor-0.0001_prune_method-gr_grow_method-init",
-
-            "weight_decay-0.01_reinit_freq-256_drop_factor-0.1_prune_method-gr_grow_method-init",
-            "weight_decay-0.01_reinit_freq-256_drop_factor-0.01_prune_method-gr_grow_method-init",
             "weight_decay-0.01_reinit_freq-256_drop_factor-0.001_prune_method-gr_grow_method-init",
             "weight_decay-0.01_reinit_freq-256_drop_factor-0.0001_prune_method-gr_grow_method-init",
             "weight_decay-0.01_reinit_freq-256_drop_factor-1e-05_prune_method-gr_grow_method-init",
             "weight_decay-0.01_reinit_freq-256_drop_factor-1e-06_prune_method-gr_grow_method-init",
             "weight_decay-0.01_reinit_freq-256_drop_factor-1e-07_prune_method-gr_grow_method-init",
 
-            "weight_decay-0.01_reinit_freq-512_drop_factor-0.1_prune_method-gr_grow_method-init",
-            "weight_decay-0.01_reinit_freq-512_drop_factor-0.01_prune_method-gr_grow_method-init",
             "weight_decay-0.01_reinit_freq-512_drop_factor-0.001_prune_method-gr_grow_method-init",
             "weight_decay-0.01_reinit_freq-512_drop_factor-0.0001_prune_method-gr_grow_method-init",
             "weight_decay-0.01_reinit_freq-512_drop_factor-1e-05_prune_method-gr_grow_method-init",
             "weight_decay-0.01_reinit_freq-512_drop_factor-1e-06_prune_method-gr_grow_method-init",
             "weight_decay-0.01_reinit_freq-512_drop_factor-1e-07_prune_method-gr_grow_method-init",
 
-            "weight_decay-0.01_reinit_freq-1024_drop_factor-0.1_prune_method-gr_grow_method-init",
-            "weight_decay-0.01_reinit_freq-1024_drop_factor-0.01_prune_method-gr_grow_method-init",
             "weight_decay-0.01_reinit_freq-1024_drop_factor-0.001_prune_method-gr_grow_method-init",
             "weight_decay-0.01_reinit_freq-1024_drop_factor-0.0001_prune_method-gr_grow_method-init",
             "weight_decay-0.01_reinit_freq-1024_drop_factor-1e-05_prune_method-gr_grow_method-init",
