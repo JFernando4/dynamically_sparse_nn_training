@@ -24,7 +24,7 @@
     "n_slices": 16,
     "u_adv_scl": true,
     "clip_eps": 0.2,
-    "runs": 5
+    "runs": 15
   },
 
   "learning_params": {
@@ -38,7 +38,7 @@
 
   "slurm_parameters": {
     "job_name": "redo_lant",
-    "time": "10:00:00",
+    "time": "11:00:00",
     "max_runs_per_job": 1,
     "mem": "4G",
     "cpus-per-task": 1,
