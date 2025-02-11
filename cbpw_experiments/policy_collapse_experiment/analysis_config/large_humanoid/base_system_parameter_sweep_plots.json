@@ -27,5 +27,5 @@
         "ylim": [-100, 5000]
     },
 
-    "plot_name_prefix": "large_ant"
+    "plot_name_prefix": "large_humanoid"
 }
