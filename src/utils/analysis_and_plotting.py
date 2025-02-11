@@ -134,7 +134,6 @@ def plot_avg_with_shaded_region(results_data: dict = None, results_avg: dict = N
         temp_x_axis = np.arange(temp_average.size) if x_axis is None else x_axis
         print(f"\t{pc}\n\tNumber of samples: {num_samples}")
         print(f"\tMax: {np.max(temp_average):.5f}\n\tMin: {np.min(temp_average):.5f}")
-        measurement_name += f"_sample_size_{num_samples}"
 
         plt.plot(temp_x_axis, temp_average, label=labels[i], color=COLOR_DICT[color_order[i]], linestyle=linestyles[i])
         plt.fill_between(temp_x_axis, temp_low, temp_high, color=COLOR_DICT[color_order[i]], alpha=alpha)
