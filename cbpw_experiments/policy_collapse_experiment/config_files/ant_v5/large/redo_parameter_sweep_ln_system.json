@@ -30,8 +30,8 @@
   "learning_params": {
     "stepsize": 0.0003,
     "use_ln": true,
-    "weight_decay": ["fixed", 0.0],
-    "redo_reinit_freq": ["fixed", 256],
+    "weight_decay": ["fixed", 1e-2],
+    "redo_reinit_freq": ["fixed", 1024],
     "redo_reinit_threshold": ["fixed", 1e-2],
     "redo_utility": ["str", "original"]
   },
