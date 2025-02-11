@@ -73,7 +73,7 @@ def plot_results(results_data: dict, plot_parameters: dict, plot_dir: str, measu
             print(f"\t{pc}\n\tNumber of samples: {num_samples}")
             print(f"\tMax: {np.max(average):.5f}\n\tMin: {np.min(average):.5f}")
             print(f"\tMean: {average}")
-        if num_samples < 30 and "_temp" not in measurement_name:
+        if num_samples < 15 and "_temp" not in measurement_name:
             measurement_name += "_temp"
 
         x_axis = np.arange(average.size)
