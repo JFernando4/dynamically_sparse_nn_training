@@ -31,8 +31,8 @@
     "stepsize": 0.0003,
     "use_ln": true,
     "weight_decay": ["fixed", 0.0, 1e-2],
-    "maturity_threshold": ["fixed", 10, 100, 1000],
-    "replacement_rate": ["fixed", 1e-2, 1e-3, 1e-4, 1e-5],
+    "maturity_threshold": ["fixed", 100],
+    "replacement_rate": ["fixed", 1e-3],
     "cbp_utility": ["str", "contribution"]
   },
 
