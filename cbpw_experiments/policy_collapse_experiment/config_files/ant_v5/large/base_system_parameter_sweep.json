@@ -23,12 +23,12 @@
     "n_slices": 16,
     "u_adv_scl": true,
     "clip_eps": 0.2,
-    "runs": 30
+    "runs": 15
   },
 
   "learning_params": {
-    "stepsize": ["fixed", 0.0003],
-    "use_ln": true,
+    "stepsize": ["fixed", 0.0005, 0.0003, 0.0001],
+    "use_ln": false,
     "weight_decay": 0.0
   },
 

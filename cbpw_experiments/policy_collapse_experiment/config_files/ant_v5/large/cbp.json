@@ -3,9 +3,10 @@
     "experiment_name": "large_ant_policy_collapse",
     "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results/",
     "relevant_parameters": [
-      "stepsize",
       "weight_decay",
-      "use_ln"
+      "maturity_threshold",
+      "replacement_rate",
+      "cbp_utility"
     ]
   },
 
@@ -27,14 +28,17 @@
   },
 
   "learning_params": {
-    "stepsize": ["fixed", 0.0003],
+    "stepsize": 0.0003,
     "use_ln": true,
-    "weight_decay": 0.0
+    "weight_decay": ["fixed", 0.0, 1e-2],
+    "maturity_threshold": ["fixed", 100],
+    "replacement_rate": ["fixed", 1e-3],
+    "cbp_utility": ["str", "contribution"]
   },
 
   "slurm_parameters": {
-    "job_name": "lant",
-    "time": "10:00:00",
+    "job_name": "cbp_lant",
+    "time": "11:00:00",
     "max_runs_per_job": 1,
     "mem": "4G",
     "cpus-per-task": 1,

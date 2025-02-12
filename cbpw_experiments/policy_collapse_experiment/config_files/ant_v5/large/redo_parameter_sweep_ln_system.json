@@ -24,21 +24,21 @@
     "n_slices": 16,
     "u_adv_scl": true,
     "clip_eps": 0.2,
-    "runs": 15
+    "runs": 5
   },
 
   "learning_params": {
     "stepsize": 0.0003,
     "use_ln": true,
-    "weight_decay": ["fixed", 1e-2],
-    "redo_reinit_freq": ["fixed", 1024],
-    "redo_reinit_threshold": ["fixed", 1e-2],
+    "weight_decay": ["fixed", 0.0, 1e-2],
+    "redo_reinit_freq": ["fixed", 256, 512, 1024],
+    "redo_reinit_threshold": ["fixed", 1e-0, 1e-1, 1e-2],
     "redo_utility": ["str", "original"]
   },
 
   "slurm_parameters": {
     "job_name": "redo_lant",
-    "time": "11:00:00",
+    "time": "10:00:00",
     "max_runs_per_job": 1,
     "mem": "4G",
     "cpus-per-task": 1,
