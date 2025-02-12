@@ -25,15 +25,15 @@
     "n_slices": 16,
     "u_adv_scl": true,
     "clip_eps": 0.2,
-    "runs": 1
+    "runs": 5
   },
 
   "learning_params": {
     "stepsize": 0.0003,
     "use_ln": true,
     "weight_decay": ["fixed", 0.0, 1e-2],
-    "reinit_freq": ["fixed", 128, 256, 512, 1024, 2048, 4096],
-    "drop_factor": ["fixed", 1e-2, 1e-3, 1e-4, 1e-5],
+    "reinit_freq": ["fixed", 256, 512, 1024, 2048],
+    "drop_factor": ["fixed", 1e-2, 1e-3, 1e-4],
     "prune_method": ["str", "gf"],
     "grow_method": ["str", "init"]
   },
