@@ -141,7 +141,7 @@ def compute_average_weight_magnitude(net: torch.nn.Module):
 
 
 def bootstrapped_return(episode_length: np.ndarray, episodic_return: np.ndarray, bin_size: int,
-                        total_steps: int, confidence_level: float = 0.95, to_bootstrap: bool = True):
+                        total_steps: int, confidence_level: float = 0.9, to_bootstrap: bool = True):
     assert len(episode_length) == len(episodic_return)
     num_runs = len(episode_length)
     avg_ret = np.zeros(total_steps // bin_size)
