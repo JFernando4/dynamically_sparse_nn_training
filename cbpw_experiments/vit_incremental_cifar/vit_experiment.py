@@ -75,6 +75,10 @@ class IncrementalCIFARExperiment(Experiment):
         self.replacement_rate = access_dict(exp_params, "replacement_rate", default=None, val_type=float)
         self.maturity_threshold = access_dict(exp_params, "maturity_threshold", default=None, val_type=int)
 
+        # ReDO parameters
+        self.reinit_frequency = access_dict(exp_params, "reinit_frequency", default=None, val_type=float)
+        self.reinit_threshold = access_dict(exp_params, "reinit_threshold", default=None, val_type=int)
+
         """ Network Resetting Parameters """
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
         self.reset_network = access_dict(exp_params, "reset_network", default=False, val_type=bool)
@@ -118,6 +122,8 @@ class IncrementalCIFARExperiment(Experiment):
             attention_dropout=self.dropout_prob,
             replacement_rate=self.replacement_rate,
             maturity_threshold=self.maturity_threshold,
+            reinit_frequency=self.reinit_frequency,
+            reinit_threshold=self.reinit_threshold,
             norm_layer=ShiftedLayerNorm if self.shifted_ln else torch.nn.LayerNorm
         )
         initialize_vit(self.net)
