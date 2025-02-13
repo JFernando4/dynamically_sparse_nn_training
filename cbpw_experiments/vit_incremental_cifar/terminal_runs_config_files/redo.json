@@ -15,20 +15,16 @@
   "fixed_classes": false,
   "use_best_network": true,
 
-  "__comment_4__": "SWR Parameters.",
-  "topology_update_freq": 65,
-  "prune_method": "gr",
-  "grow_method": "init",
-  "drop_factor": 0.01,
+  "__comment_4__": "ReDo Parameters.",
+  "reinit_frequency": 130,
+  "reinit_threshold": 1e-3,
 
   "__comment_5__": "For creating the results directory.",
   "relevant_parameters": [
     "stepsize",
     "weight_decay",
     "shifted_ln",
-    "topology_update_freq",
-    "prune_method",
-    "grow_method",
-    "drop_factor"
+    "reinit_frequency",
+    "reinit_threshold"
   ]
 }
