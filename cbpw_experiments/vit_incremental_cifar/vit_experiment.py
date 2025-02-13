@@ -76,8 +76,8 @@ class IncrementalCIFARExperiment(Experiment):
         self.maturity_threshold = access_dict(exp_params, "maturity_threshold", default=None, val_type=int)
 
         # ReDO parameters
-        self.reinit_frequency = access_dict(exp_params, "reinit_frequency", default=None, val_type=float)
-        self.reinit_threshold = access_dict(exp_params, "reinit_threshold", default=None, val_type=int)
+        self.reinit_frequency = access_dict(exp_params, "reinit_frequency", default=None, val_type=int)
+        self.reinit_threshold = access_dict(exp_params, "reinit_threshold", default=None, val_type=float)
 
         """ Network Resetting Parameters """
         self.reset_head = access_dict(exp_params, "reset_head", default=False, val_type=bool)
