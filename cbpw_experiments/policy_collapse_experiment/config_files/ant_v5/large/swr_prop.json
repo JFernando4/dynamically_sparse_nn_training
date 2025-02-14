@@ -50,7 +50,7 @@
   ],
 
   "slurm_parameters": {
-    "job_name": "redo_lant",
+    "job_name": "swr_lant",
     "time": "11:00:00",
     "max_runs_per_job": 1,
     "mem": "4G",
