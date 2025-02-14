@@ -30,7 +30,7 @@
   "learning_params": {
     "stepsize": 1e-4,
     "use_ln": true,
-    "weight_decay": ["fixed", 0.0],
+    "weight_decay": ["fixed", 0.0, 0.01],
     "redo_reinit_freq": ["fixed", 256, 512, 1024, 2048],
     "redo_reinit_threshold": ["fixed", 1e-0, 1e-1, 1e-2],
     "redo_utility": ["str", "original"]
@@ -38,7 +38,7 @@
 
   "slurm_parameters": {
     "job_name": "redo_hum",
-    "time": "10:00:00",
+    "time": "11:00:00",
     "max_runs_per_job": 1,
     "mem": "4G",
     "cpus-per-task": 1,

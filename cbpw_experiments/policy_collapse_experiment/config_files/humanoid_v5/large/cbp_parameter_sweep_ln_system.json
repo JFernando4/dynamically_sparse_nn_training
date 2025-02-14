@@ -30,7 +30,7 @@
   "learning_params": {
     "stepsize": 1e-4,
     "use_ln": true,
-    "weight_decay": ["fixed", 0.0],
+    "weight_decay": ["fixed", 0.0, 0.01],
     "maturity_threshold": ["fixed", 100, 1000, 10000],
     "replacement_rate": ["fixed", 1e-2, 1e-3, 1e-4, 1e-5],
     "cbp_utility": ["str", "contribution"]

@@ -31,7 +31,7 @@
   "learning_params": {
     "stepsize": 1e-4,
     "use_ln": true,
-    "weight_decay": ["fixed", 0.0],
+    "weight_decay": ["fixed", 0.0, 0.01],
     "reinit_freq": ["fixed", 256, 512, 1024, 2048],
     "drop_factor": ["fixed", 1e-4, 1e-5, 1e-6],
     "prune_method": ["str", "gr"],
@@ -40,7 +40,7 @@
 
   "slurm_parameters": {
     "job_name": "swr_hum",
-    "time": "10:00:00",
+    "time": "11:00:00",
     "max_runs_per_job": 1,
     "mem": "4G",
     "cpus-per-task": 1,
