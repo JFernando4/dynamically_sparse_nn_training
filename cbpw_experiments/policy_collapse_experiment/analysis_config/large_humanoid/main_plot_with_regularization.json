@@ -4,7 +4,8 @@
     "parameter_combinations":
         [
             "stepsize-0.0001_weight_decay-0.0_use_ln-False",
-            "stepsize-0.0001_weight_decay-0.01_use_ln-False"
+            "stepsize-0.0001_weight_decay-0.01_use_ln-False",
+            "stepsize-0.0001_weight_decay-0.01_use_ln-True"
         ],
 
     "summary_names":
