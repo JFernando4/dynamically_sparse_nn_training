@@ -21,7 +21,7 @@
         "x_label": "Training Step",
         "y_label": "Return per Episode",
         "labels": ["Stepsize = 1e-4", "Stepsize = 5e-4", "Stepsize = 3e-4"],
-        "color_order": ["black", "orange", "vermillion"],
+        "color_order": ["black", "orange", "vermilion"],
         "ylim": [-100, 5000]
     },
 
