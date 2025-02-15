@@ -4,6 +4,7 @@
     "data_path": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/cbpw_experiments/vit_incremental_cifar/data/",
     "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results/",
     "relevant_parameters": [
+      "shifted_ln",
       "topology_update_freq",
       "prune_method",
       "grow_method",
@@ -13,9 +14,10 @@
 
   "experiment_params": {
     "stepsize": 0.01,
-    "weight_decay": 2e-6,
+    "weight_decay": 6e-6,
     "dropout_prob": 0.1,
     "use_lr_schedule": true,
+    "shifted_ln": true,
     "momentum": 0.9,
     "num_epochs": 2000,
     "initial_num_classes": 5,
@@ -25,10 +27,10 @@
   },
 
   "learning_params": {
-    "topology_update_freq": ["fixed", 1040, 2080, 4160, 8320, 16640],
+    "topology_update_freq": ["fixed", 64, 128, 254],
     "prune_method": ["str", "gr"],
     "grow_method": ["str", "init"],
-    "drop_factor": ["fixed", 0.01, 0.001, 0.0001]
+    "drop_factor": ["fixed", 1e-3, 5e-4, 1e-4]
   },
 
   "slurm_parameters": {
