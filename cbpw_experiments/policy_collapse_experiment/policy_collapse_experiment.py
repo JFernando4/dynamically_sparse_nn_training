@@ -118,7 +118,8 @@ class PolicyCollapseExperiment(Experiment):
                                                  architecture_type="ppo_networks",
                                                  prune_method=self.prune_method,
                                                  grow_method=self.grow_method,
-                                                 drop_factor=self.drop_factor)
+                                                 drop_factor=self.drop_factor,
+                                                 activation=self.activation_type.lower())
 
         """" Initialize PPO Agent """
         self.learner = PPO(
