@@ -23,7 +23,7 @@
     "initial_num_classes": 5,
     "fixed_classes": false,
     "use_best_network": true,
-    "runs": 1
+    "runs": 3
   },
 
   "learning_params": {
