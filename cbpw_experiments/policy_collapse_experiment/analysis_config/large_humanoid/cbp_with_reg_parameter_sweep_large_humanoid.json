@@ -1,0 +1,28 @@
+{
+    "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/large_humanoid_policy_collapse/",
+
+    "parameter_combinations":
+        [
+            "weight_decay-0.01_maturity_threshold-100_replacement_rate-0.01_cbp_utility-contribution",
+            "weight_decay-0.01_maturity_threshold-100_replacement_rate-0.001_cbp_utility-contribution",
+            "weight_decay-0.01_maturity_threshold-100_replacement_rate-0.0001_cbp_utility-contribution",
+            "weight_decay-0.01_maturity_threshold-100_replacement_rate-1e-05_cbp_utility-contribution",
+
+            "weight_decay-0.01_maturity_threshold-1000_replacement_rate-0.01_cbp_utility-contribution",
+            "weight_decay-0.01_maturity_threshold-1000_replacement_rate-0.001_cbp_utility-contribution",
+            "weight_decay-0.01_maturity_threshold-1000_replacement_rate-0.0001_cbp_utility-contribution",
+            "weight_decay-0.01_maturity_threshold-1000_replacement_rate-1e-05_cbp_utility-contribution",
+
+            "weight_decay-0.01_maturity_threshold-10000_replacement_rate-0.01_cbp_utility-contribution",
+            "weight_decay-0.01_maturity_threshold-10000_replacement_rate-0.001_cbp_utility-contribution",
+            "weight_decay-0.01_maturity_threshold-10000_replacement_rate-0.0001_cbp_utility-contribution",
+            "weight_decay-0.01_maturity_threshold-10000_replacement_rate-1e-05_cbp_utility-contribution"
+        ],
+
+    "summary_names":
+        [
+            "average_return_over_run"
+        ],
+
+    "total_steps": 20000000
+}
