@@ -9,7 +9,7 @@ from mlproj_manager.util.experiments_util import access_dict
 from src.utils import aggregate_over_bins, plot_results, parse_plots_and_analysis_terminal_arguments
 
 DEBUG = False
-BIN_SIZE = {"test_accuracy_per_epoch": 100}
+BIN_SIZE = {"test_accuracy_per_epoch": 100, "average_test_accuracy_per_epoch": 100}
 
 
 def get_results_data(results_dir: str, measurement_name: str, parameter_combination: list[str]):
@@ -42,6 +42,13 @@ def get_results_data(results_dir: str, measurement_name: str, parameter_combinat
     return results
 
 
+def print_average_test_accuracy(results_dict: dict):
+
+    for i, (pc, temp_results) in enumerate(results_dict.items()):
+        average = np.mean(temp_results)
+        print(f"Parameter combination: {pc}\n\tAverage test accuracy = {average}")
+
+
 def analyse_results(analysis_parameters: dict, save_plots: bool = True):
 
     results_dir = analysis_parameters["results_dir"]
@@ -52,8 +59,13 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
     plot_name_prefix = access_dict(analysis_parameters, "plot_name_prefix", default="", val_type=str)
 
     for sn in summary_names:
-        results_data = get_results_data(results_dir, sn, parameter_combinations)
-        plot_results(results_data, plot_parameters, plot_dir, sn, save_plots, plot_name_prefix)
+
+        if sn == "test_accuracy_per_epoch":
+            results_data = get_results_data(results_dir, sn, parameter_combinations)
+            plot_results(results_data, plot_parameters, plot_dir, sn, save_plots, plot_name_prefix)
+        elif sn == "average_test_accuracy_per_epoch":
+            results_data = get_results_data(results_dir, "test_accuracy_per_epoch", parameter_combinations)
+
 
 
 if __name__ == "__main__":
