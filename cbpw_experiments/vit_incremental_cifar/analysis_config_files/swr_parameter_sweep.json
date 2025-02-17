@@ -1,0 +1,36 @@
+{
+    "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/vit_cbpw_cifar/",
+
+    "parameter_combinations":
+        [
+            "shifted_ln-True_topology_update_freq-64_prune_method-gr_grow_method-init_drop_factor-0.001",
+            "shifted_ln-True_topology_update_freq-64_prune_method-gr_grow_method-init_drop_factor-0.0005",
+            "shifted_ln-True_topology_update_freq-64_prune_method-gr_grow_method-init_drop_factor-0.0001",
+
+            "shifted_ln-True_topology_update_freq-128_prune_method-gr_grow_method-init_drop_factor-0.001",
+            "shifted_ln-True_topology_update_freq-128_prune_method-gr_grow_method-init_drop_factor-0.0005",
+            "shifted_ln-True_topology_update_freq-128_prune_method-gr_grow_method-init_drop_factor-0.0001",
+
+            "shifted_ln-True_topology_update_freq-254_prune_method-gr_grow_method-init_drop_factor-0.001",
+            "shifted_ln-True_topology_update_freq-254_prune_method-gr_grow_method-init_drop_factor-0.0005",
+            "shifted_ln-True_topology_update_freq-254_prune_method-gr_grow_method-init_drop_factor-0.0001"
+        ],
+
+    "summary_names":
+        [
+            "test_accuracy_per_epoch",
+            "average_test_accuracy_per_epoch"
+        ],
+
+    "plot_dir": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/cbpw_experiments/vit_incremental_cifar/twenty_tasks_incremental_cifar_plots",
+
+    "plot_parameters": {
+        "x_label": "Number of Classes",
+        "y_label": "Best accuracy per task",
+        "labels": ["64, 1e-3", "64, 5e-4", "64, 1e-4", "128, 1e-3", "128, 5e-4", "128, 1e-4", "254, 1e-3", "254, 5e-4", "254, 1e-4"],
+        "color_order": ["black", "orange", "blue", "black", "orange", "blue", "black", "orange", "blue"],
+        "linestyles": ["-", "-", "-", ":", ":", ":", "--", "--", "--"]
+    },
+
+    "plot_name_prefix": "swr_parameter_sweep"
+}
