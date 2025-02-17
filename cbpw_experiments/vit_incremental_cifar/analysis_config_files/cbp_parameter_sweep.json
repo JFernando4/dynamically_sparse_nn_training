@@ -1,0 +1,36 @@
+{
+    "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/vit_cbpw_cifar/",
+
+    "parameter_combinations":
+        [
+            "shifted_ln-True_replacement_rate-1e-06_maturity_threshold-1000",
+            "shifted_ln-True_replacement_rate-5e-07_maturity_threshold-1000",
+            "shifted_ln-True_replacement_rate-1e-07_maturity_threshold-1000",
+            "shifted_ln-True_replacement_rate-5e-08_maturity_threshold-1000",
+            "shifted_ln-True_replacement_rate-1e-08_maturity_threshold-1000",
+
+            "shifted_ln-True_replacement_rate-1e-06_maturity_threshold-10000",
+            "shifted_ln-True_replacement_rate-5e-07_maturity_threshold-10000",
+            "shifted_ln-True_replacement_rate-1e-07_maturity_threshold-10000",
+            "shifted_ln-True_replacement_rate-5e-08_maturity_threshold-10000",
+            "shifted_ln-True_replacement_rate-1e-08_maturity_threshold-10000"
+        ],
+
+    "summary_names":
+        [
+            "test_accuracy_per_epoch",
+            "average_test_accuracy_per_epoch"
+        ],
+
+    "plot_dir": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/cbpw_experiments/vit_incremental_cifar/twenty_tasks_incremental_cifar_plots",
+
+    "plot_parameters": {
+        "x_label": "Number of Classes",
+        "y_label": "Best accuracy per task",
+        "labels": ["1e-6, 1k", "5e-7, 1k", "1e-7, 1k", "5e-8, 1k", "1e-8, 1k", "1e-6, 10k", "5e-7, 10k", "1e-7, 10k", "5e-8, 10k", "1e-8, 10k"],
+        "color_order": ["black", "orange", "blue", "vermilion", "blue_green", "black", "orange", "blue", "vermilion", "blue_green"],
+        "linestyles": ["-", "-", "-", "-", "-", "--", "--", "--", "--", "--"]
+    },
+
+    "plot_name_prefix": "cbp_parameter_sweep"
+}

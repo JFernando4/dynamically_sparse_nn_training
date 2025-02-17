@@ -65,6 +65,7 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
             plot_results(results_data, plot_parameters, plot_dir, sn, save_plots, plot_name_prefix)
         elif sn == "average_test_accuracy_per_epoch":
             results_data = get_results_data(results_dir, "test_accuracy_per_epoch", parameter_combinations)
+            print_average_test_accuracy(results_data)
 
 
 
