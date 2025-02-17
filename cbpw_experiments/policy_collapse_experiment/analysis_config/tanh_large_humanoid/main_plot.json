@@ -24,5 +24,5 @@
         "ylim": [-100, 5000]
     },
 
-    "plot_name_prefix": "main_large_humanoid"
+    "plot_name_prefix": "main_tanh_large_humanoid"
 }
