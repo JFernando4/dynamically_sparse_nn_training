@@ -1,6 +1,6 @@
 {
   "file_management": {
-    "experiment_name": "tanh_large_ant_policy_collapse",
+    "experiment_name": "tanh_large_humanoid_policy_collapse",
     "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results/",
     "relevant_parameters": [
       "weight_decay",
