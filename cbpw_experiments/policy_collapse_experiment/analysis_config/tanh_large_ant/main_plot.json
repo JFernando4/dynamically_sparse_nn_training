@@ -1,0 +1,28 @@
+{
+    "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/tanh_large_ant_policy_collapse/",
+
+    "parameter_combinations":
+        [
+            "stepsize-0.0003_weight_decay-0.0_use_ln-False",
+            "stepsize-0.0003_weight_decay-0.0_use_ln-True"
+        ],
+
+    "summary_names":
+        [
+            "average_return",
+            "average_return_over_run"
+        ],
+
+    "plot_dir": "/home/jfernan/projects/def-sutton/jfernan/dynamically_sparse_nn_training/cbpw_experiments/policy_collapse_experiment/plots/tanh_large_ant",
+    "total_steps": 20000000,
+
+    "plot_parameters": {
+        "x_label": "Training Step",
+        "y_label": "Return per Episode",
+        "labels": ["Base System", "With Layer Norm", "With LN and Reg", "ReDo", "CBP", "SWR"],
+        "color_order": ["black", "orange", "sky_blue", "blue_green", "yellow", "blue", "vermilion", "pale_violet", "gray"],
+        "ylim": [-100, 5000]
+    },
+
+    "plot_name_prefix": "main_large_ant"
+}
