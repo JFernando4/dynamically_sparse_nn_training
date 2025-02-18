@@ -85,6 +85,7 @@ class ReDoLinear(nn.Module):
         Indicators for different events
         """
         self.replace_feature_event_indicator = False
+        self.num_replaced = None
 
     def forward(self, _input):
         self.step_count += 1
@@ -137,6 +138,7 @@ class ReDoLinear(nn.Module):
 
             self.out_layer.weight.data[:, features_to_replace] = 0
             self.replace_feature_event_indicator = True
+            self.num_replaced = num_features_to_replace
 
             """
             Reset the corresponding batchnorm/layernorm layers
@@ -156,3 +158,7 @@ class ReDoLinear(nn.Module):
         """
         features_to_replace = self.get_features_to_reinit()
         self.reinit_features(features_to_replace)
+
+    def reset_indicators(self):
+        self.replace_feature_event_indicator = False
+        self.num_replaced = None

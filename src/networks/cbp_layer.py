@@ -162,3 +162,6 @@ class CBPLinear(nn.Module):
         features_to_replace = self.get_features_to_reinit()
         self.reinit_features(features_to_replace)
         # todo: think if I should implement update optim parameters
+
+    def reset_indicators(self):
+        self.replace_feature_event_indicator = False
