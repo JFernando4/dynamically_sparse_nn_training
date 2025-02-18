@@ -23,7 +23,7 @@ from src.cbpw_functions.weight_matrix_updates import update_weights
 from src.utils.experiment_utils import parse_terminal_arguments
 from src.plasticity_functions import FirstOrderGlobalUPGD, inject_noise
 from src.utils.evaluation_functions import compute_average_gradient_magnitude, compute_average_weight_magnitude
-from src.utils.permuted_mnist_experiment_utils import compute_dead_units_proportion
+from src.utils.permuted_mnist_experiment_utils import compute_dead_units_proportion, initialize_results_dict
 
 
 class PermutedMNISTExperiment(Experiment):
@@ -185,34 +185,9 @@ class PermutedMNISTExperiment(Experiment):
         self.current_running_avg_step, self.running_loss, self.running_accuracy, self.current_permutation = (0, 0.0, 0.0, 0)
         self.running_avg_grad_magnitude = 0.0
         self.previous_activations = []
-        self.results_dict = {}
-        total_ckpts = self.steps_per_task * self.num_permutations // (self.running_avg_window * self.batch_size)
-        self.results_dict["train_loss_per_checkpoint"] = torch.zeros(total_ckpts, device=self.device, dtype=torch.float32)
-        self.results_dict["train_accuracy_per_checkpoint"] = torch.zeros(total_ckpts, device=self.device, dtype=torch.float32)
-
-        if self.use_cbpw:
-            total_top_updates = ((self.steps_per_task // self.batch_size) * self.num_permutations) // self.topology_update_freq
-            self.results_dict["prop_added_then_removed"] = torch.zeros(total_top_updates, device=self.device, dtype=torch.float32)
-
-        if self.extended_summaries:
-            self.results_dict["average_gradient_magnitude_per_checkpoint"] = torch.zeros(total_ckpts, device=self.device, dtype=torch.float32)
-            self.results_dict["average_weight_magnitude_per_permutation"] = torch.zeros(self.num_permutations, device=self.device, dtype=torch.float32)
-            self.results_dict["proportion_dead_units_per_permutation"] = torch.zeros(self.num_permutations, device=self.device, dtype=torch.float32)
-            if self.use_ln:
-                self.results_dict["average_ln_weight_magnitude_per_checkpoint"] = torch.zeros(total_ckpts, device=self.device, dtype=torch.float32)
-
-        if (self.use_cbp or self.use_cbpw) and self.extended_summaries:
-            self.results_dict["loss_before_topology_update"] = []
-            self.results_dict["loss_after_topology_update"] = []
-            self.results_dict["avg_grad_before_topology_update"] = []
-            self.results_dict["avg_grad_after_topology_update"] = []
-            if self.use_ln:
-                self.results_dict["change_in_average_activation_layer_1"] = []
-                self.results_dict["change_in_average_activation_layer_2"] = []
-                self.results_dict["change_in_average_activation_layer_3"] = []
-                self.results_dict["change_in_std_activation_layer_1"] = []
-                self.results_dict["change_in_std_activation_layer_2"] = []
-                self.results_dict["change_in_std_activation_layer_3"] = []
+        self.results_dict = initialize_results_dict(self.steps_per_task, self.num_permutations, self.running_avg_window,
+                                                    self.batch_size, self.device, self.use_cbpw, self.topology_update_freq,
+                                                    self.use_redo, self.use_cbp, self.use_ln, self.extended_summaries)
 
         """ For creating experiment checkpoints """
         self.current_permutation = 0
@@ -276,7 +251,7 @@ class PermutedMNISTExperiment(Experiment):
                 for param in self.net.parameters(): param.grad = None  # apparently faster than optim.zero_grad()
 
                 # compute prediction and loss
-                current_activations = [] if (self.extended_summaries and self.use_ln and (self.use_cbp or self.use_cbpw)) else None
+                current_activations = [] if (self.extended_summaries and self.use_ln and (self.use_cbp or self.use_cbpw or self.use_redo)) else None
                 predictions = self.net.forward(image, current_activations)
                 current_reg_loss = self.loss(predictions, label)
                 current_loss = current_reg_loss.detach().clone()
@@ -336,19 +311,21 @@ class PermutedMNISTExperiment(Experiment):
         if not self.extended_summaries: return
 
         if (not self.store_cbp_extended_summaries() and         # check if using cbp and a feature has been replaced
-            not self.store_cbpw_extended_summaries() and        # check if using cbpw and weights have been replaced
+            not self.store_cbpw_extended_summaries() and        # check if using swr and weights have been replaced
+            not self.store_redo_extended_summaries() and        # check if using redo
             not self.store_next_loss):                          # check if cbp or cbpw was used in the previous step
             return
 
-        if not self.store_next_loss and (self.store_cbp_extended_summaries() or self.store_cbpw_extended_summaries()):
-            self.results_dict[f"loss_before_topology_update"].append(current_loss)
-            self.results_dict[f"avg_grad_before_topology_update"].append(compute_average_gradient_magnitude(self.net))
+        if not self.store_next_loss and (self.store_cbp_extended_summaries() or self.store_cbpw_extended_summaries() or self.store_redo_extended_summaries()):
+            self.results_dict["loss_before_topology_update"].append(current_loss)
+            self.results_dict["avg_grad_before_topology_update"].append(compute_average_gradient_magnitude(self.net))
             if self.use_ln:
                 self.previous_activations = current_activations
+            self.store_cbp_and_redo_num_replace_summary()
 
-        elif self.store_next_loss and (not self.store_cbp_extended_summaries() and not self.store_cbpw_extended_summaries()):
-            self.results_dict[f"loss_after_topology_update"].append(current_loss)
-            self.results_dict[f"avg_grad_after_topology_update"].append(compute_average_gradient_magnitude(self.net))
+        elif self.store_next_loss and (not self.store_cbp_extended_summaries() and not self.store_cbpw_extended_summaries() and not self.store_redo_extended_summaries()):
+            self.results_dict["loss_after_topology_update"].append(current_loss)
+            self.results_dict["avg_grad_after_topology_update"].append(compute_average_gradient_magnitude(self.net))
             if self.use_ln:
                 for i in range(len(current_activations)):
                     diff_average_act = current_activations[i].mean().detach() - self.previous_activations[i].mean().detach()
@@ -357,11 +334,11 @@ class PermutedMNISTExperiment(Experiment):
                     self.results_dict[f"change_in_std_activation_layer_{i + 1}"].append(diff_std_act.abs())
                 self.previous_activations = []
 
-        elif self.store_next_loss and (self.store_cbpw_extended_summaries() or self.store_cbpw_extended_summaries()):
-            self.results_dict[f"loss_before_topology_update"].append(current_loss)
-            self.results_dict[f"avg_grad_before_topology_update"].append(compute_average_gradient_magnitude(self.net))
-            self.results_dict[f"loss_after_topology_update"].append(current_loss)
-            self.results_dict[f"avg_grad_after_topology_update"].append(compute_average_gradient_magnitude(self.net))
+        elif self.store_next_loss and (self.store_cbpw_extended_summaries() or self.store_cbpw_extended_summaries() or self.store_redo_extended_summaries()):
+            self.results_dict["loss_before_topology_update"].append(current_loss)
+            self.results_dict["avg_grad_before_topology_update"].append(compute_average_gradient_magnitude(self.net))
+            self.results_dict["loss_after_topology_update"].append(current_loss)
+            self.results_dict["avg_grad_after_topology_update"].append(compute_average_gradient_magnitude(self.net))
             if self.use_ln:
                 for i in range(len(current_activations)):
                     diff_average_act = current_activations[i].mean().detach() - self.previous_activations[i].mean().detach()
@@ -369,17 +346,26 @@ class PermutedMNISTExperiment(Experiment):
                     self.results_dict[f"change_in_average_activation_layer_{i + 1}"].append(diff_average_act.abs())
                     self.results_dict[f"change_in_std_activation_layer_{i + 1}"].append(diff_std_act.abs())
                 self.previous_activations = current_activations
+            self.store_cbp_and_redo_num_replace_summary()
 
 
-        self.store_next_loss = self.store_cbp_extended_summaries() or self.store_cbpw_extended_summaries()
+        self.store_next_loss = self.store_cbp_extended_summaries() or self.store_cbpw_extended_summaries() or self.store_redo_extended_summaries()
         self.cbpw_reset = False
         self.net.reset_indicators()
 
     def store_cbp_extended_summaries(self) -> bool:
         return (self.use_cbp and self.net.feature_replace_event_indicator())
 
+    def store_redo_extended_summaries(self) -> bool:
+        return (self.use_redo and self.net.feature_replace_event_indicator())
+
     def store_cbpw_extended_summaries(self) -> bool:
         return self.use_cbpw and self.cbpw_reset
+
+    def store_cbp_and_redo_num_replace_summary(self):
+        if not self.use_cbp or not self.use_redo: return
+        num_replaced = sum(self.net.num_replaced())
+        self.results_dict["num_replaced"].append(num_replaced)
 
     def time_to_update_topology(self, current_minibatch: int):
         if not self.use_cbpw:
@@ -402,6 +388,7 @@ class PermutedMNISTExperiment(Experiment):
         if not self.reinit_freq_as_rate:
             removed_masks = [v[0] for v in temp_summaries_dict.values()]
             num_pruned = sum([v[1] for v in temp_summaries_dict.values()])
+            self.results_dict["num_replaced"].append(num_pruned)
             self.store_mask_update_summary(removed_masks, num_pruned)
             self.current_topology_update += 1
 
@@ -451,8 +438,10 @@ class PermutedMNISTExperiment(Experiment):
         store_object_with_several_attempts(model_parameters, file_path, storing_format="pickle", num_attempts=10)
 
     def post_process_extended_results(self):
-        using_cbp_or_cbpw = self.use_cbp or self.use_cbpw
-        if not self.extended_summaries or not using_cbp_or_cbpw: return
+        using_cbp_or_swr_or_redo = self.use_cbp or self.use_cbpw or self.use_redo
+        if not self.extended_summaries or not using_cbp_or_swr_or_redo: return
+        self.results_dict["num_replaced"] = np.array(self.results_dict["num_replaced"], dtype=np.float32)
+
         self.results_dict["loss_before_topology_update"] = np.array(self.results_dict["loss_before_topology_update"], dtype=np.float32)
         self.results_dict["loss_after_topology_update"] = np.array(self.results_dict["loss_after_topology_update"], dtype=np.float32)
         self.results_dict["avg_grad_before_topology_update"] = np.array(self.results_dict["avg_grad_before_topology_update"], dtype=np.float32)
