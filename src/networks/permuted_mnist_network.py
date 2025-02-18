@@ -142,8 +142,7 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
         return self.out(x)
 
     def feature_replace_event_indicator(self):
-        if not self.use_cbp and not self.use_redo:
-            return False
+        if not self.use_cbp and not self.use_redo: return False
 
         return (self.reinit_layer_1.replace_feature_event_indicator or
                 self.reinit_layer_2.replace_feature_event_indicator or
@@ -156,9 +155,9 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
         self.reinit_layer_2.reset_indicators()
         self.reinit_layer_3.reset_indicators()
 
-    def redo_num_replaced(self):
-        if not self.use_redo:
-            return (0, 0, 0)
+    def num_replaced(self):
+        if not self.use_redo and not self.use_cbp: return (0, 0, 0)
+
         return (self.reinit_layer_1.num_replaced * self.weights_per_feature_1,
                 self.reinit_layer_2.num_replaced * self.weights_per_feature_2,
                 self.reinit_layer_3.num_replaced * self.weights_per_feature_3)
