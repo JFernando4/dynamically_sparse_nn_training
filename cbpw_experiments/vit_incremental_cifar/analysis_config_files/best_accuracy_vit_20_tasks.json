@@ -3,9 +3,9 @@
 
     "parameter_combinations":
         [
-            "num_epochs-2000_stepsize-0.01_weight_decay-6e-06_shifted_ln-True",
+            "stepsize-0.01_weight_decay-2e-06_dropout_prob-0.1_momentum-0.9_reset_network-False",
             "stepsize-0.01_weight_decay-2e-06_dropout_prob-0.1_momentum-0.9_reset_network-True",
-            "num_epochs-2000_stepsize-0.01_weight_decay-6e-06_shifted_ln-True_reset_network-False",
+            "num_epochs-2000_stepsize-0.01_weight_decay-6e-06_shifted_ln-True",
             "num_epochs-2000_stepsize-0.01_weight_decay-6e-06_shifted_ln-True_reset_network-True",
             "shifted_ln-True_topology_update_freq-128_prune_method-gr_grow_method-init_drop_factor-0.0005",
             "shifted_ln-True_replacement_rate-1e-07_maturity_threshold-10000"
