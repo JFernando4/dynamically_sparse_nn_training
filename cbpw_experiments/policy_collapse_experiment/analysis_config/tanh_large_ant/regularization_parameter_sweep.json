@@ -1,0 +1,23 @@
+{
+    "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/tanh_large_ant_policy_collapse/",
+
+    "parameter_combinations":
+        [
+            "stepsize-0.0003_weight_decay-0.1_use_ln-False",
+            "stepsize-0.0003_weight_decay-0.01_use_ln-False",
+            "stepsize-0.0003_weight_decay-0.001_use_ln-False",
+            "stepsize-0.0003_weight_decay-0.0001_use_ln-False",
+
+            "stepsize-0.0003_weight_decay-0.1_use_ln-True",
+            "stepsize-0.0003_weight_decay-0.01_use_ln-True",
+            "stepsize-0.0003_weight_decay-0.001_use_ln-True",
+            "stepsize-0.0003_weight_decay-0.0001_use_ln-True"
+        ],
+
+    "summary_names":
+        [
+            "average_return_over_run"
+        ],
+
+    "total_steps": 20000000
+}
