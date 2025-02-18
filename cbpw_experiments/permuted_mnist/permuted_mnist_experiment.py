@@ -85,7 +85,6 @@ class PermutedMNISTExperiment(Experiment):
         self.use_swr_optim = access_dict(exp_params, "use_swr_optim", default=False, val_type=bool)
 
         # CBP parameters
-        self.use_cbp = access_dict(exp_params, "use_cbp", default=False, val_type=bool)
         self.maturity_threshold = access_dict(exp_params, "maturity_threshold", default=None, val_type=int)             # also used in SWR optimizer
         self.replacement_rate = access_dict(exp_params, "replacement_rate", default=None, val_type=float)               # also used in SWR optimizer
         self.cbp_utility = access_dict(exp_params, "cbp_utility", default="none", val_type=str, choices=["none", "contribution"])
