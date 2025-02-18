@@ -86,9 +86,11 @@ class PermutedMNISTExperiment(Experiment):
 
         # CBP parameters
         self.use_cbp = access_dict(exp_params, "use_cbp", default=False, val_type=bool)
-        self.maturity_threshold = access_dict(exp_params, "maturity_threshold", default=0, val_type=int)            # also used in SWR optimizer
-        self.replacement_rate = access_dict(exp_params, "replacement_rate", default=1e-6, val_type=float)           # also used in SWR optimizer
-        self.cbp_utility = access_dict(exp_params, "cbp_utility", default="contribution", val_type=str)
+        self.maturity_threshold = access_dict(exp_params, "maturity_threshold", default=None, val_type=int)             # also used in SWR optimizer
+        self.replacement_rate = access_dict(exp_params, "replacement_rate", default=None, val_type=float)               # also used in SWR optimizer
+        self.cbp_utility = access_dict(exp_params, "cbp_utility", default="none", val_type=str, choices=["none", "contribution"])
+        self.use_cbp = (self.maturity_threshold is not None) and (self.replacement_rate is not None) and (self.cbp_utility != "none")
+
 
         # ReDo parameters
         self.reinit_freq = access_dict(exp_params, "reinit_freq", default=None, val_type=int)
