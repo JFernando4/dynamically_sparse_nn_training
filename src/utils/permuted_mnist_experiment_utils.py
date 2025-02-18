@@ -27,3 +27,55 @@ def compute_dead_units_proportion(net: ThreeHiddenLayerNetwork, data_loader: Dat
 
     sum_activations = all_activations.sum(0)
     return torch.mean((sum_activations == 0.0).to(torch.float32))
+
+
+def initialize_results_dict(
+        steps_per_task: int,
+        num_permutations: int,
+        running_avg_window: int,
+        batch_size: int,
+        device: torch.device,
+        use_swr: bool = False,
+        topology_update_freq: int = 1,
+        use_redo: bool = False,
+        use_cbp: bool = False,
+        use_ln: bool = False,
+        extended_summaries: bool = False
+) -> dict:
+    """
+    Initializes the results dictionary for the permuted mnist experiment
+    """
+    results_dict = {}
+    defaults = {"device": device, "dtype": torch.float32}
+
+    total_ckpts = steps_per_task * num_permutations // (running_avg_window * batch_size)
+    results_dict["train_loss_per_checkpoint"] = torch.zeros(total_ckpts, **defaults)
+    results_dict["train_accuracy_per_checkpoint"] = torch.zeros(total_ckpts, **defaults)
+
+    if use_swr or use_redo or use_cbp:
+        results_dict["num_replaced"] = []
+        if use_swr:
+            total_top_updates = ((steps_per_task // batch_size) * num_permutations) // topology_update_freq
+            results_dict["prop_added_then_removed"] = torch.zeros(total_top_updates, **defaults)
+        if extended_summaries:
+            results_dict["loss_before_topology_update"] = []
+            results_dict["loss_after_topology_update"] = []
+            results_dict["avg_grad_before_topology_update"] = []
+            results_dict["avg_grad_after_topology_update"] = []
+            if use_ln:
+                results_dict["change_in_average_activation_layer_1"] = []
+                results_dict["change_in_average_activation_layer_2"] = []
+                results_dict["change_in_average_activation_layer_3"] = []
+                results_dict["change_in_std_activation_layer_1"] = []
+                results_dict["change_in_std_activation_layer_2"] = []
+                results_dict["change_in_std_activation_layer_3"] = []
+
+    if extended_summaries:
+        results_dict["average_gradient_magnitude_per_checkpoint"] = torch.zeros(total_ckpts, **defaults)
+        results_dict["average_weight_magnitude_per_permutation"] = torch.zeros(num_permutations, **defaults)
+        results_dict["proportion_dead_units_per_permutation"] = torch.zeros(num_permutations, **defaults)
+        results_dict["stable_rank_per_permutation"] = torch.zeros(num_permutations, **defaults)
+        if use_ln:
+            results_dict["average_ln_weight_magnitude_per_checkpoint"] = torch.zeros(total_ckpts, **defaults)
+
+    return results_dict
