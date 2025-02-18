@@ -24,14 +24,14 @@
     "n_slices": 16,
     "u_adv_scl": true,
     "clip_eps": 0.2,
-    "runs": 5
+    "runs": 10
   },
 
   "learning_params": {
     "stepsize": 0.0003,
     "use_ln": true,
     "weight_decay": ["fixed", 0.0, 1e-2],
-    "maturity_threshold": ["fixed", 100, 1000],
+    "maturity_threshold": ["fixed", 100, 1000, 10000],
     "replacement_rate": ["fixed", 1e-2, 1e-3, 1e-4, 1e-5],
     "cbp_utility": ["str", "contribution"]
   },
