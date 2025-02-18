@@ -85,6 +85,7 @@ class CBPLinear(nn.Module):
         Indicators for different events
         """
         self.replace_feature_event_indicator = False
+        self.num_replaced = None
 
     def forward(self, _input):
         return _input
@@ -142,6 +143,7 @@ class CBPLinear(nn.Module):
             self.out_layer.weight.data[:, features_to_replace] = 0
             self.ages[features_to_replace] = 0
             self.replace_feature_event_indicator = True
+            self.num_replaced = num_features_to_replace
 
             """
             Reset the corresponding batchnorm/layernorm layers
@@ -165,3 +167,4 @@ class CBPLinear(nn.Module):
 
     def reset_indicators(self):
         self.replace_feature_event_indicator = False
+        self.num_replaced = None
