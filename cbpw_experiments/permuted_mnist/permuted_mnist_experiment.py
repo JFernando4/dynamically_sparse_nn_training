@@ -66,7 +66,6 @@ class PermutedMNISTExperiment(Experiment):
         self.current_experiment_step = 0
 
         # SWR (formerly CBPw) parameters
-        self.use_cbpw = access_dict(exp_params, "use_cbpw", default=False, val_type=bool)
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
         self.reinit_freq_as_rate = access_dict(exp_params, "reinit_freq_as_rate", default=False, val_type=bool)
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str,                   # also use in SWR optimizer
@@ -77,6 +76,7 @@ class PermutedMNISTExperiment(Experiment):
                                                 "median_truncated", "median_clipped", "25p_truncated", "25p_clipped",
                                                 "mean_truncated", "mean_clipped"])
         self.drop_factor = access_dict(exp_params, "drop_factor", default=float, val_type=float)
+        self.use_cbpw = self.prune_method != "none" and self.grow_method != "none"
         self.cbpw_reset = False
         self.previously_removed_weights = None
         self.current_topology_update = 0
