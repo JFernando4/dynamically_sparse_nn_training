@@ -22,7 +22,7 @@
         "x_label": "Number of Classes",
         "y_label": "Best accuracy per task",
         "labels": ["Base System", "Network Resetting", "Base System SLN", "Network Resetting SLN", "SWR", "CBP"],
-        "color_order": ["black", "gray", "orange", "blue", "vermilion", "orange", "blue_green"]
+        "color_order": ["black", "gray", "orange", "blue", "vermilion", "blue_green"]
     },
 
     "plot_name_prefix": "main_shifted_ln"
