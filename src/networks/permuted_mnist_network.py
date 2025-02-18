@@ -34,7 +34,7 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
         input_dim_scaling = 1
         if self.use_crelu:
             assert hidden_dim % 2 == 0
-            hidden_dim  = hidden_dim // 2
+            hidden_dim = hidden_dim // 2
             input_dim_scaling = 2
 
         self.use_skip_connections = use_skip_connections
@@ -59,6 +59,7 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
         self.neg_act_1 = torch.nn.ReLU()
         self.reinit_layer_1 = None          # either CBP or ReDo
         self.ln_1 = torch.nn.LayerNorm(hidden_dim * input_dim_scaling) if self.use_layer_norm else None
+        self.weights_per_feature_1 = INPUT_DIMS + hidden_dim        # cbp and redo would replace this number of weights per reinitialized feature
         # second layer
         second_layer_dim = hidden_dim if not use_bottleneck else hidden_dim // 10
         self.ff_2 = torch.nn.Linear(hidden_dim * input_dim_scaling, out_features=second_layer_dim, bias=True)
@@ -66,6 +67,7 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
         self.neg_act_2 = torch.nn.ReLU()
         self.reinit_layer_2 = None
         self.ln_2 = torch.nn.LayerNorm(second_layer_dim * input_dim_scaling) if self.use_layer_norm else None
+        self.weights_per_feature_2 = hidden_dim * 2
         # third layer
         self.ff_3 = torch.nn.Linear(second_layer_dim * input_dim_scaling, out_features=hidden_dim, bias=True)
         self.act_3 = torch.nn.ReLU()
@@ -73,8 +75,9 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
         self.reinit_layer_3 = None
         self.ln_3 = torch.nn.LayerNorm(hidden_dim * input_dim_scaling) if self.use_layer_norm else None
         self.out = torch.nn.Linear(hidden_dim * input_dim_scaling, OUTPUT_DIMS, bias=True)
+        self.weights_per_feature_3 = hidden_dim + OUTPUT_DIMS
 
-        if use_cbp:
+        if self.use_cbp:
             assert maturity_threshold is not None and replacement_rate is not None
             self.reinit_layer_1 = CBPLinear(in_layer=self.ff_1, out_layer=self.ff_2, replacement_rate=self.rr,
                                             maturity_threshold=self.mt, ln_layer=self.ln_1, util_type=cbp_utility)
@@ -149,6 +152,13 @@ class ThreeHiddenLayerNetwork(torch.nn.Module):
     def reset_indicators(self):
         if not self.use_cbp and not self.use_redo: return
 
-        self.reinit_layer_1.replace_feature_event_indicator = False
-        self.reinit_layer_2.replace_feature_event_indicator = False
-        self.reinit_layer_3.replace_feature_event_indicator = False
+        self.reinit_layer_1.reset_indicators()
+        self.reinit_layer_2.reset_indicators()
+        self.reinit_layer_3.reset_indicators()
+
+    def redo_num_replaced(self):
+        if not self.use_redo:
+            return (0, 0, 0)
+        return (self.reinit_layer_1.num_replaced * self.weights_per_feature_1,
+                self.reinit_layer_2.num_replaced * self.weights_per_feature_2,
+                self.reinit_layer_3.num_replaced * self.weights_per_feature_3)
