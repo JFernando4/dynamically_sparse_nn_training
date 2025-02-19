@@ -12,7 +12,7 @@ DEBUG = False
 BIN_SIZE = {"average_return": 100000, "return_per_episode": 1, "termination_steps": 1, "dead_units_prop": 10}
 
 
-def get_results_data(results_dir: str, measurement_name: str, parameter_combination: list[str]):
+def get_results_data(results_dir: str, measurement_name: str, parameter_combination: list[str], max_runs: int = 100):
 
     valid_measurements = BIN_SIZE.keys()
     if DEBUG: print(measurement_name, valid_measurements)
@@ -29,6 +29,7 @@ def get_results_data(results_dir: str, measurement_name: str, parameter_combinat
 
         results[pc] = []
         for idx in indices:
+            if idx >= max_runs: break
             filename = f"index-{idx}.npy"
             try:
                 temp_measurement_array = np.load(os.path.join(measurement_dir, filename))
@@ -70,6 +71,7 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
     plot_dir = access_dict(analysis_parameters, "plot_dir", default="")
     plot_parameters = access_dict(analysis_parameters, "plot_parameters", default={}, val_type=dict)
     plot_name_prefix = access_dict(analysis_parameters, "plot_name_prefix", default="", val_type=str)
+    max_runs = access_dict(analysis_parameters, "max_runs", default=100, val_type=int)
 
     for sn in summary_names:
         plot_args = {"plot_parameters": plot_parameters, "plot_dir": plot_dir, "measurement_name": sn,
@@ -79,7 +81,7 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
             plot_avg_with_shaded_region(results_avg=avg_return, results_low=ci_low, results_high=ci_high,
                                         x_axis=x_axis, num_samples=num_samples, **plot_args)
         elif sn == "average_return_over_run":
-            results_data = get_results_data(results_dir, "return_per_episode", parameter_combinations)
+            results_data = get_results_data(results_dir, "return_per_episode", parameter_combinations, max_runs)
             for k, v in results_data.items():
                 print(f"Parameter combinations: {k}")
                 num_runs = 0
