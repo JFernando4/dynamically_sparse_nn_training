@@ -27,14 +27,24 @@
     "runs": 30
   },
 
-  "learning_params": {
-    "stepsize": 0.0003,
-    "use_ln": true,
-    "weight_decay": ["fixed", 0.0, 1e-2],
-    "maturity_threshold": ["fixed", 100],
-    "replacement_rate": ["fixed", 1e-3],
-    "cbp_utility": ["str", "contribution"]
-  },
+  "specific_parameter_combination": [
+    {
+      "stepsize": 0.0003,
+      "use_ln": true,
+      "weight_decay":  0.0,
+      "maturity_threshold": 100,
+      "replacement_rate": 1e-2,
+      "cbp_utility": "contribution"
+    },
+    {
+      "stepsize": 0.0003,
+      "use_ln": true,
+      "weight_decay":  1e-2,
+      "maturity_threshold": 10000,
+      "replacement_rate": 1e-5,
+      "cbp_utility": "contribution"
+    }
+  ],
 
   "slurm_parameters": {
     "job_name": "cbp_lant",

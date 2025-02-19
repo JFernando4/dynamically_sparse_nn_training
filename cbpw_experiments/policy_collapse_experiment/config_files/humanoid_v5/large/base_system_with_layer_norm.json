@@ -23,17 +23,17 @@
     "n_slices": 16,
     "u_adv_scl": true,
     "clip_eps": 0.2,
-    "runs": 5
+    "runs": 30
   },
 
   "learning_params": {
-    "stepsize": ["fixed", 1e-4],
+    "stepsize": 1e-4,
     "use_ln": true,
     "weight_decay": 0.0
   },
 
   "slurm_parameters": {
-    "job_name": "hum",
+    "job_name": "ln_lhum",
     "time": "10:00:00",
     "max_runs_per_job": 1,
     "mem": "4G",
