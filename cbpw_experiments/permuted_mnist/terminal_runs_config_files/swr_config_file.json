@@ -8,10 +8,10 @@
   "num_hidden": 10,
   "batch_size": 30,
   "store_parameters": false,
-  "extended_summaries": false,
+  "extended_summaries": true,
 
   "__comment_3__": "Permuted MNIST problem parameters. Classes increase by 5 every 100 epochs.",
-  "num_permutations": 1000,
+  "num_permutations": 10,
 
   "__comment_4__": "CBPw Parameters.",
   "use_cbpw": true,
