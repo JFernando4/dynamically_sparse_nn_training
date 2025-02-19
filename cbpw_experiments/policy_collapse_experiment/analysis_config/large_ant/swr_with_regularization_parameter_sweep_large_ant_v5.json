@@ -25,6 +25,7 @@
             "average_return_over_run"
         ],
 
-    "total_steps": 20000000
+    "total_steps": 20000000,
+    "max_runs": 10
 
 }
