@@ -20,7 +20,7 @@ from src.networks import RegularizedSGD, ThreeHiddenLayerNetwork
 from src.cbpw_functions.weight_matrix_updates import update_weights
 from src.utils.experiment_utils import parse_terminal_arguments
 from src.plasticity_functions import FirstOrderGlobalUPGD, inject_noise
-from src.utils.evaluation_functions import compute_average_gradient_magnitude, compute_average_weight_magnitude
+from src.utils.evaluation_functions import compute_average_gradient_magnitude, compute_average_weight_magnitude, set_random_seed
 from src.utils.permuted_mnist_experiment_utils import initialize_results_dict, compute_dead_units_prop_and_stable_rank
 
 
@@ -37,11 +37,7 @@ class PermutedMNISTExperiment(Experiment):
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         """ For reproducibility """
-        actual_seed = int(get_random_seeds()[run_index])
-        torch.random.manual_seed(actual_seed)
-        np.random.seed(actual_seed)
-        if "cuda" in self.device.type:
-            torch.cuda.manual_seed(actual_seed)
+        set_random_seed(self.run_index)
 
         """ Experiment parameters """
         self.extended_summaries = access_dict(exp_params, "extended_summaries", default=False, val_type=bool)
