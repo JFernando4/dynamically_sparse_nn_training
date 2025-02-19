@@ -4,7 +4,6 @@
     "data_path": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/data/",
     "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
     "relevant_parameters": [
-      "use_cbpw",
       "topology_update_freq",
       "prune_method",
       "grow_method",
@@ -19,14 +18,12 @@
     "batch_size": 30,
     "steps_per_task": 60000,
     "extended_summaries": true,
-    "store_parameters": false,
     "runs": 30
   },
 
   "specific_parameter_combination": [
     {
       "stepsize": 0.05,
-      "use_cbpw": true,
       "topology_update_freq": 4800,
       "prune_method": "magnitude",
       "grow_method": "zero",
@@ -34,7 +31,6 @@
     },
     {
       "stepsize": 0.05,
-      "use_cbpw": true,
       "topology_update_freq": 4800,
       "prune_method": "magnitude",
       "grow_method": "kaiming_normal",
@@ -42,7 +38,6 @@
     },
     {
       "stepsize": 0.05,
-      "use_cbpw": true,
       "topology_update_freq": 1200,
       "prune_method": "gf",
       "grow_method": "zero",
@@ -50,11 +45,38 @@
     },
     {
       "stepsize": 0.05,
-      "use_cbpw": true,
       "topology_update_freq": 2400,
       "prune_method": "gf",
       "grow_method": "kaiming_normal",
       "drop_factor": 0.4
+    },
+    {
+      "stepsize": 0.05,
+      "topology_update_freq": 600,
+      "prune_method": "mr",
+      "grow_method": "zero",
+      "drop_factor": 0.0002
+    },
+    {
+      "stepsize": 0.05,
+      "topology_update_freq": 8600,
+      "prune_method": "mr",
+      "grow_method": "kaiming_normal",
+      "drop_factor": 0.0005
+    },
+    {
+      "stepsize": 0.05,
+      "topology_update_freq": 2400,
+      "prune_method": "gr",
+      "grow_method": "zero",
+      "drop_factor": 0.0001
+    },
+    {
+      "stepsize": 0.05,
+      "topology_update_freq": 2400,
+      "prune_method": "gr",
+      "grow_method": "kaiming_normal",
+      "drop_factor": 0.0001
     }
   ],
 
