@@ -44,14 +44,15 @@ def compute_average_gradient_magnitude(model: torch.nn.Module) -> float:
     return float(grad_magnitude_summ / total_params)
 
 
-def compute_matrix_rank_summaries(m: torch.Tensor, prop=0.99, use_scipy=False):
+def compute_matrix_rank_summaries(m: torch.Tensor, prop=0.99, use_scipy=False, return_rank: bool = True,
+                                  return_effective_rank: bool = True, return_approximate_rank: bool = True,
+                                  return_abs_approximate_rank: bool = True):
     """
     Computes the rank, effective rank, and approximate rank of a matrix
     Refer to the corresponding functions for their definitions
     :param m: (float np array) a rectangular matrix
     :param prop: (float) proportion used for computing the approximate rank
-    :param use_scipy: (bool) indicates whether to compute the singular values in the cpu, only matters when using
-                                  a gpu
+    :param use_scipy: (bool) indicates whether to compute the singular values in the cpu, only matters when using a gpu
     :return: (torch int32) rank, (torch float32) effective rank, (torch int32) approximate rank
     """
     if use_scipy:
@@ -59,10 +60,11 @@ def compute_matrix_rank_summaries(m: torch.Tensor, prop=0.99, use_scipy=False):
         sv = torch.tensor(svd(np_m, compute_uv=False, lapack_driver="gesvd"), device=m.device)
     else:
         sv = torch.linalg.svdvals(m)    # for large matrices, svdvals may fail to converge in gpu, but not cpu
-    rank = torch.count_nonzero(sv).to(torch.int32)
-    effective_rank = compute_effective_rank(sv)
-    approximate_rank = compute_approximate_rank(sv, prop=prop)
-    approximate_rank_abs = compute_abs_approximate_rank(sv, prop=prop)
+    default_int, default_float = torch.tensor(0.0, dtype=torch.int32), torch.tensor(0.0, dtype=torch.float32)
+    rank = default_int if not return_rank else torch.count_nonzero(sv).to(torch.int32)
+    effective_rank = default_float if not return_effective_rank else compute_effective_rank(sv)
+    approximate_rank = default_float if not return_approximate_rank else compute_approximate_rank(sv, prop=prop)
+    approximate_rank_abs = default_float if not return_abs_approximate_rank else compute_abs_approximate_rank(sv, prop=prop)
     return rank, effective_rank, approximate_rank, approximate_rank_abs
 
 
