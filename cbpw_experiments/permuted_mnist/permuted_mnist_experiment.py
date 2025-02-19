@@ -1,11 +1,10 @@
 # built-in libraries
 import time
 import os
-import pickle
 
 # third party libraries
 import torch
-from torch.func import functional_call, vmap, grad
+# from torch.func import functional_call, vmap, grad
 from torch.utils.data import DataLoader
 import numpy as np
 
@@ -14,7 +13,6 @@ from mlproj_manager.experiments import Experiment
 from mlproj_manager.problems import MnistDataSet
 from mlproj_manager.util import access_dict, Permute, get_random_seeds, turn_off_debugging_processes
 from mlproj_manager.util.neural_networks import init_weights_kaiming
-from mlproj_manager.file_management import store_object_with_several_attempts
 
 # from src
 from src.cbpw_functions import initialize_weight_dict, SelectiveWeightReinitializationSGD, get_init_parameters, compute_trace_utility
@@ -69,7 +67,7 @@ class PermutedMNISTExperiment(Experiment):
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
         self.reinit_freq_as_rate = access_dict(exp_params, "reinit_freq_as_rate", default=False, val_type=bool)
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str,                   # also use in SWR optimizer
-                                        choices=["none", "magnitude", "gf", "efi", "gr", "mr", "er", "tgf", "tgr"])
+                                        choices=["none", "magnitude", "gf", "gr", "mr", "tgf", "tgr"])
         self.use_trace_utility = self.prune_method in ["tgf", "tgr"]
         self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str,                     # also used in SWR optimizer
                                        choices=["none", "kaiming_normal", "zero", "truncated", "clipped", "mad",
@@ -113,7 +111,6 @@ class PermutedMNISTExperiment(Experiment):
 
         # paths for loading and storing data
         self.data_path = exp_params["data_path"]
-        self.parameter_save_frequency = 10  # how often to save the parameters in terms of number of tasks
         self.results_dir = results_dir
 
         """ Training constants """
@@ -188,9 +185,9 @@ class PermutedMNISTExperiment(Experiment):
                                                     self.batch_size, self.device, self.use_cbpw, self.topology_update_freq,
                                                     self.use_redo, self.use_cbp, self.use_ln, self.extended_summaries)
 
-        """ For computing per sample gradients """
-        self.compute_grad_func = grad(self.compute_loss)
-        self.per_sample_grad_func = vmap(self.compute_grad_func, in_dims=(None, None, 0, 0))
+        # """ For computing per sample gradients """
+        # self.compute_grad_func = grad(self.compute_loss)
+        # self.per_sample_grad_func = vmap(self.compute_grad_func, in_dims=(None, None, 0, 0))
 
     # ----------------------------- For storing summaries ----------------------------- #
     def _store_training_summaries(self):
@@ -224,8 +221,6 @@ class PermutedMNISTExperiment(Experiment):
 
         while self.current_permutation < self.num_permutations:
             initial_time = time.perf_counter()
-            self._save_model_parameters()
-
             training_data.set_transformation(Permute(np.random.permutation(self.num_inputs)))  # apply new permutation
 
             self.compute_network_extended_summaries(mnist_data_loader)
@@ -268,8 +263,6 @@ class PermutedMNISTExperiment(Experiment):
 
                 # update topology and apply masks to weights
                 if self.time_to_update_topology(self.current_experiment_step):
-                    if self.prune_method in ["efi", "er"]:
-                        self.compute_empirical_fisher_information(image, label)
                     self.update_topology()
 
                 # store summaries
@@ -284,8 +277,6 @@ class PermutedMNISTExperiment(Experiment):
 
             final_time = time.perf_counter()
             print("Epoch run time: {0:.2f}".format((final_time - initial_time) / 60))
-
-        self._save_model_parameters()
 
     def compute_network_extended_summaries(self, training_data: DataLoader):
         """ Computes the average weight magnitude, proportion of dead units, and stable rank of the representation """
@@ -373,8 +364,7 @@ class PermutedMNISTExperiment(Experiment):
         reinitialization_rate = 1/self.topology_update_freq if self.reinit_freq_as_rate else None
         temp_summaries_dict = update_weights(self.weight_dict, reinitialization_rate=reinitialization_rate)
         # compute and store summaries
-        if len(temp_summaries_dict) > 0:
-            self.cbpw_reset = True
+        self.cbpw_reset = len(temp_summaries_dict) > 0
         if not self.reinit_freq_as_rate:
             removed_masks = [v[0] for v in temp_summaries_dict.values()]
             num_pruned = sum([v[1] for v in temp_summaries_dict.values()])
@@ -412,26 +402,13 @@ class PermutedMNISTExperiment(Experiment):
             if not isinstance(self.results_dict[k], np.ndarray):
                 self.results_dict[k] = np.array(self.results_dict[k], dtype=np.float32)
 
-    def compute_loss(self, params, buffers, sample, target):
-        batch = sample
-        targets = target
-        current_activations = []
-        predictions = functional_call(self.net, (params, buffers), (batch, current_activations))
-        loss = self.loss(predictions, targets)
-        return loss
-
-    def compute_empirical_fisher_information(self, images, labels):
-        params = {k: v.detach() for k, v in self.net.named_parameters()}
-        buffers = {k: v.detach() for k, v in self.net.named_buffers()}
-
-        for p in self.net.parameters():
-            p.empirical_fisher = None
-            p.grad = None
-
-        per_sample_grads = self.per_sample_grad_func(params, buffers, images, labels)
-
-        for n, p in self.net.named_parameters():
-            p.empirical_fisher = per_sample_grads[n].square().sum(axis=0)
+    # def compute_loss(self, params, buffers, sample, target):
+    #     batch = sample
+    #     targets = target
+    #     current_activations = []
+    #     predictions = functional_call(self.net, (params, buffers), (batch, current_activations))
+    #     loss = self.loss(predictions, targets)
+    #     return loss
 
 
 def main():
