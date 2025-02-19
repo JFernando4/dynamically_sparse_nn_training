@@ -113,7 +113,6 @@ class PermutedMNISTExperiment(Experiment):
 
         # paths for loading and storing data
         self.data_path = exp_params["data_path"]
-        self.store_parameters = access_dict(exp_params, "store_parameters", default=False, val_type=bool)
         self.parameter_save_frequency = 10  # how often to save the parameters in terms of number of tasks
         self.results_dir = results_dir
 
@@ -405,28 +404,6 @@ class PermutedMNISTExperiment(Experiment):
             self.results_dict["prop_added_then_removed"][self.current_topology_update] += prop_added_then_removed
 
         self.previously_removed_weights = removed_masks
-
-    def _save_model_parameters(self):
-        """ Stores the parameters of the network """
-        if not (self.current_permutation % self.parameter_save_frequency == 0) or not self.store_parameters:
-            return
-        model_parameters_dir_path = os.path.join(self.results_dir, "model_parameters")
-        os.makedirs(model_parameters_dir_path, exist_ok=True)
-
-        file_name = f"index-{self.run_index}.pt"
-        file_path = os.path.join(model_parameters_dir_path, file_name)
-
-        model_parameters = []
-        if os.path.exists(file_path):
-            if self.current_permutation == 0:   # there was something stored from previous failed runs
-                os.remove(file_path)
-            else:                               # there was something stored from the current run
-                with open(file_path, mode="rb") as model_parameters_file:
-                    model_parameters = pickle.load(model_parameters_file)
-                os.remove(file_path)
-
-        model_parameters.append(self.net.state_dict())
-        store_object_with_several_attempts(model_parameters, file_path, storing_format="pickle", num_attempts=10)
 
     def post_process_extended_results(self):
         using_cbp_or_swr_or_redo = self.use_cbp or self.use_cbpw or self.use_redo
