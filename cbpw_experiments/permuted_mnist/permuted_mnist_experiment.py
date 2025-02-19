@@ -11,11 +11,11 @@ import numpy as np
 # from ml project manager
 from mlproj_manager.experiments import Experiment
 from mlproj_manager.problems import MnistDataSet
-from mlproj_manager.util import access_dict, Permute, get_random_seeds, turn_off_debugging_processes
+from mlproj_manager.util import access_dict, Permute, turn_off_debugging_processes
 from mlproj_manager.util.neural_networks import init_weights_kaiming
 
 # from src
-from src.cbpw_functions import initialize_weight_dict, SelectiveWeightReinitializationSGD, get_init_parameters
+from src.cbpw_functions import initialize_weight_dict
 from src.networks import RegularizedSGD, ThreeHiddenLayerNetwork
 from src.cbpw_functions.weight_matrix_updates import update_weights
 from src.utils.experiment_utils import parse_terminal_arguments
@@ -110,7 +110,6 @@ class PermutedMNISTExperiment(Experiment):
         self.max_num_images_per_permutation = 60000
 
         """ Network set up """
-        # self.net = self.initialize_network()
         self.net = ThreeHiddenLayerNetwork(hidden_dim=self.num_hidden,
                                            use_skip_connections=self.use_skip_connections,
                                            preactivation_skip_connection=self.preactivation_skip_connections,
@@ -127,6 +126,7 @@ class PermutedMNISTExperiment(Experiment):
                                            use_crelu=self.use_crelu,
                                            use_bottleneck=self.use_bottleneck)
         self.net.apply(lambda z: init_weights_kaiming(z, nonlinearity="relu", normal=True))     # initialize weights
+        self.net.to(self.device)
 
         # initialize CBPw dictionary
         self.weight_dict = None
@@ -149,9 +149,6 @@ class PermutedMNISTExperiment(Experiment):
 
         # define loss function
         self.loss = torch.nn.CrossEntropyLoss(reduction="mean")
-
-        # move network to device
-        self.net.to(self.device)
 
         """ Experiment Summaries """
         self.running_avg_window = 100 if self.batch_size == 1 else 10
@@ -277,19 +274,19 @@ class PermutedMNISTExperiment(Experiment):
             not store_redo_summaries and        # check if using redo
             not self.store_next_loss):          # check if cbp, cbpw, or redo was used in the previous step
             return
-
+        # reinitialization happened on the current step
         if not self.store_next_loss and (store_cbp_summaries or store_cbpw_summaries or store_redo_summaries):
             self.store_before_reinitialization_summaries(current_loss)
             if self.use_ln:
                 self.previous_activations = current_activations
             self.store_cbp_and_redo_num_replace_summary()
-
+        # reinitialization happened on the previous step
         elif self.store_next_loss and (not store_cbp_summaries and not store_cbpw_summaries and not store_redo_summaries):
             self.store_after_reinitialization_summaries(current_loss)
             if self.use_ln:
                 self.store_change_in_activation_statistics_summaries(current_activations)
                 self.previous_activations = []
-
+        # reinitialization happened on the current and previous step
         elif self.store_next_loss and (store_cbpw_summaries or store_cbpw_summaries or store_redo_summaries):
             self.store_before_reinitialization_summaries(current_loss)
             self.store_after_reinitialization_summaries(current_loss)
