@@ -5,9 +5,9 @@
     "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
     "relevant_parameters": [
       "use_ln",
-      "use_cbp",
       "maturity_threshold",
-      "replacement_rate"
+      "replacement_rate",
+      "cbp_utility"
     ]
   },
 
@@ -25,17 +25,17 @@
     "stepsize": 0.1,
     "use_ln": true,
     "preactivation_ln": false,
-    "use_cbp": true,
     "maturity_threshold": 1,
-    "replacement_rate": 1e-5
+    "replacement_rate": 1e-5,
+    "cbp_utility": "contribution"
   },
 
   "slurm_parameters": {
-    "job_name": "cbp_bs",
+    "job_name": "cbp_lnbs",
     "time": "11:00:00",
     "max_runs_per_job": 5,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
-    "output_filename": "cbp_bs-%n-%j.out",
+    "output_filename": "%n-%j.out",
     "mem": "12G",
     "mail-type": "BEGIN,END,FAIL",
     "mail-user":"jfhernan@ualberta.ca",

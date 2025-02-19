@@ -98,11 +98,11 @@
   ],
 
   "slurm_parameters": {
-    "job_name": "swr_bs_ln",
-    "time": "12:00:00",
+    "job_name": "swr_llnbs",
+    "time": "13:00:00",
     "max_runs_per_job": 5,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
-    "output_filename": "swr_bs_ln-%n-%j.out",
+    "output_filename": "%n-%j.out",
     "mem": "16G",
     "mail-type": "BEGIN,END,FAIL",
     "mail-user":"jfhernan@ualberta.ca",

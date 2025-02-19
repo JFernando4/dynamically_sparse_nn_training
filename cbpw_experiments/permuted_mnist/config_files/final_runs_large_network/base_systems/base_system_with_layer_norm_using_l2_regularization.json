@@ -18,7 +18,6 @@
     "batch_size": 30,
     "steps_per_task": 60000,
     "extended_summaries": true,
-    "store_parameters": false,
     "runs": 30
   },
 
@@ -30,11 +29,11 @@
   },
 
   "slurm_parameters": {
-    "job_name": "bs_ln_l2",
+    "job_name": "bs_ln_reg",
     "time": "13:00:00",
     "max_runs_per_job": 5,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
-    "output_filename": "bs_ln_l2-%n-%j.out",
+    "output_filename": "-%n-%j.out",
     "mem": "12G",
     "mail-type": "BEGIN,END,FAIL",
     "mail-user":"jfhernan@ualberta.ca",
