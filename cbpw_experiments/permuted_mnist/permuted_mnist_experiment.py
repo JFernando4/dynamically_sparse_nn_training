@@ -62,9 +62,9 @@ class PermutedMNISTExperiment(Experiment):
         # SWR (formerly CBPw) parameters
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
         self.reinit_freq_as_rate = access_dict(exp_params, "reinit_freq_as_rate", default=False, val_type=bool)
-        self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str,                   # also use in SWR optimizer
+        self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str,
                                         choices=["none", "magnitude", "gf", "gr", "mr"])
-        self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str,                     # also used in SWR optimizer
+        self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str,
                                        choices=["none", "kaiming_normal", "zero", "truncated", "clipped", "mad",
                                                 "median_truncated", "median_clipped", "25p_truncated", "25p_clipped",
                                                 "mean_truncated", "mean_clipped"])
@@ -74,15 +74,11 @@ class PermutedMNISTExperiment(Experiment):
         self.previously_removed_weights = None
         self.current_topology_update = 0
 
-        # SWR optimizer
-        self.use_swr_optim = access_dict(exp_params, "use_swr_optim", default=False, val_type=bool)
-
         # CBP parameters
-        self.maturity_threshold = access_dict(exp_params, "maturity_threshold", default=None, val_type=int)             # also used in SWR optimizer
-        self.replacement_rate = access_dict(exp_params, "replacement_rate", default=None, val_type=float)               # also used in SWR optimizer
+        self.maturity_threshold = access_dict(exp_params, "maturity_threshold", default=None, val_type=int)
+        self.replacement_rate = access_dict(exp_params, "replacement_rate", default=None, val_type=float)
         self.cbp_utility = access_dict(exp_params, "cbp_utility", default="none", val_type=str, choices=["none", "contribution"])
         self.use_cbp = (self.maturity_threshold is not None) and (self.replacement_rate is not None) and (self.cbp_utility != "none")
-
 
         # ReDo parameters
         self.reinit_freq = access_dict(exp_params, "reinit_freq", default=None, val_type=int)
@@ -145,19 +141,6 @@ class PermutedMNISTExperiment(Experiment):
                                               weight_decay=self.l2_factor / self.stepsize,
                                               beta_utility=self.beta_utility,
                                               sigma=self.noise_std)
-        elif self.use_swr_optim:
-            scaling = 0.0 if self.grow_method == "zero" else 1.0
-            means, stds = get_init_parameters(self.net, initialization_type="xavier_normal", activation="relu", scaling=scaling)
-            self.optim = SelectiveWeightReinitializationSGD(
-                self.net.parameters(),
-                lr=self.stepsize,
-                weight_decay=self.l2_factor / self.stepsize,
-                replacement_rate=self.replacement_rate,
-                maturity_threshold=self.maturity_threshold,
-                utility=self.prune_method,
-                new_params_mean=means,
-                new_params_std=stds
-            )
         else:
             self.optim = RegularizedSGD(self.net.parameters(),
                                         lr=self.stepsize,
