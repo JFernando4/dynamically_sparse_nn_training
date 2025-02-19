@@ -1,6 +1,6 @@
 {
   "__comment_1__": "Parameters for the environment",
-  "env_name": "Ant-v5",
+  "env_name": "Humanoid-v5",
   "total_env_steps": 20000000,
 
   "__comment_2__": "Network parameters",
@@ -24,10 +24,10 @@
   "clip_eps": 0.2,
 
   "__comment_5__": "Selective Weight Reinitialization parameters",
-  "reinit_freq": 512,
-  "drop_factor": 1e-3,
-  "prune_method": "gr",
-  "grow_method": "init",
+  "reinit_freq": 0,
+  "drop_factor": 0.0,
+  "prune_method": "none",
+  "grow_method": "none",
 
   "__comment_6__": "For creating the results directory.",
   "relevant_parameters": [
