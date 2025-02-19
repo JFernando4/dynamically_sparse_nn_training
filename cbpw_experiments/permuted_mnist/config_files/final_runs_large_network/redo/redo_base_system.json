@@ -1,0 +1,41 @@
+{
+  "file_management": {
+    "experiment_name": "permuted_mnist_large_network",
+    "data_path": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/data/",
+    "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
+    "relevant_parameters": [
+      "reinit_freq",
+      "reinit_threshold",
+      "redo_utility"
+    ]
+  },
+
+  "experiment_params": {
+    "num_permutations": 1000,
+    "num_layers": 3,
+    "num_hidden": 100,
+    "batch_size": 30,
+    "steps_per_task": 60000,
+    "extended_summaries": true,
+    "runs": 30
+  },
+
+  "learning_params": {
+    "stepsize": 0.05,
+    "reinit_freq": 35,
+    "reinit_threshold": 0.005,
+    "redo_utility": "original"
+  },
+
+  "slurm_parameters": {
+    "job_name": "redo_lbs",
+    "time": "11:00:00",
+    "max_runs_per_job": 5,
+    "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
+    "output_filename": "redo_bs-%n-%j.out",
+    "mem": "12G",
+    "mail-type": "BEGIN,END,FAIL",
+    "mail-user":"jfhernan@ualberta.ca",
+    "cpus-per-task": 6
+  }
+}
