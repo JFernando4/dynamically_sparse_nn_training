@@ -189,11 +189,6 @@ class PermutedMNISTExperiment(Experiment):
                                                     self.batch_size, self.device, self.use_cbpw, self.topology_update_freq,
                                                     self.use_redo, self.use_cbp, self.use_ln, self.extended_summaries)
 
-        """ For creating experiment checkpoints """
-        self.current_permutation = 0
-        # with batch size of 30 and num permutations of 1000, experiment take less than an hour, so why checkpoints?
-        self.store_checkpoints = False
-
         """ For computing per sample gradients """
         self.compute_grad_func = grad(self.compute_loss)
         self.per_sample_grad_func = vmap(self.compute_grad_func, in_dims=(None, None, 0, 0))
@@ -287,8 +282,6 @@ class PermutedMNISTExperiment(Experiment):
                     self._store_training_summaries()
 
             self.current_permutation += 1
-            if (self.current_permutation % self.checkpoint_save_frequency == 0) and self.store_checkpoints:
-                self.save_experiment_checkpoint()
 
             final_time = time.perf_counter()
             print("Epoch run time: {0:.2f}".format((final_time - initial_time) / 60))
@@ -438,19 +431,9 @@ class PermutedMNISTExperiment(Experiment):
     def post_process_extended_results(self):
         using_cbp_or_swr_or_redo = self.use_cbp or self.use_cbpw or self.use_redo
         if not self.extended_summaries or not using_cbp_or_swr_or_redo: return
-        self.results_dict["num_replaced"] = np.array(self.results_dict["num_replaced"], dtype=np.float32)
-
-        self.results_dict["loss_before_topology_update"] = np.array(self.results_dict["loss_before_topology_update"], dtype=np.float32)
-        self.results_dict["loss_after_topology_update"] = np.array(self.results_dict["loss_after_topology_update"], dtype=np.float32)
-        self.results_dict["avg_grad_before_topology_update"] = np.array(self.results_dict["avg_grad_before_topology_update"], dtype=np.float32)
-        self.results_dict["avg_grad_after_topology_update"] = np.array(self.results_dict["avg_grad_after_topology_update"], dtype=np.float32)
-        if self.use_ln:
-            self.results_dict["change_in_average_activation_layer_1"] = np.array(self.results_dict["change_in_average_activation_layer_1"], dtype=np.float32)
-            self.results_dict["change_in_average_activation_layer_2"] = np.array(self.results_dict["change_in_average_activation_layer_2"], dtype=np.float32)
-            self.results_dict["change_in_average_activation_layer_3"] = np.array(self.results_dict["change_in_average_activation_layer_3"], dtype=np.float32)
-            self.results_dict["change_in_std_activation_layer_1"] = np.array(self.results_dict["change_in_std_activation_layer_1"], dtype=np.float32)
-            self.results_dict["change_in_std_activation_layer_2"] = np.array(self.results_dict["change_in_std_activation_layer_2"], dtype=np.float32)
-            self.results_dict["change_in_std_activation_layer_3"] = np.array(self.results_dict["change_in_std_activation_layer_3"], dtype=np.float32)
+        for k in self.results_dict.keys():
+            if not isinstance(self.results_dict[k], np.ndarray):
+                self.results_dict[k] = np.array(self.results_dict[k], dtype=np.float32)
 
     def compute_loss(self, params, buffers, sample, target):
         batch = sample
