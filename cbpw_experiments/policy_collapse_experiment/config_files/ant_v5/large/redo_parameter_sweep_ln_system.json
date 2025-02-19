@@ -31,7 +31,7 @@
     "stepsize": 0.0003,
     "use_ln": true,
     "weight_decay": ["fixed", 0.0, 1e-2],
-    "redo_reinit_freq": ["fixed", 256, 512, 1024],
+    "redo_reinit_freq": ["fixed", 256, 512, 1024, 2048],
     "redo_reinit_threshold": ["fixed", 1e-0, 1e-1, 1e-2],
     "redo_utility": ["str", "original"]
   },
