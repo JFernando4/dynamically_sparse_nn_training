@@ -15,7 +15,6 @@ def compute_dead_units_prop_and_stable_rank(net: ThreeHiddenLayerNetwork, data_l
     """
     num_inputs = 784
     num_layers = 3
-    total_num_units = num_layers * num_activations
 
     # compute some number of activations
     all_activations = torch.zeros((num_mini_batches * batch_size, num_layers, num_activations), dtype=torch.float32)
@@ -26,11 +25,13 @@ def compute_dead_units_prop_and_stable_rank(net: ThreeHiddenLayerNetwork, data_l
         temp_acts = []
         net.forward(image, activations=temp_acts)
         for l in range(num_layers):
-            all_activations[i * batch_size:(i + 1) * batch_size, :, l] = temp_acts[l]
+            all_activations[i * batch_size:(i + 1) * batch_size, l, :] = temp_acts[l]
 
-    prop_dead_units = torch.sum((all_activations.sum(0) == 0.0)).item() / total_num_units
-    stable_rank = compute_matrix_rank_summaries(all_activations[:, :, -1], prop=0.99, use_scipy=False)
-    return prop_dead_units, stable_rank
+    prop_dead_units = torch.mean((all_activations.sum(0) == 0.0).to(torch.float32)).item()
+    _, _, _, stable_rank = compute_matrix_rank_summaries(all_activations[:, -1, :], prop=0.99, use_scipy=False,
+                                                         return_rank=False, return_effective_rank=False,
+                                                         return_approximate_rank=False)
+    return prop_dead_units, stable_rank.item()
 
 
 @torch.no_grad()
