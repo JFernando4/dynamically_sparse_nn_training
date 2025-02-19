@@ -315,7 +315,7 @@ class PermutedMNISTExperiment(Experiment):
             self.results_dict[f"change_in_std_activation_layer_{i + 1}"].append(diff_std_act.abs())
 
     def store_cbp_and_redo_num_replace_summary(self):
-        if not self.use_cbp or not self.use_redo: return
+        if not self.use_cbp and not self.use_redo: return
         num_replaced = sum(self.net.num_replaced())
         self.results_dict["num_replaced"].append(num_replaced)
 
