@@ -15,7 +15,7 @@ from mlproj_manager.util import access_dict, Permute, get_random_seeds, turn_off
 from mlproj_manager.util.neural_networks import init_weights_kaiming
 
 # from src
-from src.cbpw_functions import initialize_weight_dict, SelectiveWeightReinitializationSGD, get_init_parameters, compute_trace_utility
+from src.cbpw_functions import initialize_weight_dict, SelectiveWeightReinitializationSGD, get_init_parameters
 from src.networks import RegularizedSGD, ThreeHiddenLayerNetwork
 from src.cbpw_functions.weight_matrix_updates import update_weights
 from src.utils.experiment_utils import parse_terminal_arguments
@@ -67,8 +67,7 @@ class PermutedMNISTExperiment(Experiment):
         self.topology_update_freq = access_dict(exp_params, "topology_update_freq", default=0, val_type=int)
         self.reinit_freq_as_rate = access_dict(exp_params, "reinit_freq_as_rate", default=False, val_type=bool)
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str,                   # also use in SWR optimizer
-                                        choices=["none", "magnitude", "gf", "gr", "mr", "tgf", "tgr"])
-        self.use_trace_utility = self.prune_method in ["tgf", "tgr"]
+                                        choices=["none", "magnitude", "gf", "gr", "mr"])
         self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str,                     # also used in SWR optimizer
                                        choices=["none", "kaiming_normal", "zero", "truncated", "clipped", "mad",
                                                 "median_truncated", "median_clipped", "25p_truncated", "25p_clipped",
@@ -248,10 +247,6 @@ class PermutedMNISTExperiment(Experiment):
                 # backpropagate and update weights
                 current_reg_loss.backward()
                 self.optim.step()
-
-                # for swr with trace utility
-                if self.use_trace_utility:
-                    for p in self.net.parameters(): compute_trace_utility(p, 0.99, "gradient")
 
                 if self.extended_summaries:
                     self.running_avg_grad_magnitude += compute_average_gradient_magnitude(self.net)
