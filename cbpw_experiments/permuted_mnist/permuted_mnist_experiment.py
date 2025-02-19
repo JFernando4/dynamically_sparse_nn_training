@@ -23,7 +23,7 @@ from src.cbpw_functions.weight_matrix_updates import update_weights
 from src.utils.experiment_utils import parse_terminal_arguments
 from src.plasticity_functions import FirstOrderGlobalUPGD, inject_noise
 from src.utils.evaluation_functions import compute_average_gradient_magnitude, compute_average_weight_magnitude
-from src.utils.permuted_mnist_experiment_utils import compute_dead_units_proportion, initialize_results_dict
+from src.utils.permuted_mnist_experiment_utils import initialize_results_dict, compute_dead_units_prop_and_stable_rank
 
 
 class PermutedMNISTExperiment(Experiment):
@@ -296,12 +296,13 @@ class PermutedMNISTExperiment(Experiment):
         self._save_model_parameters()
 
     def compute_network_extended_summaries(self, training_data: DataLoader):
-        """ Computes the average weight magnitude and average dead units per permutation """
-
+        """ Computes the average weight magnitude, proportion of dead units, and stable rank of the representation """
         if not self.extended_summaries: return
         avg_weight_magnitude, avg_ln_weight_magnitude = compute_average_weight_magnitude(self.net)
-        prop_dead_units = compute_dead_units_proportion(self.net, training_data, self.num_hidden, self.batch_size)
+        prop_dead_units, stable_rank = compute_dead_units_prop_and_stable_rank(self.net, training_data, self.num_hidden,
+                                                                               self.batch_size)
         self.results_dict["average_weight_magnitude_per_permutation"][self.current_permutation] += avg_weight_magnitude
+        self.results_dict["stable_rank_per_permutation"][self.current_permutation] += stable_rank
         self.results_dict["proportion_dead_units_per_permutation"][self.current_permutation] += prop_dead_units
         if self.use_ln:
             self.results_dict["average_ln_weight_magnitude_per_checkpoint"][self.current_permutation] += avg_ln_weight_magnitude
@@ -310,57 +311,54 @@ class PermutedMNISTExperiment(Experiment):
         """ Stores the extended summaries related to the topology update of CBP and CBPw """
         if not self.extended_summaries: return
 
-        if (not self.store_cbp_extended_summaries() and         # check if using cbp and a feature has been replaced
-            not self.store_cbpw_extended_summaries() and        # check if using swr and weights have been replaced
-            not self.store_redo_extended_summaries() and        # check if using redo
-            not self.store_next_loss):                          # check if cbp or cbpw was used in the previous step
+        store_cbp_summaries = self.use_cbp and self.net.feature_replace_event_indicator()
+        store_redo_summaries = self.use_redo and self.net.feature_replace_event_indicator()
+        store_cbpw_summaries = self.use_cbpw and self.cbpw_reset
+
+        if (not store_cbp_summaries and         # check if using cbp and a feature has been replaced
+            not store_cbpw_summaries and        # check if using swr and weights have been replaced
+            not store_redo_summaries and        # check if using redo
+            not self.store_next_loss):          # check if cbp, cbpw, or redo was used in the previous step
             return
 
-        if not self.store_next_loss and (self.store_cbp_extended_summaries() or self.store_cbpw_extended_summaries() or self.store_redo_extended_summaries()):
-            self.results_dict["loss_before_topology_update"].append(current_loss)
-            self.results_dict["avg_grad_before_topology_update"].append(compute_average_gradient_magnitude(self.net))
+        if not self.store_next_loss and (store_cbp_summaries or store_cbpw_summaries or store_redo_summaries):
+            self.store_before_reinitialization_summaries(current_loss)
             if self.use_ln:
                 self.previous_activations = current_activations
             self.store_cbp_and_redo_num_replace_summary()
 
-        elif self.store_next_loss and (not self.store_cbp_extended_summaries() and not self.store_cbpw_extended_summaries() and not self.store_redo_extended_summaries()):
-            self.results_dict["loss_after_topology_update"].append(current_loss)
-            self.results_dict["avg_grad_after_topology_update"].append(compute_average_gradient_magnitude(self.net))
+        elif self.store_next_loss and (not store_cbp_summaries and not store_cbpw_summaries and not store_redo_summaries):
+            self.store_after_reinitialization_summaries(current_loss)
             if self.use_ln:
-                for i in range(len(current_activations)):
-                    diff_average_act = current_activations[i].mean().detach() - self.previous_activations[i].mean().detach()
-                    diff_std_act = current_activations[i].std().detach() - self.previous_activations[i].std().detach()
-                    self.results_dict[f"change_in_average_activation_layer_{i + 1}"].append(diff_average_act.abs())
-                    self.results_dict[f"change_in_std_activation_layer_{i + 1}"].append(diff_std_act.abs())
+                self.store_change_in_activation_statistics_summaries(current_activations)
                 self.previous_activations = []
 
-        elif self.store_next_loss and (self.store_cbpw_extended_summaries() or self.store_cbpw_extended_summaries() or self.store_redo_extended_summaries()):
-            self.results_dict["loss_before_topology_update"].append(current_loss)
-            self.results_dict["avg_grad_before_topology_update"].append(compute_average_gradient_magnitude(self.net))
-            self.results_dict["loss_after_topology_update"].append(current_loss)
-            self.results_dict["avg_grad_after_topology_update"].append(compute_average_gradient_magnitude(self.net))
+        elif self.store_next_loss and (store_cbpw_summaries or store_cbpw_summaries or store_redo_summaries):
+            self.store_before_reinitialization_summaries(current_loss)
+            self.store_after_reinitialization_summaries(current_loss)
             if self.use_ln:
-                for i in range(len(current_activations)):
-                    diff_average_act = current_activations[i].mean().detach() - self.previous_activations[i].mean().detach()
-                    diff_std_act = current_activations[i].std().detach() - self.previous_activations[i].std().detach()
-                    self.results_dict[f"change_in_average_activation_layer_{i + 1}"].append(diff_average_act.abs())
-                    self.results_dict[f"change_in_std_activation_layer_{i + 1}"].append(diff_std_act.abs())
+                self.store_change_in_activation_statistics_summaries(current_activations)
                 self.previous_activations = current_activations
             self.store_cbp_and_redo_num_replace_summary()
 
-
-        self.store_next_loss = self.store_cbp_extended_summaries() or self.store_cbpw_extended_summaries() or self.store_redo_extended_summaries()
+        self.store_next_loss = store_cbp_summaries or store_cbpw_summaries or store_redo_summaries
         self.cbpw_reset = False
         self.net.reset_indicators()
 
-    def store_cbp_extended_summaries(self) -> bool:
-        return (self.use_cbp and self.net.feature_replace_event_indicator())
+    def store_before_reinitialization_summaries(self, current_loss: torch.Tensor):
+        self.results_dict["loss_before_topology_update"].append(current_loss)
+        self.results_dict["avg_grad_before_topology_update"].append(compute_average_gradient_magnitude(self.net))
 
-    def store_redo_extended_summaries(self) -> bool:
-        return (self.use_redo and self.net.feature_replace_event_indicator())
+    def store_after_reinitialization_summaries(self, current_loss: torch.Tensor):
+        self.results_dict["loss_after_topology_update"].append(current_loss)
+        self.results_dict["avg_grad_after_topology_update"].append(compute_average_gradient_magnitude(self.net))
 
-    def store_cbpw_extended_summaries(self) -> bool:
-        return self.use_cbpw and self.cbpw_reset
+    def store_change_in_activation_statistics_summaries(self, current_activations: list[torch.Tensor]):
+        for i in range(len(current_activations)):
+            diff_average_act = current_activations[i].mean().detach() - self.previous_activations[i].mean().detach()
+            diff_std_act = current_activations[i].std().detach() - self.previous_activations[i].std().detach()
+            self.results_dict[f"change_in_average_activation_layer_{i + 1}"].append(diff_average_act.abs())
+            self.results_dict[f"change_in_std_activation_layer_{i + 1}"].append(diff_std_act.abs())
 
     def store_cbp_and_redo_num_replace_summary(self):
         if not self.use_cbp or not self.use_redo: return
