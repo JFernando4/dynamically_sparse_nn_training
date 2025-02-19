@@ -19,7 +19,6 @@
     "batch_size": 30,
     "steps_per_task": 60000,
     "extended_summaries": true,
-    "store_parameters": false,
     "runs": 30
   },
 
