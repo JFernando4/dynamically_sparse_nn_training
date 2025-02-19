@@ -4,6 +4,33 @@ from torch.utils.data import DataLoader
 
 # from src
 from src.networks import ThreeHiddenLayerNetwork
+from src.utils.evaluation_functions import compute_matrix_rank_summaries
+
+
+@torch.no_grad()
+def compute_dead_units_prop_and_stable_rank(net: ThreeHiddenLayerNetwork, data_loader: DataLoader, num_activations: int,
+                                            batch_size: int = 30, num_mini_batches: int = 50):
+    """
+    Computes the proportion of dead units and the stable rank of the representation (the last layer)
+    """
+    num_inputs = 784
+    num_layers = 3
+    total_num_units = num_layers * num_activations
+
+    # compute some number of activations
+    all_activations = torch.zeros((num_mini_batches * batch_size, num_layers, num_activations), dtype=torch.float32)
+    for i, sample in enumerate(data_loader):
+        if i >= num_mini_batches:
+            break
+        image = sample["image"].reshape(batch_size, num_inputs)
+        temp_acts = []
+        net.forward(image, activations=temp_acts)
+        for l in range(num_layers):
+            all_activations[i * batch_size:(i + 1) * batch_size, :, l] = temp_acts[l]
+
+    prop_dead_units = torch.sum((all_activations.sum(0) == 0.0)).item() / total_num_units
+    stable_rank = compute_matrix_rank_summaries(all_activations[:, :, -1], prop=0.99, use_scipy=False)
+    return prop_dead_units, stable_rank
 
 
 @torch.no_grad()
