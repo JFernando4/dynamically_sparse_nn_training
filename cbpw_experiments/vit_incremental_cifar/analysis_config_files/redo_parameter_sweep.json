@@ -32,5 +32,5 @@
         "linestyles": ["-", "-", "-", ":", ":", ":", "--", "--", "--"]
     },
 
-    "plot_name_prefix": "swr_parameter_sweep"
+    "plot_name_prefix": "redo_parameter_sweep"
 }
