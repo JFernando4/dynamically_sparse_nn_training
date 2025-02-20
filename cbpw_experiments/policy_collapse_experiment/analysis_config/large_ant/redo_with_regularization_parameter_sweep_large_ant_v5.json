@@ -3,10 +3,6 @@
 
     "parameter_combinations":
         [
-            "weight_decay-0.01_redo_reinit_freq-128_redo_reinit_threshold-1.0_redo_utility-original",
-            "weight_decay-0.01_redo_reinit_freq-128_redo_reinit_threshold-0.1_redo_utility-original",
-            "weight_decay-0.01_redo_reinit_freq-128_redo_reinit_threshold-0.01_redo_utility-original",
-
             "weight_decay-0.01_redo_reinit_freq-256_redo_reinit_threshold-1.0_redo_utility-original",
             "weight_decay-0.01_redo_reinit_freq-256_redo_reinit_threshold-0.1_redo_utility-original",
             "weight_decay-0.01_redo_reinit_freq-256_redo_reinit_threshold-0.01_redo_utility-original",
@@ -17,7 +13,11 @@
 
             "weight_decay-0.01_redo_reinit_freq-1024_redo_reinit_threshold-1.0_redo_utility-original",
             "weight_decay-0.01_redo_reinit_freq-1024_redo_reinit_threshold-0.1_redo_utility-original",
-            "weight_decay-0.01_redo_reinit_freq-1024_redo_reinit_threshold-0.01_redo_utility-original"
+            "weight_decay-0.01_redo_reinit_freq-1024_redo_reinit_threshold-0.01_redo_utility-original",
+
+            "weight_decay-0.01_redo_reinit_freq-2048_redo_reinit_threshold-1.0_redo_utility-original",
+            "weight_decay-0.01_redo_reinit_freq-2048_redo_reinit_threshold-0.1_redo_utility-original",
+            "weight_decay-0.01_redo_reinit_freq-2048_redo_reinit_threshold-0.01_redo_utility-original"
         ],
 
     "summary_names":
