@@ -24,10 +24,10 @@
   "clip_eps": 0.2,
 
   "__comment_5__": "Selective Weight Reinitialization parameters",
-  "reinit_freq": 0,
-  "drop_factor": 0.0,
-  "prune_method": "none",
-  "grow_method": "none",
+  "reinit_freq": 10,
+  "drop_factor": 0.1,
+  "prune_method": "gr",
+  "grow_method": "init",
 
   "__comment_6__": "For creating the results directory.",
   "relevant_parameters": [
