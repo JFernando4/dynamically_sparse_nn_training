@@ -183,23 +183,24 @@ def initialize_weights_dict_ppo(policy_net: TwoLayerNetwork,
 
     weight_dict = {}
     network_list = [policy_net, val_network]
-    for net in network_list:
+    prefix = ["policy_", "value_"]
+    for i, net in enumerate(network_list):
         for n, p in net.named_parameters():
             is_weight = "weight" in n
             is_bias = "bias" in n
             is_layer_norm = ("ln_1" in n) or ("ln_2" in n)
 
             if is_weight and is_layer_norm:         # weights of layer norm
-                weight_dict[n] = (p, ln_weight_update_func)
+                weight_dict[prefix[i] + n] = (p, ln_weight_update_func)
             elif is_bias:                           # bias terms in the network
-                weight_dict[n] = (p, zero_update_func)
+                weight_dict[prefix[i] + n] = (p, zero_update_func)
             else:                                   # all the other weight matrices
                 if "out" in n:     # out = output layer of TwoLayerNetwork
-                    weight_dict[n] = (p, zero_update_func)
+                    weight_dict[prefix[i] + n] = (p, zero_update_func)
                 else:
-                    weight_dict[n] = (p, weight_update_func)
+                    weight_dict[prefix[i] + n] = (p, weight_update_func)
 
-        return weight_dict
+    return weight_dict
 
 
 def initialize_weights_dict_sequential(net: ThreeHiddenLayerNetwork,
