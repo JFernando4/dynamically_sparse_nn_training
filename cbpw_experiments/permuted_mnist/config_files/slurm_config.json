@@ -8,6 +8,6 @@
   "mail-user":"jfhernan@ualberta.ca",
   "cpus-per-task": 12,
   "max_runs_per_job": 1,
-  "main_dir": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/",
+  "main_dir": "/home/jfernan/projects/def-sutton/jfernan/dynamically_sparse_nn_training",
   "account": "def-sutton"
 }
