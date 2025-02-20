@@ -31,15 +31,15 @@
     {
       "stepsize": 0.0003,
       "use_ln": true,
-      "weight_decay":  1e-2,
+      "weight_decay":  0.0,
       "redo_reinit_freq": 1024,
-      "redo_reinit_threshold": 1e-2,
+      "redo_reinit_threshold": 1e-1,
       "redo_utility": "original"
     },
     {
       "stepsize": 0.0003,
       "use_ln": true,
-      "weight_decay":  0.0,
+      "weight_decay":  1e-2,
       "redo_reinit_freq": 256,
       "redo_reinit_threshold": 1e-2,
       "redo_utility": "original"
