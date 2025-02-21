@@ -1,0 +1,30 @@
+{
+    "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/large_humanoid_policy_collapse/",
+
+    "parameter_combinations":
+        [
+            "stepsize-0.0001_weight_decay-0.0_use_ln-False",
+            "stepsize-0.0001_weight_decay-0.01_use_ln-False",
+            "stepsize-0.0001_weight_decay-0.01_use_ln-True",
+            "weight_decay-0.01_redo_reinit_freq-512_redo_reinit_threshold-0.1_redo_utility-original",
+            "weight_decay-0.01_maturity_threshold-100_replacement_rate-0.001_cbp_utility-contribution",
+            "weight_decay-0.01_reinit_freq-1024_drop_factor-1e-05_prune_method-gr_grow_method-init"
+        ],
+
+    "summary_names":
+        [
+            "dead_units_prop",
+            "stable_rank",
+            "pol_weights",
+            "val_weights"
+        ],
+
+    "plot_dir": "/home/jfernan/projects/def-sutton/jfernan/dynamically_sparse_nn_training/cbpw_experiments/policy_collapse_experiment/plots/large_humanoid",
+
+    "plot_parameters": {
+        "labels": ["Base System", "With Reg", "With LN and Reg", "ReDo with Reg", "CBP with Reg", "SWR with Reg"],
+        "color_order": ["black", "orange", "sky_blue", "blue_green", "yellow", "blue", "vermilion", "pale_violet", "gray"]
+    },
+
+    "plot_name_prefix": "main_with_reg_large_humanoid"
+}
