@@ -111,7 +111,7 @@ def plot_avg_with_shaded_region(results_data: dict = None, results_avg: dict = N
     color_order = access_dict(plot_parameters, "color_order", list(COLOR_DICT.keys()), list)
     alpha = access_dict(plot_parameters, "alpha", 0.1, float)
     x_label = access_dict(plot_parameters, "x_label", "Permutation Number", str)
-    y_label = access_dict(plot_parameters, "y_label", measurement_name, str)
+    y_label = measurement_name if "y_label" not in plot_parameters.keys() else plot_parameters["y_label"]
     default_labels = results_data.keys() if results_data is not None else results_avg.keys()
     labels = access_dict(plot_parameters, "labels", list(default_labels), list)
     default_linestyles = ["-"] * len(results_data) if results_data is not None else ["-"] * len(results_avg)
