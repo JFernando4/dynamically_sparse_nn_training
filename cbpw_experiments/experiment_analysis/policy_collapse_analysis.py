@@ -95,9 +95,10 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
                 average_return /= num_runs
                 print(f"\tAverage return over entire experiment: {average_return}\tSample size: {num_runs}")
         else:
+            print(f"Summary: {sn}")
             results_data = get_results_data(results_dir, sn, parameter_combinations)
             plot_avg_with_shaded_region(results_data=results_data, **plot_args)
-
+            print("\n")
 
 if __name__ == "__main__":
 
