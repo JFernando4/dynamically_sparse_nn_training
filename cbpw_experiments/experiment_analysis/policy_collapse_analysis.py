@@ -9,7 +9,8 @@ from mlproj_manager.util.experiments_util import access_dict
 from src.utils import aggregate_over_bins, plot_avg_with_shaded_region, bootstrapped_return, parse_plots_and_analysis_terminal_arguments
 
 DEBUG = False
-BIN_SIZE = {"average_return": 100000, "return_per_episode": 1, "termination_steps": 1, "dead_units_prop": 10}
+BIN_SIZE = {"average_return": 100000, "return_per_episode": 1, "termination_steps": 1, "dead_units_prop": 10,
+            "stable_rank": 1, "pol_weights": 10, "val_weights": 10}
 
 
 def get_results_data(results_dir: str, measurement_name: str, parameter_combination: list[str], max_runs: int = 100):
