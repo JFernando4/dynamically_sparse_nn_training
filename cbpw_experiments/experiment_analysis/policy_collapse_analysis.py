@@ -78,8 +78,7 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
     for sn in summary_names:
         plot_args = {"plot_parameters": plot_parameters, "plot_dir": plot_dir, "measurement_name": sn,
                      "save_plots": save_plots, "plot_name_prefix": plot_name_prefix}
-        print(plot_args)
-        print("\n")
+
         if sn == "average_return":
             x_axis, avg_return, ci_low, ci_high, num_samples = compute_average_return_statistics(results_dir, parameter_combinations)
             plot_avg_with_shaded_region(results_avg=avg_return, results_low=ci_low, results_high=ci_high,
