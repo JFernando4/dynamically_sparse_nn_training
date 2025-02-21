@@ -8,7 +8,7 @@
             "stepsize-0.0001_weight_decay-0.01_use_ln-True",
             "weight_decay-0.01_redo_reinit_freq-512_redo_reinit_threshold-0.1_redo_utility-original",
             "weight_decay-0.01_maturity_threshold-100_replacement_rate-0.001_cbp_utility-contribution",
-            "weight_decay-0.01_reinit_freq-1024_drop_factor-0.0001_prune_method-gr_grow_method-init"
+            "weight_decay-0.01_reinit_freq-1024_drop_factor-1e-05_prune_method-gr_grow_method-init"
         ],
 
     "summary_names":
