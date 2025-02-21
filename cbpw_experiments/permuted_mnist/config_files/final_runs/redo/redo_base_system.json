@@ -1,7 +1,7 @@
 {
   "file_management": {
     "experiment_name": "permuted_mnist",
-    "data_path": "/home/jfernan/dst_lop/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/data/",
+    "data_path": "/home/jfernan/projects/def-sutton/jfernan/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/data/",
     "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results",
     "relevant_parameters": [
       "reinit_freq",
@@ -33,9 +33,9 @@
     "max_runs_per_job": 5,
     "output_dir": "/scratch/jfernan/dynamically_sparse_nn_training/outputs",
     "output_filename": "%n-%j.out",
-    "mem": "12G",
+    "mem": "4G",
     "mail-type": "BEGIN,END,FAIL",
     "mail-user":"jfhernan@ualberta.ca",
-    "cpus-per-task": 6
+    "cpus-per-task": 1
   }
 }
