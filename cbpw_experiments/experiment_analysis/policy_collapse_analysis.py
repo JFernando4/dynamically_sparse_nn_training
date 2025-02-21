@@ -1,5 +1,4 @@
 import numpy as np
-import argparse
 
 import os
 
@@ -99,6 +98,7 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
             results_data = get_results_data(results_dir, sn, parameter_combinations)
             plot_avg_with_shaded_region(results_data=results_data, **plot_args)
             print("\n")
+
 
 if __name__ == "__main__":
 
