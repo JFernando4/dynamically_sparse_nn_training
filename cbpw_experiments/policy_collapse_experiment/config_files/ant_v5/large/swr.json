@@ -33,8 +33,8 @@
       "stepsize": 0.0003,
       "use_ln": true,
       "weight_decay":  0.0,
-      "reinit_freq": 512,
-      "drop_factor": 1e-6,
+      "reinit_freq": 128,
+      "drop_factor": 1e-4,
       "prune_method": "gr",
       "grow_method": "init"
     },
@@ -42,8 +42,8 @@
       "stepsize": 0.0003,
       "use_ln": true,
       "weight_decay":  1e-2,
-      "reinit_freq": 2048,
-      "drop_factor": 1e-5,
+      "reinit_freq": 1024,
+      "drop_factor": 1e-6,
       "prune_method": "gr",
       "grow_method": "init"
     }
