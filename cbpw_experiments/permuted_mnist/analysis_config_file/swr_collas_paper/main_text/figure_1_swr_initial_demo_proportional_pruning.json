@@ -21,9 +21,8 @@
 
     "plot_parameters": {
         "labels": ["Base System", "L2", "CBP", "SWR-GF-MR", "SWR-GF-SR"],
-        "color_order": ["black", "pale_violet", "orange", "pink", "sky_blue"],
-        "xlim": [-50, 1050]
+        "color_order": ["black", "pale_violet", "orange", "pink", "sky_blue"]
     },
 
-    "plot_name_prefix": "swr_vs_cbp_small_network"
+    "plot_name_prefix": "figure_1_proportional_pruning"
 }
