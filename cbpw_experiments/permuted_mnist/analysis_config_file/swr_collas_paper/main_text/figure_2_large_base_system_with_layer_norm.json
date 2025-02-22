@@ -40,5 +40,5 @@
         "ylim": [0.83, 0.94]
     },
 
-    "plot_name_prefix": "figure_1_proportional_pruning"
+    "plot_name_prefix": "figure_2_base_system_with_layer_norm"
 }
