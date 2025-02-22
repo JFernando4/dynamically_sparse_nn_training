@@ -37,7 +37,7 @@
             "blue"
         ],
         "xlim": [-50, 1050],
-        "ylim": [0.74, 0.92]
+        "ylim": [0.70, 0.92]
     },
 
     "plot_name_prefix": "figure_2_small_base_system_with_layer_norm"
