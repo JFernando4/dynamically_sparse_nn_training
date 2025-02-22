@@ -21,7 +21,7 @@
 
     "plot_parameters": {
         "labels": ["Base System", "L2", "CBP", "SWR-GF-MR", "SWR-GF-SR"],
-        "color_order": ["black", "pale_violet", "orange", "pink", "sky_blue"]
+        "color_order": ["black", "pale_violet", "orange", "yellow", "sky_blue"]
     },
 
     "plot_name_prefix": "figure_1_proportional_pruning"
