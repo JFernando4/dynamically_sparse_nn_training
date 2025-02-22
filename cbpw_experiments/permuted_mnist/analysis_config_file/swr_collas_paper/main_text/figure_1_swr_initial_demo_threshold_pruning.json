@@ -12,10 +12,10 @@
 
     "summary_names":
         [
-            "/home/jfernan/projects/def-sutton/jfernan/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/plots/swr_collas_paper"
+            "train_accuracy_per_checkpoint"
         ],
 
-    "plot_dir": "",
+    "plot_dir": "/home/jfernan/projects/def-sutton/jfernan/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/plots/swr_collas_paper",
 
     "bin_sizes": [200],
 
