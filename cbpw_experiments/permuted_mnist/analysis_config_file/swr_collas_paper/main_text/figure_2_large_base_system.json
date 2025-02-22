@@ -1,0 +1,44 @@
+{
+    "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/permuted_mnist_large_network/",
+
+    "parameter_combinations":
+        [
+            "stepsize-0.05",
+            "stepsize-0.05_l2_factor-0.0001",
+            "maturity_threshold-1_replacement_rate-0.0001_cbp_utility-contribution",
+            "reinit_freq-35_reinit_threshold-0.005_redo_utility-original",
+            "topology_update_freq-2400_prune_method-gr_grow_method-kaiming_normal_drop_factor-0.0001"
+        ],
+
+    "summary_names":
+        [
+            "train_accuracy_per_checkpoint"
+        ],
+
+    "plot_dir": "/home/jfernan/projects/def-sutton/jfernan/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/plots/swr_collas_paper",
+
+    "bin_sizes": [200],
+
+    "plot_parameters": {
+        "labels":
+        [
+            "Base System",
+            "L2",
+            "CBP",
+            "ReDo",
+            "SWR-GR-SR"
+        ],
+        "color_order":
+        [
+            "black",
+            "pale_violet",
+            "orange",
+            "blue_green",
+            "blue"
+        ],
+        "xlim": [-50, 1050],
+        "ylim": [0.83, 0.94]
+    },
+
+    "plot_name_prefix": "figure_1_proportional_pruning"
+}
