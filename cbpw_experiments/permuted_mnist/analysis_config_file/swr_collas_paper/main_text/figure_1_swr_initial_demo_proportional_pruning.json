@@ -20,8 +20,24 @@
     "bin_sizes": [200],
 
     "plot_parameters": {
-        "labels": ["Base System", "L2", "CBP", "SWR-GF-MR", "SWR-GF-SR"],
-        "color_order": ["black", "pale_violet", "orange", "yellow", "sky_blue"]
+        "labels":
+        [
+            "Base System",
+            "L2",
+            "CBP",
+            "SWR-GF-MR",
+            "SWR-GF-SR"
+        ],
+        "color_order":
+        [
+            "black",
+            "pale_violet",
+            "orange",
+            "yellow",
+            "sky_blue"
+        ],
+        "xlim": [-50, 1050],
+        "ylim": [0.83, 0.98]
     },
 
     "plot_name_prefix": "figure_1_proportional_pruning"
