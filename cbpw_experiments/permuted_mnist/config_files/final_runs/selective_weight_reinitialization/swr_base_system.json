@@ -74,7 +74,7 @@
     {
       "stepsize": 0.05,
       "topology_update_freq": 1200,
-      "prune_method": "gf",
+      "prune_method": "gr",
       "grow_method": "kaiming_normal",
       "drop_factor": 0.0001
     }
