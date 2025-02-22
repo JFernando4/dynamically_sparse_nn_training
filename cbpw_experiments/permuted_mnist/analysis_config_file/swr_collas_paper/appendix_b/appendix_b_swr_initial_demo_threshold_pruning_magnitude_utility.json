@@ -1,0 +1,28 @@
+{
+    "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/permuted_mnist/",
+
+    "parameter_combinations":
+        [
+            "stepsize-0.05",
+            "stepsize-0.05_l2_factor-0.0001",
+            "reinit_freq-35_reinit_threshold-0.005_redo_utility-original",
+            "topology_update_freq-600_prune_method-mr_grow_method-zero_drop_factor-0.0002",
+            "topology_update_freq-8600_prune_method-mr_grow_method-kaiming_normal_drop_factor-0.0005"
+        ],
+
+    "summary_names":
+        [
+            "train_accuracy_per_checkpoint"
+        ],
+
+    "plot_dir": "/home/jfernan/projects/def-sutton/jfernan/dynamically_sparse_nn_training/cbpw_experiments/permuted_mnist/plots/swr_collas_paper",
+
+    "bin_sizes": [200],
+
+    "plot_parameters": {
+        "labels": ["Base System", "L2", "ReDo", "SWR-MR-MR", "SWR-MR-SR"],
+        "color_order": ["black", "pale_violet", "blue_green", "vermilion", "blue"]
+    },
+
+    "plot_name_prefix": "appendix_b_threshold_pruning_magnitude_utility"
+}
