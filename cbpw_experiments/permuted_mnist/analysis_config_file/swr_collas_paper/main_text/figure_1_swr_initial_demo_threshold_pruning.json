@@ -1,5 +1,5 @@
 {
-    "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/permuted_mnist/",
+    "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/permuted_mnist_large_network/",
 
     "parameter_combinations":
         [
