@@ -1,0 +1,50 @@
+{
+    "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/vit_cbpw_cifar/",
+
+    "parameter_combinations":
+        [
+            "stepsize-0.01_weight_decay-2e-06_dropout_prob-0.1_momentum-0.9_reset_network-False",
+            "stepsize-0.01_weight_decay-2e-06_dropout_prob-0.1_momentum-0.9_reset_network-True",
+            "num_epochs-2000_stepsize-0.01_weight_decay-6e-06_shifted_ln-True_reset_network-False",
+            "num_epochs-2000_stepsize-0.01_weight_decay-6e-06_shifted_ln-True_reset_network-True"
+        ],
+
+    "summary_names":
+        [
+            "test_accuracy_per_epoch"
+        ],
+
+    "excluded_indices":
+    {
+        "num_epochs-2000_stepsize-0.01_weight_decay-6e-06_shifted_ln-True_reset_network-False": [9]
+    },
+
+    "plot_dir": "./plots/swr_collas_paper",
+
+    "plot_parameters": {
+        "x_label": "Number of Classes",
+        "y_label": "Best accuracy per task",
+        "labels":
+        [
+            "Base System",
+            "Network Resetting",
+            "Base System SLN",
+            "Network Resetting SLN",
+            "SWR",
+            "CBP",
+            "ReDo"
+        ],
+        "color_order":
+        [
+            "vermilion",
+            "pale_violet",
+            "black",
+            "gray",
+            "blue",
+            "orange",
+            "blue_green"
+        ]
+    },
+
+    "plot_name_prefix": "figure_4_vit_incremental_regular_vs_reparam_ln"
+}
