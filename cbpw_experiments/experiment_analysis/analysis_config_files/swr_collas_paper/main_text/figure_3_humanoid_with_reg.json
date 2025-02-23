@@ -28,5 +28,5 @@
         "ylim": [-100, 4000]
     },
 
-    "plot_name_prefix": "main_with_reg_large_humanoid"
+    "plot_name_prefix": "figure_3_humanoid_with_reg"
 }
