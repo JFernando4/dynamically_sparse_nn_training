@@ -59,6 +59,7 @@ def plot_results(results_data: dict, plot_parameters: dict, plot_dir: str, measu
     ylim = access_dict(plot_parameters, "ylim", None)
     yticks = access_dict(plot_parameters, "yticks", None)
     xlim = access_dict(plot_parameters, "xlim", None)
+    xticks = access_dict(plot_parameters, "xticks", None)
     visible_grid = access_dict(plot_parameters, "visible_grid", default=True, val_type=bool)
 
     for i, (pc, temp_results) in enumerate(results_data.items()):
@@ -91,6 +92,8 @@ def plot_results(results_data: dict, plot_parameters: dict, plot_dir: str, measu
         plt.xlim(xlim)
     if yticks is not None:
         plt.yticks(yticks)
+    if xticks is not None:
+        plt.xticks(xticks)
 
     if save_plots:
         plot_path = os.path.join(plot_dir, f"{plot_name_prefix}_{measurement_name}.svg")
