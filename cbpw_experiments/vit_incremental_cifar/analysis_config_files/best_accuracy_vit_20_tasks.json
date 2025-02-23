@@ -19,7 +19,7 @@
 
     "excluded_indices":
     {
-        "num_epochs-2000_stepsize-0.01_weight_decay-6e-06_shifted_ln-True_reset_network-False": [7, 16, 17],
+        "num_epochs-2000_stepsize-0.01_weight_decay-6e-06_shifted_ln-True_reset_network-False": [9, 16, 17],
         "stepsize-0.01_weight_decay-2e-06_dropout_prob-0.1_momentum-0.9_reset_network-True":[15]
     },
 
