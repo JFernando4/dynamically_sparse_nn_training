@@ -37,6 +37,7 @@
         "x_label": "Number of Classes",
         "y_label": "Difference in Accuracy",
         "xlim": [-0.5, 19.5],
+        "xticks": [0, 4, 9, 14, 19],
         "ylim": [-0.1, 0.045],
         "labels":
         [
