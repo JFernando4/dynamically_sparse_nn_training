@@ -7,21 +7,18 @@
       "stepsize",
       "weight_decay",
       "dropout_prob",
-      "reset_network",
-      "num_epochs",
-      "initial_num_classes",
-      "class_increase"
+      "momentum",
+      "reset_network"
     ]
   },
 
   "experiment_params": {
     "use_lr_schedule": true,
-    "num_epochs": 1000,
-    "initial_num_classes": 10,
-    "class_increase": 10,
+    "num_epochs": 2000,
+    "initial_num_classes": 5,
     "fixed_classes": false,
     "use_best_network": true,
-    "runs": 5
+    "runs": 1
   },
 
   "learning_params": {
@@ -29,7 +26,7 @@
     "weight_decay": 2e-6,
     "dropout_prob": 0.1,
     "momentum": 0.9,
-    "reset_network": false
+    "reset_network": ["fixed", true, false]
   },
 
   "slurm_parameters": {
