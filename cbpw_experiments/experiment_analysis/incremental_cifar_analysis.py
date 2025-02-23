@@ -12,7 +12,8 @@ DEBUG = False
 BIN_SIZE = {"test_accuracy_per_epoch": 100, "average_test_accuracy_per_epoch": 100}
 
 
-def get_results_data(results_dir: str, measurement_name: str, parameter_combination: list[str]):
+def get_results_data(results_dir: str, measurement_name: str, parameter_combination: list[str],
+                     excluded_indices: dict):
 
     valid_measurements = BIN_SIZE.keys()
     assert measurement_name in valid_measurements
@@ -27,7 +28,10 @@ def get_results_data(results_dir: str, measurement_name: str, parameter_combinat
         measurement_dir = os.path.join(temp_results_dir, measurement_name)
 
         results[pc] = []
+        temp_excluded_indices = [] if pc not in excluded_indices.keys() else excluded_indices[pc]
         for idx in indices:
+            if idx in temp_excluded_indices:
+                continue
             filename = f"index-{idx}.npy"
             try:
                 temp_measurement_array = np.load(os.path.join(measurement_dir, filename))
@@ -54,6 +58,7 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
     results_dir = analysis_parameters["results_dir"]
     parameter_combinations = analysis_parameters["parameter_combinations"]
     summary_names = analysis_parameters["summary_names"]
+    excluded_indices = access_dict(analysis_parameters, "excluded_indices", default={}, val_type=dict)
     plot_dir = access_dict(analysis_parameters, "plot_dir", default="")
     plot_parameters = access_dict(analysis_parameters, "plot_parameters", default={}, val_type=dict)
     plot_name_prefix = access_dict(analysis_parameters, "plot_name_prefix", default="", val_type=str)
@@ -61,7 +66,7 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
     for sn in summary_names:
 
         if sn == "test_accuracy_per_epoch":
-            results_data = get_results_data(results_dir, sn, parameter_combinations)
+            results_data = get_results_data(results_dir, sn, parameter_combinations, excluded_indices)
             plot_results(results_data, plot_parameters, plot_dir, sn, save_plots, plot_name_prefix)
         elif sn == "average_test_accuracy_per_epoch":
             results_data = get_results_data(results_dir, "test_accuracy_per_epoch", parameter_combinations)
