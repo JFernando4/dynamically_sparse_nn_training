@@ -21,6 +21,8 @@ def get_results_data(results_dir: str, measurement_name: str, parameter_combinat
 
     results = {}
     for pc in parameter_combination:
+        if DEBUG:
+            print(f"\nParameter combination: {pc}")
         temp_results_dir = os.path.join(results_dir, pc)
         indices = np.load(os.path.join(temp_results_dir, "experiment_indices.npy"))
         if len(indices.shape) == 0:
