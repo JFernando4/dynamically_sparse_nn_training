@@ -24,7 +24,7 @@
         "y_label": "Return per Episode",
         "labels": ["Base System", "With Reg", "With LN and Reg", "ReDo", "CBP", "SWR"],
         "color_order": ["black", "pale_violet", "vermilion", "blue_green", "orange", "blue"],
-        "ylim": [-100, 4200]
+        "ylim": [-100, 4500]
     },
 
     "plot_name_prefix": "figure_3_ant_with_reg"
