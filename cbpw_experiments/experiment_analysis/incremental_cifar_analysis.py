@@ -41,6 +41,8 @@ def get_results_data(results_dir: str, measurement_name: str, parameter_combinat
                     print(f"\n{results_dir = }\n")
                 raise EOFError
             results[pc].append(aggregate_over_bins(temp_measurement_array, bin_size, agg_func="max"))
+            if DEBUG:
+                print(f"index: {idx}\tLast task performance: {results[pc][-1][-1]}")
         results[pc] = np.array(results[pc])
 
     return results
