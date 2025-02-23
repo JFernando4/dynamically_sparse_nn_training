@@ -13,8 +13,7 @@
 
     "summary_names":
         [
-            "average_return",
-            "average_return_over_run"
+            "average_return"
         ],
 
     "plot_dir": "./plots/swr_collas_paper",
