@@ -148,6 +148,7 @@ class PolicyCollapseExperiment(Experiment):
 
         """ Initialize summaries """
         self.to_log = ["dead_units_prop", "pol_weights", "val_weights", "pol_grad_magnitude", "val_grad_magnitude", "stable_rank"]
+        if self.use_ln: self.to_log.extend(["pol_ln_magnitude", "val_ln_magnitude"])
         self.result_store_frequency = 1000
         self.stable_rank_store_frequency = self.result_store_frequency * 10
 
@@ -162,6 +163,10 @@ class PolicyCollapseExperiment(Experiment):
             self.results_dict["dead_units_prop"] = torch.zeros(size=(results_dim,))
         if "stable_rank" in self.to_log:
             self.results_dict["stable_rank"] = torch.zeros(size=(self.total_env_steps // self.stable_rank_store_frequency, ))
+        if "pol_ln_magnitude" in self.to_log:
+            self.results_dict["pol_ln_magnitude"] = np.zeros(shape=results_dim)
+        if "val_ln_magnitude" in self.to_log:
+            self.results_dict["val_ln_magnitude"] = np.zeros(shape=results_dim)
         self.return_per_episode = []
         self.termination_steps = []
 
@@ -296,6 +301,10 @@ class PolicyCollapseExperiment(Experiment):
             self.results_dict["pol_weights"][result_index] += compute_average_weight_magnitude(self.policy_network.mean_net)[0]
         if "val_weights" in self.to_log:
             self.results_dict["val_weights"][result_index] += compute_average_weight_magnitude(self.val_function_network.v_net)[0]
+        if "pol_ln_magnitude" in self.to_log:
+            self.results_dict["pol_ln_magnitude"][result_index] += compute_average_weight_magnitude(self.policy_network.mean_net)[1]
+        if "val_ln_magnitude" in self.to_log:
+            self.results_dict["val_ln_magnitude"][result_index] += compute_average_weight_magnitude(self.val_function_network.v_net)[1]
 
         if (self.current_step + 1) % self.result_store_frequency == 0:
             # store stable rank summaries
@@ -308,7 +317,6 @@ class PolicyCollapseExperiment(Experiment):
                 reshaped_feature_activity = self.short_term_feature_activity.reshape(-1, self.num_hidden_layers * self.hidden_dim)
                 dead_units_prop = (reshaped_feature_activity.mean(dim=0) == 0).float().mean()
                 self.results_dict["dead_units_prop"][result_index] = dead_units_prop
-                # self.results_dict["dead_units_prop"][result_index] = (self.short_term_feature_activity > 0.0).float().mean(dim=0)
 
     def format_results(self):
         """
