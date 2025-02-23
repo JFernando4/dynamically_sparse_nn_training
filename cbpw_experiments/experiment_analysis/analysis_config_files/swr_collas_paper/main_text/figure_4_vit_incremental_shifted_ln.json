@@ -18,7 +18,8 @@
 
     "summary_names":
         [
-            "test_accuracy_per_epoch"
+            "test_accuracy_per_epoch",
+            "test_accuracy_with_baseline"
         ],
 
     "excluded_indices":
