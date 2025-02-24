@@ -20,7 +20,7 @@
             "network_parameter_magnitude"
         ],
 
-    "compute_weight_magnitude_summaries"
+    "compute_weight_magnitude_summaries": true,
 
     "excluded_indices":
     {
