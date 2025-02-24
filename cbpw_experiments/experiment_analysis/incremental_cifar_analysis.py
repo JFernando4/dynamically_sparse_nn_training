@@ -93,7 +93,7 @@ def compute_and_store_weight_magnitude_results(parameter_comb, results_dir):
         idx_weight_magnitude_lists = [[], [], [], []]
 
         for current_epoch in range(0, total_number_of_epochs + store_frequency, store_frequency):
-            filename = f"index-{idx}_epoch-{current_epoch}.npy"
+            filename = f"index-{idx}_epoch-{current_epoch}.pt"
             try:
                 temp_state_dict = torch.load(os.path.join(temp_results_dir, "model_parameters", filename), map_location="cpu")
             except EOFError:
