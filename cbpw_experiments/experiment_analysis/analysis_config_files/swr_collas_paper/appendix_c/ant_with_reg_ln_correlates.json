@@ -3,8 +3,6 @@
 
     "parameter_combinations":
         [
-            "stepsize-0.0003_weight_decay-0.0_use_ln-False",
-            "stepsize-0.0003_weight_decay-0.01_use_ln-False",
             "stepsize-0.0003_weight_decay-0.01_use_ln-True",
             "weight_decay-0.01_redo_reinit_freq-256_redo_reinit_threshold-0.01_redo_utility-original",
             "weight_decay-0.01_maturity_threshold-10000_replacement_rate-1e-05_cbp_utility-contribution",
@@ -13,10 +11,8 @@
 
     "summary_names":
         [
-            "dead_units_prop",
-            "stable_rank",
-            "pol_weights",
-            "val_weights"
+            "pol_ln_magnitude",
+            "val_ln_magnitude"
         ],
 
     "plot_dir": "./plots/swr_collas_paper/appendix_c",
@@ -25,8 +21,6 @@
         "x_label": "Training Step",
         "labels":
         [
-            "Base System",
-            "With Reg",
             "With LN and Reg",
             "ReDo",
             "CBP",
@@ -34,8 +28,6 @@
         ],
         "color_order":
         [
-            "black",
-            "pale_violet",
             "vermilion",
             "blue_green",
             "orange",

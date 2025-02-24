@@ -3,7 +3,6 @@
 
     "parameter_combinations":
         [
-            "stepsize-0.0003_weight_decay-0.0_use_ln-False",
             "stepsize-0.0003_weight_decay-0.0_use_ln-True",
             "stepsize-0.0003_weight_decay-0.01_use_ln-True",
             "weight_decay-0.0_redo_reinit_freq-1024_redo_reinit_threshold-0.1_redo_utility-original",
@@ -13,20 +12,16 @@
 
     "summary_names":
         [
-            "dead_units_prop",
-            "stable_rank",
-            "pol_weights",
-            "val_weights"
+            "pol_ln_magnitude",
+            "val_ln_magnitude"
         ],
 
     "plot_dir": "./plots/swr_collas_paper/appendix_c",
 
-    "plot_parameters":
-    {
+    "plot_parameters": {
         "x_label": "Training Step",
         "labels":
         [
-            "Base System",
             "With Layer Norm",
             "With LN and Reg",
             "ReDo",
@@ -35,7 +30,6 @@
         ],
         "color_order":
         [
-            "black",
             "sky_blue",
             "vermilion",
             "blue_green",
