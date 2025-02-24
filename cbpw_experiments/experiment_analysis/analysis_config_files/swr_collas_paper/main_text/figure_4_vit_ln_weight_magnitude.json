@@ -1,0 +1,39 @@
+{
+    "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/vit_cbpw_cifar/",
+
+    "parameter_combinations":
+        [
+            "stepsize-0.01_weight_decay-2e-06_dropout_prob-0.1_momentum-0.9_reset_network-False",
+            "stepsize-0.01_weight_decay-2e-06_dropout_prob-0.1_momentum-0.9_reset_network-True"
+        ],
+
+    "summary_names":
+        [
+            "ln_weight_magnitude",
+        ],
+
+    "compute_weight_magnitude_summaries": false,
+
+    "max_samples": 15,
+
+    "plot_dir": "./plots/swr_collas_paper/figure_4",
+
+    "plot_parameters": {
+        "x_label": "Number of Classes",
+        "y_label": "Average LN Magnitude",
+        "xlim": [-0.5, 20.5],
+        "xticks": [0, 5, 10, 15, 20],
+        "labels":
+        [
+            "Base System",
+            "Network Resetting"
+        ],
+        "color_order":
+        [
+            "vermilion",
+            "pale_violet"
+        ]
+    },
+
+    "plot_name_prefix": "figure_4_ln_weight_magnitude"
+}

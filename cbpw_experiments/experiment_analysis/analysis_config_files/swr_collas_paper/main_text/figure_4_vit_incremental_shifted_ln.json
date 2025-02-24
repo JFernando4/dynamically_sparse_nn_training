@@ -31,7 +31,7 @@
 
     "max_samples": 15,
 
-    "plot_dir": "./plots/swr_collas_paper",
+    "plot_dir": "./plots/swr_collas_paper/figure_4",
 
     "plot_parameters": {
         "x_label": "Number of Classes",
