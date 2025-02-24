@@ -9,7 +9,7 @@ from src.utils import aggregate_over_bins, plot_avg_with_shaded_region, bootstra
 
 DEBUG = False
 BIN_SIZE = {"average_return": 100000, "return_per_episode": 1, "termination_steps": 1, "dead_units_prop": 10,
-            "stable_rank": 1, "pol_weights": 10, "val_weights": 10}
+            "stable_rank": 1, "pol_weights": 10, "val_weights": 10, "pol_ln_magnitude": 10, "val_ln_magnitude": 10}
 
 
 def get_results_data(results_dir: str, measurement_name: str, parameter_combination: list[str], max_runs: int = 100):
