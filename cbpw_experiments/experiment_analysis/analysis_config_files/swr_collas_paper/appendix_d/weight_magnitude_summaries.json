@@ -34,7 +34,7 @@
 
     "plot_parameters": {
         "x_label": "Number of Classes",
-        "y_label": "Best accuracy per task",
+        "y_label": "Average Magnitude",
         "xlim": [-0.5, 20.5],
         "xticks": [0, 5, 10, 15, 20],
         "labels":
