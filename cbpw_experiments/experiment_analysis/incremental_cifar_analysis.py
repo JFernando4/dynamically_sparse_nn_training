@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 import os
 
@@ -8,8 +9,10 @@ from mlproj_manager.util.experiments_util import access_dict
 from src.utils import aggregate_over_bins, plot_results, parse_plots_and_analysis_terminal_arguments
 
 DEBUG = False
-BIN_SIZE = {"test_accuracy_per_epoch": 100, "average_test_accuracy_per_epoch": 100}
-AGG_FUNC = {"test_accuracy_per_epoch": "max", "average_test_accuracy_per_epoch": "max"}
+BIN_SIZE = {"test_accuracy_per_epoch": 100, "average_test_accuracy_per_epoch": 100, "ln_weight_magnitude": 1,
+            "self_attention_weight_magnitude": 1, "mlp_weight_magnitude": 1, "network_parameter_magnitude": 1}
+AGG_FUNC = {"test_accuracy_per_epoch": "max", "average_test_accuracy_per_epoch": "max", "ln_weight_magnitude": "max",
+            "self_attention_weight_magnitude": "max", "mlp_weight_magnitude": "max", "network_parameter_magnitude": "max"}
 
 
 def get_results_data(results_dir: str, measurement_name: str, parameter_combination: list[str],
@@ -71,6 +74,63 @@ def get_parameter_combination_results(parameter_comb, results_dir, measurement_n
     return np.array(temp_results)
 
 
+def compute_and_store_weight_magnitude_results(parameter_comb, results_dir):
+
+    if DEBUG: print(f"\nParameter combination: {parameter_comb}")
+
+    temp_results_dir = os.path.join(results_dir, parameter_comb)
+    indices = np.load(os.path.join(temp_results_dir, "experiment_indices.npy"))
+    if len(indices.shape) == 0: indices = indices.reshape(indices.size)
+    indices.sort()
+    store_frequency = 100
+    total_number_of_epochs = 2000
+
+    summary_names = ["ln_weight_magnitude", "self_attention_weight_magnitude", "mlp_weight_magnitude", "network_parameter_magnitude"]
+    summary_dirs = [os.path.join(temp_results_dir, wm_dir) for wm_dir in summary_names]
+    for d in summary_dirs: os.makedirs(d, exist_ok=True)
+
+    for idx in indices:
+        idx_weight_magnitude_lists = [[], [], [], []]
+
+        for current_epoch in range(0, total_number_of_epochs + store_frequency, store_frequency):
+            filename = f"index-{idx}_epoch-{current_epoch}.npy"
+            try:
+                temp_state_dict = torch.load(os.path.join(temp_results_dir, "model_parameters", filename), map_location="cpu")
+            except EOFError:
+                print(f"\n{filename = }\nParameter combination = {parameter_comb}"); raise EOFError
+
+            temp_summaries = compute_average_weight_magnitude(temp_state_dict)  # order of output: ln, sa, mlp, all
+            for i in range(len(temp_summaries)):
+                idx_weight_magnitude_lists[i].append(temp_summaries[i])
+
+        for i in range(len(idx_weight_magnitude_lists)):
+            np.save(os.path.join(summary_dirs[i], f"index-{idx}.npy"), np.array(idx_weight_magnitude_lists[i]))
+
+
+def compute_average_weight_magnitude(state_dict: dict):
+
+    ln_sum, ln_numel, sa_sum, sa_numel, mlp_sum, mlp_numel, total_sum, total_numel = 0, 0, 0, 0, 0, 0, 0, 0
+
+    for n, p in state_dict.items():
+        is_weight = "weight" in n
+        is_self_attention = ".self_attention." in n
+        is_layer_norm = (".ln." in n) or (".ln_1." in n) or (".ln_2." in n)
+        is_mlp_block = ".mlp." in n
+        if is_self_attention and is_weight:     # weight magnitude of self-attention layers
+            sa_sum += p.abs().sum().item()
+            sa_numel += p.numel()
+        if is_layer_norm and is_weight:         # weight magnitude of layer norm layers
+            ln_sum += p.abs().sum().item()
+            ln_numel += p.numel()
+        if is_mlp_block and is_weight:          # weight magnitude of feed-forward layers in mlp block
+            mlp_sum += p.abs().mean().item()
+            mlp_numel += p.numel()
+        total_sum += p.abs().sum().item()       # weight magnitude of the entire network
+        total_numel += p.numel()
+
+    return ln_sum / ln_numel, sa_sum / sa_numel, mlp_sum / mlp_numel, total_sum / total_numel
+
+
 def print_average_test_accuracy(results_dict: dict):
 
     for i, (pc, temp_results) in enumerate(results_dict.items()):
@@ -84,6 +144,8 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
     parameter_combinations = analysis_parameters["parameter_combinations"]
     summary_names = analysis_parameters["summary_names"]
     excluded_indices = access_dict(analysis_parameters, "excluded_indices", default={}, val_type=dict)
+    compute_weight_magnitude_summaries = access_dict(analysis_parameters, "compute_weight_magnitude_summaries",
+                                                     default=False, val_type=bool)
     max_samples = access_dict(analysis_parameters, "max_samples", default=15, val_type=int)
     base_lines = access_dict(analysis_parameters, "base_lines", default={}, val_type=dict)
     plot_dir = access_dict(analysis_parameters, "plot_dir", default="")
@@ -100,6 +162,13 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
             print_average_test_accuracy(results_data)
         elif sn == "test_accuracy_with_baseline":
             results_data = get_results_data_accuracy_diff(results_dir, parameter_combinations, base_lines, excluded_indices, max_samples)
+            plot_results(results_data, plot_parameters, plot_dir, sn, save_plots, plot_name_prefix)
+        elif sn in ["ln_weight_magnitude", "self_attention_weight_magnitude", "mlp_weight_magnitude", "network_parameter_magnitude"]:
+            if compute_weight_magnitude_summaries:
+                for param_comb in parameter_combinations:
+                    compute_and_store_weight_magnitude_results(param_comb, results_dir)
+                compute_weight_magnitude_summaries = False
+            results_data = get_results_data(results_dir, sn, parameter_combinations, excluded_indices, max_samples)
             plot_results(results_data, plot_parameters, plot_dir, sn, save_plots, plot_name_prefix)
 
 
