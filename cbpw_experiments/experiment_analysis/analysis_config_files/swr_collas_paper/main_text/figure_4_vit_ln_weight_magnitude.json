@@ -9,7 +9,7 @@
 
     "summary_names":
         [
-            "ln_weight_magnitude",
+            "ln_weight_magnitude"
         ],
 
     "compute_weight_magnitude_summaries": false,
