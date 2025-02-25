@@ -16,7 +16,7 @@
             "average_return"
         ],
 
-    "plot_dir": "./plots/swr_collas_paper",
+    "plot_dir": "./plots/swr_collas_paper/figure_3",
     "total_steps": 20000000,
 
     "plot_parameters": {
