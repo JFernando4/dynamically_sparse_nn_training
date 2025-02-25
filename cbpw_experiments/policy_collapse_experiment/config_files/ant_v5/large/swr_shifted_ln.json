@@ -1,0 +1,55 @@
+{
+  "file_management": {
+    "experiment_name": "large_ant_policy_collapse",
+    "results_path": "/scratch/jfernan/dynamically_sparse_nn_training/results/",
+    "relevant_parameters": [
+      "use_shifted_ln",
+      "weight_decay",
+      "reinit_freq",
+      "drop_factor",
+      "prune_method",
+      "grow_method"
+    ]
+  },
+
+  "experiment_params": {
+    "env_name": "Ant-v5",
+    "total_env_steps": 20000000,
+    "activation_type": "ReLU",
+    "hidden_dim": 64,
+    "adam_beta1": 0.99,
+    "adam_beta2": 0.99,
+    "buffer_size": 2048,
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "num_epochs": 10,
+    "n_slices": 16,
+    "u_adv_scl": true,
+    "clip_eps": 0.2,
+    "runs": 30
+  },
+
+  "specific_parameter_combination": [
+    {
+      "stepsize": 0.0003,
+      "use_ln": true,
+      "use_shifted_ln": true,
+      "weight_decay":  1e-2,
+      "reinit_freq": 1024,
+      "drop_factor": 1e-6,
+      "prune_method": "gr",
+      "grow_method": "init"
+    }
+  ],
+
+  "slurm_parameters": {
+    "job_name": "swr_lant",
+    "time": "10:00:00",
+    "max_runs_per_job": 1,
+    "mem": "4G",
+    "cpus-per-task": 1,
+    "load_modules": [
+      "module load mujoco/3.1.6\n"
+    ]
+  }
+}
