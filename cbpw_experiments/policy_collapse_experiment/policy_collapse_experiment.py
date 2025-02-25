@@ -300,22 +300,23 @@ class PolicyCollapseExperiment(Experiment):
             self.short_term_feature_activity[self.current_step % self.result_store_frequency, layer_idx, :] = new_features[layer_idx].detach().clone()
 
         result_index = self.current_step // self.result_store_frequency
-        if "pol_weights" in self.to_log:
-            self.results_dict["pol_weights"][result_index] += compute_average_weight_magnitude(self.policy_network.mean_net)[0]
-        if "val_weights" in self.to_log:
-            self.results_dict["val_weights"][result_index] += compute_average_weight_magnitude(self.val_function_network.v_net)[0]
-        if "pol_ln_magnitude" in self.to_log:
-            self.results_dict["pol_ln_magnitude"][result_index] += compute_average_weight_magnitude(self.policy_network.mean_net)[1]
-        if "val_ln_magnitude" in self.to_log:
-            self.results_dict["val_ln_magnitude"][result_index] += compute_average_weight_magnitude(self.val_function_network.v_net)[1]
+        pol_weight_magnitude, pol_ln_magnitude = compute_average_weight_magnitude(self.policy_network.mean_net)
+        val_weight_magnitude, val_ln_magnitude = compute_average_weight_magnitude(self.val_function_network.v_net)
 
-        if (self.current_step + 1) % self.result_store_frequency == 0:
+        self.results_dict["pol_weights"][result_index] += pol_weight_magnitude / self.result_store_frequency
+        self.results_dict["val_weights"][result_index] += val_weight_magnitude / self.result_store_frequency
+        if self.use_ln:
+            self.results_dict["pol_ln_magnitude"][result_index] += pol_ln_magnitude / self.result_store_frequency
+            self.results_dict["val_ln_magnitude"][result_index] += val_ln_magnitude / self.result_store_frequency
+
+        if (self.current_step + 1) % self.stable_rank_store_frequency == 0:
             # store stable rank summaries
             if "stable_rank" in self.to_log:
                 _, _, _, current_stable_rank = compute_matrix_rank_summaries(
                     m=self.short_term_feature_activity[:, -1, :], use_scipy=True)
                 self.results_dict["stable_rank"][self.current_step // self.stable_rank_store_frequency] = current_stable_rank
 
+        if (self.current_step + 1) % self.result_store_frequency == 0:
             if "dead_units_prop" in self.to_log:
                 reshaped_feature_activity = self.short_term_feature_activity.reshape(-1, self.num_hidden_layers * self.hidden_dim)
                 dead_units_prop = (reshaped_feature_activity.mean(dim=0) == 0).float().mean()
