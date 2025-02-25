@@ -78,6 +78,7 @@ class PolicyCollapseExperiment(Experiment):
         self.activation_type = access_dict(exp_params, "activation_type", default="ReLU", val_type=str)
         self.hidden_dim = access_dict(exp_params, "hidden_dim", default=16, val_type=int)
         self.use_ln = access_dict(exp_params, "use_ln", default=True, val_type=bool)
+        self.use_shifted_ln = access_dict(exp_params, "use_shifted_ln", default=False, val_type=bool)
 
         """ Initialize Environment """
         # self.env = gym.make(self.env_name, render_mode="human")
@@ -101,12 +102,13 @@ class PolicyCollapseExperiment(Experiment):
             "reinit_frequency": self.redo_reinit_freq,
             "reinit_threshold": self.redo_reinit_threshold,
             "decay_rate": self.decay_rate,
-            "use_ln": self.use_ln
+            "use_ln": self.use_ln,
+            "use_shifted_ln": self.use_shifted_ln
         }
         self.policy_network = MLPPolicy(a_dim=a_dim, **network_arguments)
-        initialize_two_layer_network(self.policy_network.mean_net)
+        initialize_two_layer_network(self.policy_network.mean_net, use_shifted_ln=self.use_shifted_ln)
         self.val_function_network = MLPVF(**network_arguments)
-        initialize_two_layer_network(self.val_function_network.v_net)
+        initialize_two_layer_network(self.val_function_network.v_net, use_shifted_ln=self.use_shifted_ln)
         self.replay_buffer = Buffer(input_dim, a_dim, self.buffer_size, device=self.device)
         self.optimizer = AdamW
 
@@ -119,7 +121,8 @@ class PolicyCollapseExperiment(Experiment):
                                                  prune_method=self.prune_method,
                                                  grow_method=self.grow_method,
                                                  drop_factor=self.drop_factor,
-                                                 activation=self.activation_type.lower())
+                                                 activation=self.activation_type.lower(),
+                                                 shifted_ln=self.use_shifted_ln)
 
         """" Initialize PPO Agent """
         self.learner = PPO(
