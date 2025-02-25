@@ -114,7 +114,7 @@ def compute_average_weight_magnitude(state_dict: dict):
     ln_sum, ln_numel, sa_sum, sa_numel, mlp_sum, mlp_numel, total_sum, total_numel = 0, 0, 0, 0, 0, 0, 0, 0
     sa_weights, mlp_weights = [], []
     for n, p in state_dict.items():
-        if ".cbp." in n: continue
+        if (".cbp." in n) or (".redo." in n): continue
         is_weight = "weight" in n
         is_self_attention = ".self_attention." in n
         is_layer_norm = (".ln." in n) or (".ln_1." in n) or (".ln_2." in n)
@@ -126,10 +126,10 @@ def compute_average_weight_magnitude(state_dict: dict):
         if is_layer_norm and is_weight:         # weight magnitude of layer norm layers
             ln_sum += p.abs().sum().item()
             ln_numel += p.numel()
-            mlp_weights.extend(p.flatten().abs().tolist())
         if is_mlp_block and is_weight:          # weight magnitude of feed-forward layers in mlp block
             mlp_sum += p.abs().mean().item()
             mlp_numel += p.numel()
+            mlp_weights.extend(p.flatten().abs().tolist())
         total_sum += p.abs().sum().item()       # weight magnitude of the entire network
         total_numel += p.numel()
 
