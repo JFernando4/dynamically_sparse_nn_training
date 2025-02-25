@@ -112,6 +112,7 @@ def compute_average_weight_magnitude(state_dict: dict):
     ln_sum, ln_numel, sa_sum, sa_numel, mlp_sum, mlp_numel, total_sum, total_numel = 0, 0, 0, 0, 0, 0, 0, 0
 
     for n, p in state_dict.items():
+        if not p.requires_grad: continue
         is_weight = "weight" in n
         is_self_attention = ".self_attention." in n
         is_layer_norm = (".ln." in n) or (".ln_1." in n) or (".ln_2." in n)
