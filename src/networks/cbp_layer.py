@@ -46,6 +46,7 @@ class CBPLinear(nn.Module):
             maturity_threshold=1000,
             util_type='contribution',
             decay_rate=0,
+            use_shifted_ln: bool = False
     ):
         super().__init__()
         if type(in_layer) is not nn.Linear:
@@ -59,6 +60,7 @@ class CBPLinear(nn.Module):
         self.maturity_threshold = maturity_threshold
         self.util_type = util_type
         self.decay_rate = decay_rate
+        self.use_shifted_ln = use_shifted_ln
         self.features = None
         """
         Register hooks
@@ -155,7 +157,8 @@ class CBPLinear(nn.Module):
                 self.bn_layer.running_var.data[features_to_replace] = 1.0
             if self.ln_layer is not None:
                 self.ln_layer.bias.data[features_to_replace] = 0.0
-                self.ln_layer.weight.data[features_to_replace] = 1.0
+                new_ln_val = 0.0 if self.use_shifted_ln else 1.0
+                self.ln_layer.weight.data[features_to_replace] = new_ln_val
 
     def reinit(self):
         """
