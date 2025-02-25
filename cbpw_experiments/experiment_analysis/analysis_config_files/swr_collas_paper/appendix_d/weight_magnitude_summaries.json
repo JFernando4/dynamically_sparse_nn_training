@@ -19,7 +19,11 @@
             "mlp_weight_magnitude",
             "network_parameter_magnitude",
             "sa_weight_magnitude_median",
-            "mlp_weight_magnitude_median"
+            "mlp_weight_magnitude_median",
+            "last_in_projection_weight_magnitude",
+            "last_in_projection_weight_magnitude_median",
+            "sa_in_proj_weight_magnitude",
+            "sa_in_proj_weight_magnitude_median"
         ],
 
     "compute_weight_magnitude_summaries": false,
