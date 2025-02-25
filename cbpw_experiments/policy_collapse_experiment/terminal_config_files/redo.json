@@ -1,15 +1,16 @@
 {
   "__comment_1__": "Parameters for the environment",
-  "env_name": "Ant-v5",
+  "env_name": "Humanoid-v5",
   "total_env_steps": 20000000,
 
   "__comment_2__": "Network parameters",
   "activation_type": "ReLU",
   "hidden_dim": 64,
   "use_ln": true,
+  "use_shifted_ln": true,
 
   "__comment_3__": "Optimizer parameters",
-  "stepsize": 0.0003,
+  "stepsize": 0.0001,
   "weight_decay": 0.01,
   "adam_beta1": 0.99,
   "adam_beta2": 0.99,
