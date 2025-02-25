@@ -19,7 +19,7 @@ def initialize_weight_dict(net: torch.nn.Module,
 
     if architecture_type == "vit":
         assert isinstance(net, VisionTransformer)
-        shifted_ln = drop_factor if "shifted_ln" not in kwargs.keys() else kwargs["shifted_ln"]
+        shifted_ln = False if "shifted_ln" not in kwargs.keys() else kwargs["shifted_ln"]
         return initialize_weights_dict_vit(net, prune_method, grow_method, drop_factor, shifted_ln=shifted_ln)
 
     elif architecture_type == "resnet":
@@ -34,8 +34,10 @@ def initialize_weight_dict(net: torch.nn.Module,
     elif architecture_type == "ppo_networks":
         assert "val_network" in kwargs.keys()
         activation = "relu" if "activation" not in kwargs.keys() else kwargs["activation"]
+        shifted_ln = False if "shifted_ln" not in kwargs.keys() else kwargs["shifted_ln"]
         return initialize_weights_dict_ppo(policy_net=net, val_network=kwargs["val_network"], prune_method=prune_method,
-                                           grow_method=grow_method, drop_factor=drop_factor, activation=activation)
+                                           grow_method=grow_method, drop_factor=drop_factor, activation=activation,
+                                           shifted_ln=shifted_ln)
     elif architecture_type == "bert":
         return initialize_weights_dict_bert_all(net, prune_method=prune_method, grow_method=grow_method, drop_factor=drop_factor)
     else:
@@ -169,7 +171,8 @@ def initialize_weights_dict_ppo(policy_net: TwoLayerNetwork,
                                 prune_method: str,
                                 grow_method: str,
                                 drop_factor: float,
-                                activation: str) -> dict[str, tuple]:
+                                activation: str,
+                                shifted_ln: bool = False) -> dict[str, tuple]:
     """
     Initializes the weight dictionaries used in SWR for a network
 
@@ -178,7 +181,8 @@ def initialize_weights_dict_ppo(policy_net: TwoLayerNetwork,
     """
     weight_grow_name = {"truncated": "tk_uniform", "zero": "zero", "init": "kaiming_uniform"}[grow_method]
     weight_update_func = setup_cbpw_weight_update_function(prune_method, weight_grow_name, drop_factor=drop_factor, activation=activation)
-    ln_weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="fixed", drop_factor=drop_factor, reinit_val=1.0)
+    ln_reinit_val = 0.0 if shifted_ln else 1.0
+    ln_weight_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="fixed", drop_factor=drop_factor, reinit_val=ln_reinit_val)
     zero_update_func = setup_cbpw_weight_update_function(prune_method, grow_name="zero", drop_factor=drop_factor)
 
     weight_dict = {}
