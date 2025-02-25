@@ -13,11 +13,12 @@ BIN_SIZE = {"test_accuracy_per_epoch": 100, "average_test_accuracy_per_epoch": 1
             "self_attention_weight_magnitude": 1, "mlp_weight_magnitude": 1, "network_parameter_magnitude": 1}
 AGG_FUNC = {"test_accuracy_per_epoch": "max", "average_test_accuracy_per_epoch": "max", "ln_weight_magnitude": "max",
             "self_attention_weight_magnitude": "max", "mlp_weight_magnitude": "max", "network_parameter_magnitude": "max"}
+WEIGHT_SUMMARY_NAMES = ["ln_weight_magnitude", "self_attention_weight_magnitude", "mlp_weight_magnitude",
+                        "network_parameter_magnitude", "sa_weight_magnitude_median", "mlp_weight_magnitude_median"]
 
 
 def get_results_data(results_dir: str, measurement_name: str, parameter_combination: list[str],
                      excluded_indices: dict, max_samples: int = 15):
-
     results = {}
     for pc in parameter_combination:
         pc_excluded_indices = [] if pc not in excluded_indices.keys() else excluded_indices[pc]
@@ -85,12 +86,13 @@ def compute_and_store_weight_magnitude_results(parameter_comb, results_dir):
     store_frequency = 100
     total_number_of_epochs = 2000
 
-    summary_names = ["ln_weight_magnitude", "self_attention_weight_magnitude", "mlp_weight_magnitude", "network_parameter_magnitude"]
+    summary_names = ["ln_weight_magnitude", "self_attention_weight_magnitude", "mlp_weight_magnitude",
+                     "network_parameter_magnitude", "sa_weight_magnitude_median", "mlp_weight_magnitude_median"]
     summary_dirs = [os.path.join(temp_results_dir, wm_dir) for wm_dir in summary_names]
     for d in summary_dirs: os.makedirs(d, exist_ok=True)
 
     for idx in indices:
-        idx_weight_magnitude_lists = [[], [], [], []]
+        idx_weight_magnitude_lists = [[]] * len(summary_names)
 
         for current_epoch in range(0, total_number_of_epochs + store_frequency, store_frequency):
             filename = f"index-{idx}_epoch-{current_epoch}.pt"
@@ -99,18 +101,18 @@ def compute_and_store_weight_magnitude_results(parameter_comb, results_dir):
             except EOFError:
                 print(f"\n{filename = }\nParameter combination = {parameter_comb}"); raise EOFError
 
-            temp_summaries = compute_average_weight_magnitude(temp_state_dict)  # order of output: ln, sa, mlp, all
+            temp_summaries = compute_average_weight_magnitude(temp_state_dict)  # order of output: ln, sa, mlp, all, sa_median, mlp_median
             for i in range(len(temp_summaries)):
                 idx_weight_magnitude_lists[i].append(temp_summaries[i])
 
-        for i in range(len(idx_weight_magnitude_lists)):
+        for i in range(len(summary_names)):
             np.save(os.path.join(summary_dirs[i], f"index-{idx}.npy"), np.array(idx_weight_magnitude_lists[i]))
 
 
 def compute_average_weight_magnitude(state_dict: dict):
 
     ln_sum, ln_numel, sa_sum, sa_numel, mlp_sum, mlp_numel, total_sum, total_numel = 0, 0, 0, 0, 0, 0, 0, 0
-
+    sa_weights, mlp_weights = [], []
     for n, p in state_dict.items():
         if not p.requires_grad: continue
         is_weight = "weight" in n
@@ -120,16 +122,18 @@ def compute_average_weight_magnitude(state_dict: dict):
         if is_self_attention and is_weight:     # weight magnitude of self-attention layers
             sa_sum += p.abs().sum().item()
             sa_numel += p.numel()
+            sa_weights.extend(p.flatten().abs().tolist())
         if is_layer_norm and is_weight:         # weight magnitude of layer norm layers
             ln_sum += p.abs().sum().item()
             ln_numel += p.numel()
+            mlp_weights.extend(p.flatten().abs().tolist())
         if is_mlp_block and is_weight:          # weight magnitude of feed-forward layers in mlp block
             mlp_sum += p.abs().mean().item()
             mlp_numel += p.numel()
         total_sum += p.abs().sum().item()       # weight magnitude of the entire network
         total_numel += p.numel()
 
-    return ln_sum / ln_numel, sa_sum / sa_numel, mlp_sum / mlp_numel, total_sum / total_numel
+    return ln_sum / ln_numel, sa_sum / sa_numel, mlp_sum / mlp_numel, total_sum / total_numel, np.median(sa_weights), np.median(mlp_weights)
 
 
 def print_average_test_accuracy(results_dict: dict):
@@ -164,7 +168,7 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
         elif sn == "test_accuracy_with_baseline":
             results_data = get_results_data_accuracy_diff(results_dir, parameter_combinations, base_lines, excluded_indices, max_samples)
             plot_results(results_data, plot_parameters, plot_dir, sn, save_plots, plot_name_prefix)
-        elif sn in ["ln_weight_magnitude", "self_attention_weight_magnitude", "mlp_weight_magnitude", "network_parameter_magnitude"]:
+        elif sn in WEIGHT_SUMMARY_NAMES:
             if compute_weight_magnitude_summaries:
                 for param_comb in parameter_combinations:
                     compute_and_store_weight_magnitude_results(param_comb, results_dir)
