@@ -94,7 +94,7 @@ def compute_and_store_weight_magnitude_results(parameter_comb, results_dir):
     for d in summary_dirs: os.makedirs(d, exist_ok=True)
 
     for idx in indices:
-        idx_weight_magnitude_lists = [[]] * len(summary_names)
+        idx_weight_magnitude_lists = [[] for _ in range(len(summary_names))]
 
         for current_epoch in range(0, total_number_of_epochs + store_frequency, store_frequency):
             filename = f"index-{idx}_epoch-{current_epoch}.pt"
