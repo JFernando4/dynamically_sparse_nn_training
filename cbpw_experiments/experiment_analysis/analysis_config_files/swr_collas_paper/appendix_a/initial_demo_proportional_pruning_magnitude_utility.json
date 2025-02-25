@@ -1,0 +1,44 @@
+{
+    "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/permuted_mnist_large_network/",
+
+    "parameter_combinations":
+        [
+            "stepsize-0.05",
+            "stepsize-0.05_l2_factor-0.0001",
+            "maturity_threshold-1_replacement_rate-0.0001_cbp_utility-contribution",
+            "topology_update_freq-4800_prune_method-magnitude_grow_method-zero_drop_factor-0.8",
+            "topology_update_freq-4800_prune_method-magnitude_grow_method-kaiming_normal_drop_factor-0.8"
+        ],
+
+    "summary_names":
+        [
+            "train_accuracy_per_checkpoint"
+        ],
+
+    "plot_dir": "./plots/swr_collas_paper/appendix_a",
+
+    "bin_sizes": [200],
+
+    "plot_parameters": {
+        "labels":
+        [
+            "Base System",
+            "L2",
+            "CBP",
+            "SWR-GF-MR",
+            "SWR-GF-SR"
+        ],
+        "color_order":
+        [
+            "black",
+            "pale_violet",
+            "orange",
+            "yellow",
+            "sky_blue"
+        ],
+        "xlim": [-50, 1050],
+        "ylim": [0.83, 0.94]
+    },
+
+    "plot_name_prefix": "proportional_pruning_magnitude_utility"
+}
