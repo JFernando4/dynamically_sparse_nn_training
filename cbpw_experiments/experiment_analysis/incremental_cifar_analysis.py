@@ -11,12 +11,18 @@ from src.utils import aggregate_over_bins, plot_results, parse_plots_and_analysi
 DEBUG = False
 BIN_SIZE = {"test_accuracy_per_epoch": 100, "average_test_accuracy_per_epoch": 100, "ln_weight_magnitude": 1,
             "self_attention_weight_magnitude": 1, "mlp_weight_magnitude": 1, "network_parameter_magnitude": 1,
-            "sa_weight_magnitude_median": 1, "mlp_weight_magnitude_median": 1}
+            "sa_weight_magnitude_median": 1, "mlp_weight_magnitude_median": 1,
+            "last_in_projection_weight_magnitude": 1, "last_in_projection_weight_magnitude_median": 1,
+            "sa_in_proj_weight_magnitude": 1, "sa_in_proj_weight_magnitude_median": 1}
 AGG_FUNC = {"test_accuracy_per_epoch": "max", "average_test_accuracy_per_epoch": "max", "ln_weight_magnitude": "max",
             "self_attention_weight_magnitude": "max", "mlp_weight_magnitude": "max", "network_parameter_magnitude": "max",
-            "sa_weight_magnitude_median": "max", "mlp_weight_magnitude_median": "max"}
+            "sa_weight_magnitude_median": "max", "mlp_weight_magnitude_median": "max",
+            "last_in_projection_weight_magnitude": "max", "last_in_projection_weight_magnitude_median": "max",
+            "sa_in_proj_weight_magnitude": "max", "sa_in_proj_weight_magnitude_median": "max"}
 WEIGHT_SUMMARY_NAMES = ["ln_weight_magnitude", "self_attention_weight_magnitude", "mlp_weight_magnitude",
-                        "network_parameter_magnitude", "sa_weight_magnitude_median", "mlp_weight_magnitude_median"]
+                        "network_parameter_magnitude", "sa_weight_magnitude_median", "mlp_weight_magnitude_median",
+                        "last_in_projection_weight_magnitude", "last_in_projection_weight_magnitude_median",
+                        "sa_in_proj_weight_magnitude", "sa_in_proj_weight_magnitude_median"]
 
 
 def get_results_data(results_dir: str, measurement_name: str, parameter_combination: list[str],
@@ -101,7 +107,8 @@ def compute_and_store_weight_magnitude_results(parameter_comb, results_dir):
             except EOFError:
                 print(f"\n{filename = }\nParameter combination = {parameter_comb}"); raise EOFError
 
-            temp_summaries = compute_average_weight_magnitude(temp_state_dict)  # order of output: ln, sa, mlp, all, sa_median, mlp_median
+            # order of output: ln, sa, mlp, all, sa_median, mlp_median, last_in_proj, last_in_proj_median, sa_in_proj, sa_in_proj_median
+            temp_summaries = compute_average_weight_magnitude(temp_state_dict)
             for i in range(len(temp_summaries)):
                 idx_weight_magnitude_lists[i].append(temp_summaries[i])
 
@@ -111,29 +118,41 @@ def compute_and_store_weight_magnitude_results(parameter_comb, results_dir):
 
 def compute_average_weight_magnitude(state_dict: dict):
 
-    ln_sum, ln_numel, sa_sum, sa_numel, mlp_sum, mlp_numel, total_sum, total_numel = 0, 0, 0, 0, 0, 0, 0, 0
-    sa_weights, mlp_weights = [], []
+    (ln_sum, ln_numel, sa_sum, sa_numel, mlp_sum, mlp_numel, total_sum, total_numel, last_in_proj_sum,
+     last_in_proj_numel, sa_in_proj_sum, sa_in_proj_numel) = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    sa_weights, mlp_weights, last_in_proj_weights, sa_in_proj_weights= [], [], [], []
     for n, p in state_dict.items():
         if (".cbp." in n) or (".redo." in n): continue
         is_weight = "weight" in n
         is_self_attention = ".self_attention." in n
         is_layer_norm = (".ln." in n) or (".ln_1." in n) or (".ln_2." in n)
         is_mlp_block = ".mlp." in n
-        if is_self_attention and is_weight:     # weight magnitude of self-attention layers
-            sa_sum += p.abs().sum().item()
-            sa_numel += p.numel()
+        p_abs_sum, p_numel = p.abs().sum().item(), p.numel()
+        if is_self_attention and is_weight:                     # weight magnitude of self-attention layers
+            sa_sum += p_abs_sum
+            sa_numel += p_numel
             sa_weights.extend(p.flatten().abs().tolist())
-        if is_layer_norm and is_weight:         # weight magnitude of layer norm layers
-            ln_sum += p.abs().sum().item()
-            ln_numel += p.numel()
-        if is_mlp_block and is_weight:          # weight magnitude of feed-forward layers in mlp block
-            mlp_sum += p.abs().mean().item()
-            mlp_numel += p.numel()
+        if is_layer_norm and is_weight:                             # weight magnitude of layer norm layers
+            ln_sum += p_abs_sum
+            ln_numel += p_numel
+        if is_mlp_block and is_weight:                              # weight magnitude of feed-forward layers in mlp block
+            mlp_sum += p_abs_sum
+            mlp_numel += p_numel
             mlp_weights.extend(p.flatten().abs().tolist())
-        total_sum += p.abs().sum().item()       # weight magnitude of the entire network
-        total_numel += p.numel()
+        if "encoder_layer_7.self_attention.in_proj_weight" in n:    # weight of the last sa layer
+            last_in_proj_sum += p_abs_sum
+            last_in_proj_numel += p_numel
+            last_in_proj_weights.extend(p.flatten().abs().tolist())
+        if "self_attention.in_proj_weight" in n:
+            sa_in_proj_sum += p_abs_sum
+            sa_in_proj_numel += p_numel
+            sa_in_proj_weights.extend(p.flatten().abs().tolist())
+        total_sum += p_abs_sum                                      # weight magnitude of the entire network
+        total_numel += p_numel
 
-    return ln_sum / ln_numel, sa_sum / sa_numel, mlp_sum / mlp_numel, total_sum / total_numel, np.median(sa_weights), np.median(mlp_weights)
+    return (ln_sum / ln_numel, sa_sum / sa_numel, mlp_sum / mlp_numel, total_sum / total_numel, np.median(sa_weights),
+            np.median(mlp_weights), last_in_proj_sum / last_in_proj_numel, np.median(last_in_proj_weights),
+            sa_in_proj_sum / sa_in_proj_numel, np.median(sa_in_proj_weights))
 
 
 def print_average_test_accuracy(results_dict: dict):
