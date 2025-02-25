@@ -53,7 +53,7 @@ def plot_results(results_data: dict, plot_parameters: dict, plot_dir: str, measu
     color_order = access_dict(plot_parameters, "color_order", list(COLOR_DICT.keys()), list)
     alpha = access_dict(plot_parameters, "alpha", 0.1, float)
     x_label = access_dict(plot_parameters, "x_label", "Permutation Number", str)
-    y_label = access_dict(plot_parameters, "y_label", measurement_name, str)
+    y_label = measurement_name if "y_label" not in plot_parameters.keys() else plot_parameters["y_label"]
     labels = access_dict(plot_parameters, "labels", list(results_data.keys()), list)
     linestyles = access_dict(plot_parameters, "linestyles", ["-"] * len(results_data), list)
     ylim = access_dict(plot_parameters, "ylim", None)
