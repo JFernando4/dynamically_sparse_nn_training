@@ -17,10 +17,12 @@
             "ln_weight_magnitude",
             "self_attention_weight_magnitude",
             "mlp_weight_magnitude",
-            "network_parameter_magnitude"
+            "network_parameter_magnitude",
+            "sa_weight_magnitude_median",
+            "mlp_weight_magnitude_median"
         ],
 
-    "compute_weight_magnitude_summaries": false,
+    "compute_weight_magnitude_summaries": true,
 
     "excluded_indices":
     {
@@ -34,7 +36,6 @@
 
     "plot_parameters": {
         "x_label": "Number of Classes",
-        "y_label": "Average Magnitude",
         "xlim": [-0.5, 20.5],
         "xticks": [0, 5, 10, 15, 20],
         "labels":
