@@ -60,6 +60,7 @@ def plot_results(results_data: dict, plot_parameters: dict, plot_dir: str, measu
     yticks = access_dict(plot_parameters, "yticks", None)
     xlim = access_dict(plot_parameters, "xlim", None)
     xticks = access_dict(plot_parameters, "xticks", None)
+    log_y_scale = access_dict(plot_parameters, "log_y_scale", False, val_type=bool)
     visible_grid = access_dict(plot_parameters, "visible_grid", default=True, val_type=bool)
 
     for i, (pc, temp_results) in enumerate(results_data.items()):
@@ -85,7 +86,8 @@ def plot_results(results_data: dict, plot_parameters: dict, plot_dir: str, measu
     plt.xlabel(x_label)
     plt.legend()
     plt.grid(visible=visible_grid, axis="y")
-
+    if log_y_scale:
+        plt.yscale("log")
     if ylim is not None:
         plt.ylim(ylim)
     if xlim is not None:
