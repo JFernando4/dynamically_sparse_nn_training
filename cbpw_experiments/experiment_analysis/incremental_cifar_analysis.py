@@ -88,13 +88,11 @@ def compute_and_store_weight_magnitude_results(parameter_comb, results_dir):
     store_frequency = 100
     total_number_of_epochs = 2000
 
-    summary_names = ["ln_weight_magnitude", "self_attention_weight_magnitude", "mlp_weight_magnitude",
-                     "network_parameter_magnitude", "sa_weight_magnitude_median", "mlp_weight_magnitude_median"]
-    summary_dirs = [os.path.join(temp_results_dir, wm_dir) for wm_dir in summary_names]
+    summary_dirs = [os.path.join(temp_results_dir, wm_dir) for wm_dir in WEIGHT_SUMMARY_NAMES]
     for d in summary_dirs: os.makedirs(d, exist_ok=True)
 
     for idx in indices:
-        idx_weight_magnitude_lists = [[] for _ in range(len(summary_names))]
+        idx_weight_magnitude_lists = [[] for _ in range(len(WEIGHT_SUMMARY_NAMES))]
 
         for current_epoch in range(0, total_number_of_epochs + store_frequency, store_frequency):
             filename = f"index-{idx}_epoch-{current_epoch}.pt"
@@ -107,7 +105,7 @@ def compute_and_store_weight_magnitude_results(parameter_comb, results_dir):
             for i in range(len(temp_summaries)):
                 idx_weight_magnitude_lists[i].append(temp_summaries[i])
 
-        for i in range(len(summary_names)):
+        for i in range(len(WEIGHT_SUMMARY_NAMES)):
             np.save(os.path.join(summary_dirs[i], f"index-{idx}.npy"), np.array(idx_weight_magnitude_lists[i]))
 
 
