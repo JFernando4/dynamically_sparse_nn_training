@@ -10,9 +10,11 @@ from src.utils import aggregate_over_bins, plot_results, parse_plots_and_analysi
 
 DEBUG = False
 BIN_SIZE = {"test_accuracy_per_epoch": 100, "average_test_accuracy_per_epoch": 100, "ln_weight_magnitude": 1,
-            "self_attention_weight_magnitude": 1, "mlp_weight_magnitude": 1, "network_parameter_magnitude": 1}
+            "self_attention_weight_magnitude": 1, "mlp_weight_magnitude": 1, "network_parameter_magnitude": 1,
+            "sa_weight_magnitude_median": 1, "mlp_weight_magnitude_median": 1}
 AGG_FUNC = {"test_accuracy_per_epoch": "max", "average_test_accuracy_per_epoch": "max", "ln_weight_magnitude": "max",
-            "self_attention_weight_magnitude": "max", "mlp_weight_magnitude": "max", "network_parameter_magnitude": "max"}
+            "self_attention_weight_magnitude": "max", "mlp_weight_magnitude": "max", "network_parameter_magnitude": "max",
+            "sa_weight_magnitude_median": "max", "mlp_weight_magnitude_median": "max"}
 WEIGHT_SUMMARY_NAMES = ["ln_weight_magnitude", "self_attention_weight_magnitude", "mlp_weight_magnitude",
                         "network_parameter_magnitude", "sa_weight_magnitude_median", "mlp_weight_magnitude_median"]
 

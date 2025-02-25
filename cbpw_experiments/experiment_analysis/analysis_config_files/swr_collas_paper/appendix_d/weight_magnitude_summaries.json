@@ -22,7 +22,7 @@
             "mlp_weight_magnitude_median"
         ],
 
-    "compute_weight_magnitude_summaries": true,
+    "compute_weight_magnitude_summaries": false,
 
     "excluded_indices":
     {
