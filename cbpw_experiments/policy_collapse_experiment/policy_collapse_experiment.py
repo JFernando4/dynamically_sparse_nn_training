@@ -31,7 +31,7 @@ class PolicyCollapseExperiment(Experiment):
         set_random_seed(self.run_index)
 
         """ Experiment Parameters """
-
+        self.extended_results = access_dict(exp_params, "extended_results", default=True, val_type=bool)
         # optimizer parameters
         self.stepsize = exp_params["stepsize"]
         self.weight_decay = exp_params["weight_decay"]
@@ -150,8 +150,10 @@ class PolicyCollapseExperiment(Experiment):
         self.agent = Agent(pol=self.policy_network, learner=self.learner)
 
         """ Initialize summaries """
-        self.to_log = ["dead_units_prop", "pol_weights", "val_weights", "pol_grad_magnitude", "val_grad_magnitude", "stable_rank"]
-        if self.use_ln: self.to_log.extend(["pol_ln_magnitude", "val_ln_magnitude"])
+        self.to_log = []
+        if self.extended_results:
+            self.to_log = ["dead_units_prop", "pol_weights", "val_weights", "pol_grad_magnitude", "val_grad_magnitude", "stable_rank"]
+            if self.use_ln: self.to_log.extend(["pol_ln_magnitude", "val_ln_magnitude"])
         self.result_store_frequency = 1000
         self.stable_rank_store_frequency = self.result_store_frequency * 10
 
@@ -297,7 +299,9 @@ class PolicyCollapseExperiment(Experiment):
         """ Computes the results of the experiment """
 
         if (self.current_step + 1) % self.stable_rank_store_frequency == 0:
-            self._print(f"\tAverage return in the last 100 episode: {np.average(self.return_per_episode[-100:])}")
+            self._print(f"\tAverage return in the last 100 episodes: {np.average(self.return_per_episode[-100:])}")
+
+        if not self.extended_results: return
 
         for layer_idx in range(self.num_hidden_layers):
             self.short_term_feature_activity[self.current_step % self.result_store_frequency, layer_idx, :] = new_features[layer_idx].detach().clone()
@@ -331,8 +335,9 @@ class PolicyCollapseExperiment(Experiment):
         """
         self.results_dict["return_per_episode"] = np.array(self.return_per_episode)
         self.results_dict["termination_steps"] = np.array(self.termination_steps)
-        self.results_dict["dead_units_prop"] = self.results_dict["dead_units_prop"].numpy()
-        self.results_dict["stable_rank"] = self.results_dict["stable_rank"].numpy()
+        if self.extended_results:
+            self.results_dict["dead_units_prop"] = self.results_dict["dead_units_prop"].numpy()
+            self.results_dict["stable_rank"] = self.results_dict["stable_rank"].numpy()
         self._print(f"\nAverage return per episode: {np.average(self.results_dict['return_per_episode']): .4f}\n")
 
 
