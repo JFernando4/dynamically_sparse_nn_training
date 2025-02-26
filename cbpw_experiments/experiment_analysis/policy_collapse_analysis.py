@@ -64,6 +64,18 @@ def compute_average_return_statistics(results_dir: str, parameter_combinations: 
     return x_axis, avg_return_per_episode, confidence_interval_low, confidence_interva_high, num_samples
 
 
+def print_average_return_over_run(results_dict):
+    for k, v in results_dict.items():
+        print(f"Parameter combinations: {k}")
+        average_return_per_run = []
+        for run_array in v:
+            average_return_per_run.append(np.average(run_array))
+        average_return = np.average(average_return_per_run)
+        num_runs = len(average_return_per_run)
+        stde = np.std(average_return_per_run, ddof=1) / np.sqrt(num_runs)
+        print(f"\tAverage return over entire experiment: {average_return:.2f} ± {stde:.2f}\tSample size: {num_runs}")
+
+
 def analyse_results(analysis_parameters: dict, save_plots: bool = True):
 
     results_dir = analysis_parameters["results_dir"]
@@ -84,15 +96,7 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
                                         x_axis=x_axis, num_samples=num_samples, **plot_args)
         elif sn == "average_return_over_run":
             results_data = get_results_data(results_dir, "return_per_episode", parameter_combinations, max_runs)
-            for k, v in results_data.items():
-                print(f"Parameter combinations: {k}")
-                num_runs = 0
-                average_return = 0.0
-                for run_array in v:
-                    num_runs += 1
-                    average_return += np.average(run_array)
-                average_return /= num_runs
-                print(f"\tAverage return over entire experiment: {average_return}\tSample size: {num_runs}")
+            print_average_return_over_run(results_data)
         else:
             print(f"Summary: {sn}")
             results_data = get_results_data(results_dir, sn, parameter_combinations)
