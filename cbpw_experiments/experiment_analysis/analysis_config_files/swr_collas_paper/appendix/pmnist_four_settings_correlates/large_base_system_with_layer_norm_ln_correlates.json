@@ -20,7 +20,6 @@
     "bin_sizes": [1],
 
     "plot_parameters": {
-        "xlim": [-50, 1050],
         "ylim": [-0.05, 1.05],
         "labels":
         [
