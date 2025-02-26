@@ -14,7 +14,8 @@
         [
             "average_weight_magnitude_per_permutation",
             "proportion_dead_units_per_permutation",
-            "average_gradient_magnitude_per_checkpoint"
+            "average_gradient_magnitude_per_checkpoint",
+            "stable_rank_per_permutation"
         ],
 
     "plot_dir": "./plots/swr_collas_paper/appendix/pmnist_four_settings_correlates",
