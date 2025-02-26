@@ -296,6 +296,9 @@ class PolicyCollapseExperiment(Experiment):
     def compute_results(self, new_features):
         """ Computes the results of the experiment """
 
+        if (self.current_step + 1) % self.stable_rank_store_frequency == 0:
+            self._print(f"\tAverage return in the last 100 episode: {np.average(self.return_per_episode[-100:])}")
+
         for layer_idx in range(self.num_hidden_layers):
             self.short_term_feature_activity[self.current_step % self.result_store_frequency, layer_idx, :] = new_features[layer_idx].detach().clone()
 
