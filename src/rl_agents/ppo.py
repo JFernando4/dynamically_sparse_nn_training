@@ -33,7 +33,8 @@ class PPO(object):
                  no_clipping=False,
                  loss_type='ppo',
                  weight_dict: dict = None,
-                 swr_reinit_freq: int = 0
+                 swr_reinit_freq: int = 0,
+                 use_swr_freq_as_rate: bool = False
                  ):
         self.pol = pol
         self.buf = buf
@@ -56,6 +57,7 @@ class PPO(object):
         self.to_perturb = self.perturb_scale != 0
         self.weight_dict = weight_dict
         self.swr_reinit_freq = swr_reinit_freq
+        self.use_swr_freq_as_rate = use_swr_freq_as_rate
         self.use_swr = (self.weight_dict is not None) and (self.swr_reinit_freq != 0)
 
         self.num_parameter_updates = 0
@@ -134,8 +136,15 @@ class PPO(object):
 
                 self.num_parameter_updates += 1
                 if self.use_swr:
-                    if (self.num_parameter_updates % self.swr_reinit_freq) == 0:
-                        update_weights(self.weight_dict)
+                    summaries_dict = None
+                    if self.use_swr_freq_as_rate:
+                        summaries_dict = update_weights(self.weight_dict, 1/self.swr_reinit_freq)
+                    else:
+                        if (self.num_parameter_updates % self.swr_reinit_freq) == 0:
+                            summaries_dict = update_weights(self.weight_dict)
+                    if summaries_dict is not None:
+                        num_pruned = sum([v[1] for v in summaries_dict.values()])
+                        # print(f"\t{num_pruned = }")
 
                 if self.to_perturb:
                     self.perturb(net=self.pol.mean_net)
