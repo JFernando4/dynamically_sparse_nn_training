@@ -1,0 +1,46 @@
+{
+    "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/permuted_mnist/",
+
+    "parameter_combinations":
+        [
+            "stepsize-0.05",
+            "stepsize-0.05_l2_factor-0.0001",
+            "maturity_threshold-5_replacement_rate-0.001_cbp_utility-contribution",
+            "reinit_freq-15_reinit_threshold-0.02_redo_utility-original",
+            "topology_update_freq-1200_prune_method-gr_grow_method-kaiming_normal_drop_factor-0.0001"
+        ],
+
+    "summary_names":
+        [
+            "average_weight_magnitude_per_permutation",
+            "proportion_dead_units_per_permutation",
+            "average_gradient_magnitude_per_checkpoint"
+        ],
+
+    "plot_dir": "./plots/swr_collas_paper/appendix/four_settings_correlates",
+
+    "bin_sizes": [1, 1, 200],
+
+    "plot_parameters": {
+        "labels":
+        [
+            "Base System",
+            "L2",
+            "CBP",
+            "ReDo",
+            "SWR-GR-SR"
+        ],
+        "color_order":
+        [
+            "black",
+            "pale_violet",
+            "orange",
+            "blue_green",
+            "blue"
+        ],
+        "xlim": [-50, 1050],
+        "ylim": [0.70, 0.93]
+    },
+
+    "plot_name_prefix": "small_base_system_correlates"
+}
