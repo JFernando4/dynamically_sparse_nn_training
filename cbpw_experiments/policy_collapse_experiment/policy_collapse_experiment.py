@@ -68,6 +68,7 @@ class PolicyCollapseExperiment(Experiment):
                                         choices=["none", "magnitude", "gf", "gr", "mr"])
         self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str,
                                        choices=["none", "init", "zero", "truncated"])
+        self.use_swr_freq_as_rate = access_dict(exp_params, "use_swr_freq_as_rate", default=False, val_type=bool)
         self.use_swr = (self.prune_method != "none") and (self.grow_method != "none")
 
         # environment parameters
@@ -145,7 +146,8 @@ class PolicyCollapseExperiment(Experiment):
             eps=self.adam_eps,
             no_clipping=self.no_clipping,
             weight_dict=weight_dict,
-            swr_reinit_freq=self.reinit_freq
+            swr_reinit_freq=self.reinit_freq,
+            use_swr_freq_as_rate=self.use_swr_freq_as_rate
         )
         self.agent = Agent(pol=self.policy_network, learner=self.learner)
 
