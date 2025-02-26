@@ -13,7 +13,6 @@
     "summary_names":
         [
             "average_weight_magnitude_per_permutation",
-            "average_ln_weight_magnitude_per_checkpoint",
             "proportion_dead_units_per_permutation",
             "average_gradient_magnitude_per_checkpoint"
         ],
