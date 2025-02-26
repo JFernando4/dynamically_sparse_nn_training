@@ -1,0 +1,31 @@
+{
+    "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/large_humanoid_policy_collapse/",
+
+    "parameter_combinations":
+        [
+            "stepsize-0.0001_weight_decay-0.0_use_ln-False",
+            "stepsize-0.0001_weight_decay-0.01_use_ln-True",
+            "use_shifted_ln-True_stepsize-0.0001_weight_decay-0.01_use_ln-True",
+            "use_shifted_ln-True_weight_decay-0.01_redo_reinit_freq-512_redo_reinit_threshold-0.1_redo_utility-original",
+            "use_shifted_ln-True_weight_decay-0.01_maturity_threshold-100_replacement_rate-0.001_cbp_utility-contribution",
+            "use_shifted_ln-True_weight_decay-0.01_reinit_freq-128_drop_factor-1e-06_prune_method-gr_grow_method-init"
+        ],
+
+    "summary_names":
+        [
+            "average_return"
+        ],
+
+    "plot_dir": "./plots/swr_collas_paper/figure_5",
+    "total_steps": 20000000,
+
+    "plot_parameters": {
+        "x_label": "Training Step",
+        "y_label": "Return per Episode",
+        "labels": ["Base System", "With LN and Reg", "With SLN and Reg", "ReDo", "CBP", "SWR"],
+        "color_order": ["black",  "vermilion", "pale_violet", "blue_green", "orange", "blue"],
+        "ylim": [-100, 4500]
+    },
+
+    "plot_name_prefix": "figure_5_humanoid_with_sln_and_reg"
+}
