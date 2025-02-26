@@ -37,9 +37,7 @@
             "orange",
             "blue_green",
             "blue"
-        ],
-        "xlim": [-50, 1050],
-        "ylim": [0.70, 0.93]
+        ]
     },
 
     "plot_name_prefix": "small_base_system_correlates"
