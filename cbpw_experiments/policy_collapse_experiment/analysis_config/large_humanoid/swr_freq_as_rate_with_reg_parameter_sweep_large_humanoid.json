@@ -1,0 +1,31 @@
+{
+    "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/large_humanoid_policy_collapse/",
+
+    "parameter_combinations":
+        [
+            "use_swr_freq_as_rate-True_weight_decay-0.01_reinit_freq-128_drop_factor-0.0001_prune_method-gr_grow_method-init",
+            "use_swr_freq_as_rate-True_weight_decay-0.01_reinit_freq-128_drop_factor-1e-05_prune_method-gr_grow_method-init",
+            "use_swr_freq_as_rate-True_weight_decay-0.01_reinit_freq-128_drop_factor-1e-06_prune_method-gr_grow_method-init",
+
+            "use_swr_freq_as_rate-True_weight_decay-0.01_reinit_freq-256_drop_factor-0.0001_prune_method-gr_grow_method-init",
+            "use_swr_freq_as_rate-True_weight_decay-0.01_reinit_freq-256_drop_factor-1e-05_prune_method-gr_grow_method-init",
+            "use_swr_freq_as_rate-True_weight_decay-0.01_reinit_freq-256_drop_factor-1e-06_prune_method-gr_grow_method-init",
+
+            "use_swr_freq_as_rate-True_weight_decay-0.01_reinit_freq-512_drop_factor-0.0001_prune_method-gr_grow_method-init",
+            "use_swr_freq_as_rate-True_weight_decay-0.01_reinit_freq-512_drop_factor-1e-05_prune_method-gr_grow_method-init",
+            "use_swr_freq_as_rate-True_weight_decay-0.01_reinit_freq-512_drop_factor-1e-06_prune_method-gr_grow_method-init",
+
+            "use_swr_freq_as_rate-True_weight_decay-0.01_reinit_freq-1024_drop_factor-0.0001_prune_method-gr_grow_method-init",
+            "use_swr_freq_as_rate-True_weight_decay-0.01_reinit_freq-1024_drop_factor-1e-05_prune_method-gr_grow_method-init",
+            "use_swr_freq_as_rate-True_weight_decay-0.01_reinit_freq-1024_drop_factor-1e-06_prune_method-gr_grow_method-init"
+        ],
+
+    "summary_names":
+        [
+            "average_return_over_run"
+        ],
+
+    "total_steps": 20000000,
+    "max_runs": 10
+
+}
