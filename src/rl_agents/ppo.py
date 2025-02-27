@@ -142,9 +142,9 @@ class PPO(object):
                     else:
                         if (self.num_parameter_updates % self.swr_reinit_freq) == 0:
                             summaries_dict = update_weights(self.weight_dict)
-                    if summaries_dict is not None:
-                        num_pruned = sum([v[1] for v in summaries_dict.values()])
-                        # print(f"\t{num_pruned = }")
+                    # if summaries_dict is not None:
+                    #     num_pruned = sum([v[1] for v in summaries_dict.values()])
+                    #     print(f"\t{num_pruned = }")
 
                 if self.to_perturb:
                     self.perturb(net=self.pol.mean_net)
