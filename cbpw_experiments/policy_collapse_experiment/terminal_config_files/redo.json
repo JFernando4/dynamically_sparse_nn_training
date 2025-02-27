@@ -2,12 +2,14 @@
   "__comment_1__": "Parameters for the environment",
   "env_name": "Humanoid-v5",
   "total_env_steps": 20000000,
+  "extended_results": true,
+  "use_checkpoints": false,
 
   "__comment_2__": "Network parameters",
   "activation_type": "ReLU",
   "hidden_dim": 64,
   "use_ln": true,
-  "use_shifted_ln": true,
+  "use_shifted_ln": false,
 
   "__comment_3__": "Optimizer parameters",
   "stepsize": 0.0001,
