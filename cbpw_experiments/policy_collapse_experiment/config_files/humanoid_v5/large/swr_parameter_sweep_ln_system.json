@@ -25,6 +25,8 @@
     "n_slices": 16,
     "u_adv_scl": true,
     "clip_eps": 0.2,
+    "extended_results": false,
+    "use_checkpoints": false,
     "runs": 10
   },
 
@@ -32,8 +34,8 @@
     "stepsize": 1e-4,
     "use_ln": true,
     "weight_decay": ["fixed", 0.0, 0.01],
-    "reinit_freq": ["fixed", 128, 256, 512, 1024],
-    "drop_factor": ["fixed", 1e-4, 1e-5, 1e-6],
+    "reinit_freq": ["fixed", 32, 64, 128, 256, 512, 1024],
+    "drop_factor": ["fixed", 1e-3, 1e-4, 1e-5, 1e-6],
     "prune_method": ["str", "gr"],
     "grow_method": ["str", "init"]
   },
