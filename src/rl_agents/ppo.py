@@ -103,10 +103,10 @@ class PPO(object):
         mini_bs = self.buf.bs // self.n_slices
         iter_num = -1
 
-        old_weights = []
-        for layer in list(self.pol.mean_net.modules()):
-            if type(layer) is torch.nn.modules.linear.Linear:
-                old_weights.append(torch.clone(layer.weight.data))
+        # old_weights = []
+        # for layer in list(self.pol.mean_net.modules()):
+        #     if type(layer) is torch.nn.modules.linear.Linear:
+        #         old_weights.append(torch.clone(layer.weight.data))
 
         for _ in range(self.n_itrs):
             np.random.shuffle(inds)
@@ -157,13 +157,13 @@ class PPO(object):
                     self.perturb(net=self.pol.mean_net)
                     self.perturb(net=self.vf.v_net)
 
-        idx, change = 0, 0
-        for layer in list(self.pol.mean_net.modules()):
-            if type(layer) is torch.nn.modules.linear.Linear:
-                change += (old_weights[idx] - layer.weight.data).abs().sum()
-                idx += 1
-
-        return {'weight_change': change}
+        # idx, change = 0, 0
+        # for layer in list(self.pol.mean_net.modules()):
+        #     if type(layer) is torch.nn.modules.linear.Linear:
+        #         change += (old_weights[idx] - layer.weight.data).abs().sum()
+        #         idx += 1
+        # return {'weight_change': change}
+        return {}
 
     def log_update(self, o, a, r, op, logpb, dist, done):
         self.log(o, a, r, op, logpb, dist, done)
