@@ -115,12 +115,11 @@ class TwoLayerNetwork(nn.Module):
 
     def reset_indicators(self):
         if not self.use_cbp and not self.use_redo: return
-
         self.reinit_layer_1.reset_indicators()
         self.reinit_layer_2.reset_indicators()
 
     def num_replaced(self):
-        if not self.use_redo and not self.use_cbp: return (0, 0, 0)
+        if not self.use_redo and not self.use_cbp: return 0, 0
         nr_1 = 0.0 if not self.reinit_layer_1.replace_feature_event_indicator else self.reinit_layer_1.num_replaced
         nr_2 = 0.0 if not self.reinit_layer_2.replace_feature_event_indicator else self.reinit_layer_2.num_replaced
         return nr_1 * self.weights_per_feature_1, nr_2 * self.weights_per_feature_2
