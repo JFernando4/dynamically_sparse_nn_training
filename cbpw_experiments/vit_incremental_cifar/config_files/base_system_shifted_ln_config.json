@@ -19,7 +19,7 @@
     "class_increase": 5,
     "fixed_classes": false,
     "use_best_network": true,
-    "runs": 16
+    "runs": 20
   },
 
   "learning_params": {
@@ -27,7 +27,7 @@
     "weight_decay": 6e-6,
     "dropout_prob": 0.1,
     "momentum": 0.9,
-    "reset_network": ["fixed", true],
+    "reset_network": ["fixed", false, true],
     "shifted_ln": true
   },
 
