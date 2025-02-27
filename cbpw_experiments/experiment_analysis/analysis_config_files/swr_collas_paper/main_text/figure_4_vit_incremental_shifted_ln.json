@@ -25,11 +25,11 @@
 
     "excluded_indices":
     {
-        "num_epochs-2000_stepsize-0.01_weight_decay-6e-06_shifted_ln-True_reset_network-False": [9],
-        "shifted_ln-True_reinit_frequency-128_reinit_threshold-0.0005": [13]
+        "num_epochs-2000_stepsize-0.01_weight_decay-6e-06_shifted_ln-True_reset_network-False": [],
+        "shifted_ln-True_reinit_frequency-128_reinit_threshold-0.0005": []
     },
 
-    "max_samples": 15,
+    "max_samples": 20,
 
     "plot_dir": "./plots/swr_collas_paper/figure_4",
 
