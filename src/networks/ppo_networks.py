@@ -71,7 +71,7 @@ class TwoLayerNetwork(nn.Module):
             kw_arguments = {"maturity_threshold": maturity_threshold, "replacement_rate": replacement_rate,
                             "util_type": "contribution", "decay_rate": decay_rate, "use_shifted_ln": use_shifted_ln}
             self.reinit_layer_1 = CBPLinear(in_layer=self.ff_1, out_layer=self.ff_2, ln_layer=self.ln_1, **kw_arguments)
-            self.reinit_layer_1 = CBPLinear(in_layer=self.ff_2, out_layer=self.out, ln_layer=self.ln_2, **kw_arguments)     #TODO: this is a big bug
+            self.reinit_layer_2 = CBPLinear(in_layer=self.ff_2, out_layer=self.out, ln_layer=self.ln_2, **kw_arguments)
 
         if self.use_redo:
             assert reinit_frequency > 0 and reinit_threshold > 0.0
