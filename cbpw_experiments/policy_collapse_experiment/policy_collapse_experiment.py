@@ -32,6 +32,7 @@ class PolicyCollapseExperiment(Experiment):
 
         """ Experiment Parameters """
         self.extended_results = access_dict(exp_params, "extended_results", default=True, val_type=bool)
+        self.use_checkpoints = access_dict(exp_params, "use_checkpoints", default=False, val_type=bool)
         # optimizer parameters
         self.stepsize = exp_params["stepsize"]
         self.weight_decay = exp_params["weight_decay"]
@@ -180,7 +181,7 @@ class PolicyCollapseExperiment(Experiment):
         """ For creating experiment checkpoints """
         self.experiment_checkpoints_dir_path = os.path.join(self.results_dir, "experiment_checkpoints")
         self.checkpoint_identifier_name = "current_step"
-        self.checkpoint_save_frequency = 1e6                # save 1 million environment steps
+        self.checkpoint_save_frequency = 1e6 if self.use_checkpoints else np.inf    # save 1 million environment steps
         self.delete_old_checkpoints = True
 
     # ----------------------------- For saving and loading experiment checkpoints ----------------------------- #
