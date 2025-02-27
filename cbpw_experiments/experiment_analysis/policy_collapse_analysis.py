@@ -68,8 +68,10 @@ def print_average_return_over_run(results_dict):
     for k, v in results_dict.items():
         print(f"Parameter combinations: {k}")
         average_return_per_run = []
-        for run_array in v:
+        for i, run_array in enumerate(v):
             average_return_per_run.append(np.average(run_array))
+            if DEBUG:
+                print(f"Index: {i}\tAverage return: {average_return_per_run[-1]:.4f}")
         average_return = np.average(average_return_per_run)
         num_runs = len(average_return_per_run)
         stde = np.std(average_return_per_run, ddof=1) / np.sqrt(num_runs)
