@@ -148,7 +148,8 @@ class PolicyCollapseExperiment(Experiment):
             no_clipping=self.no_clipping,
             weight_dict=weight_dict,
             swr_reinit_freq=self.reinit_freq,
-            use_swr_freq_as_rate=self.use_swr_freq_as_rate
+            use_swr_freq_as_rate=self.use_swr_freq_as_rate,
+            extended_summaries=self.extended_results
         )
         self.agent = Agent(pol=self.policy_network, learner=self.learner)
 
@@ -341,6 +342,9 @@ class PolicyCollapseExperiment(Experiment):
         if self.extended_results:
             self.results_dict["dead_units_prop"] = self.results_dict["dead_units_prop"].numpy()
             self.results_dict["stable_rank"] = self.results_dict["stable_rank"].numpy()
+            if (self.learner.reinit_steps is not None) and (self.learner.num_reinit_per_step is not None):
+                self.results_dict["reinit_steps"] = np.array(self.learner.reinit_steps)
+                self.results_dict["num_reinit_per_step"] = np.array(self.learner.num_reinit_per_step)
         self._print(f"\nAverage return per episode: {np.average(self.results_dict['return_per_episode']): .4f}\n")
 
 

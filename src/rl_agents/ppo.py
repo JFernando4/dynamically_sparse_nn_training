@@ -34,7 +34,8 @@ class PPO(object):
                  loss_type='ppo',
                  weight_dict: dict = None,
                  swr_reinit_freq: int = 0,
-                 use_swr_freq_as_rate: bool = False
+                 use_swr_freq_as_rate: bool = False,
+                 extended_summaries: bool = False
                  ):
         self.pol = pol
         self.buf = buf
@@ -59,6 +60,12 @@ class PPO(object):
         self.swr_reinit_freq = swr_reinit_freq
         self.use_swr_freq_as_rate = use_swr_freq_as_rate
         self.use_swr = (self.weight_dict is not None) and (self.swr_reinit_freq != 0)
+
+        self.use_redo = self.pol.mean_net.use_redo
+        self.extended_summaries = extended_summaries
+        self.reinit_steps, self.num_reinit_per_step = None, None
+        if (self.use_swr or self.use_redo) and self.extended_summaries:
+            self.reinit_steps, self.num_reinit_per_step = [], []
 
         self.num_parameter_updates = 0
 
@@ -142,9 +149,13 @@ class PPO(object):
                     else:
                         if (self.num_parameter_updates % self.swr_reinit_freq) == 0:
                             summaries_dict = update_weights(self.weight_dict)
-                    # if summaries_dict is not None:
-                    #     num_pruned = sum([v[1] for v in summaries_dict.values()])
-                    #     print(f"\t{num_pruned = }")
+                    if (summaries_dict is not None) and self.extended_summaries:
+                        num_pruned = sum([v[1] for v in summaries_dict.values()])
+                        print(f"\t{num_pruned = }")
+                        self.log_num_pruned(num_pruned)
+                if self.use_redo and self.extended_summaries:
+                    if self.pol.mean_net.feature_replace_event_indicator() or self.vf.v_net.feature_replace_event_indicator():
+                        self.log_num_pruned(sum(self.pol.mean_net.num_replaced()) + sum(self.vf.v_net.num_replaced()))
 
                 if self.to_perturb:
                     self.perturb(net=self.pol.mean_net)
@@ -167,3 +178,9 @@ class PPO(object):
             info0.update(info)
             info0['learned'] = True
         return info0
+
+    def log_num_pruned(self, num_pruned):
+        if num_pruned > 0.0:
+            self.reinit_steps.append(self.num_parameter_updates); self.num_reinit_per_step.append(num_pruned)
+        if self.use_redo:
+            self.pol.mean_net.reset_indicators(); self.vf.v_net.reset_indicators()
