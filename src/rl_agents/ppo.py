@@ -24,8 +24,6 @@ class PPO(object):
                  u_adv_scl=1,  # scale return with mean and std
                  clip_eps=0.2,
                  max_grad_norm=int(1e9),  # maximum gradient norm for clip_grad_norm
-                 vgnt=0,
-                 pgnt=0,
                  wd=0,
                  perturb_scale=0,
                  betas=(0.9, 0.999),
@@ -50,8 +48,6 @@ class PPO(object):
         self.u_adv_scl = u_adv_scl
         self.clip_eps = clip_eps
         self.max_grad_norm = max_grad_norm
-        self.vgnt = vgnt
-        self.pgnt = pgnt
         self.perturb_scale = perturb_scale
         self.no_clipping = no_clipping
         self.loss_type = loss_type
