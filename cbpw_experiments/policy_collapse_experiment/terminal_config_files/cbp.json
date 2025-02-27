@@ -2,6 +2,8 @@
   "__comment_1__": "Parameters for the environment",
   "env_name": "Humanoid-v5",
   "total_env_steps": 20000000,
+  "extended_results": false,
+  "use_checkpoints": true,
 
   "__comment_2__": "Network parameters",
   "activation_type": "ReLU",
@@ -25,7 +27,7 @@
   "clip_eps": 0.2,
 
   "__comment_5__": "Continual Backprop parameters",
-  "replacement_rate": 1e-3,
+  "replacement_rate": 1e-2,
   "maturity_threshold": 100,
   "cbp_utility": "contribution",
 
