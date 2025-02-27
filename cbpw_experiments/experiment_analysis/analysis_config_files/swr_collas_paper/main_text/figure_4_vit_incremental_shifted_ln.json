@@ -29,7 +29,7 @@
         "shifted_ln-True_reinit_frequency-128_reinit_threshold-0.0005": []
     },
 
-    "max_samples": 20,
+    "max_samples": 16,
 
     "plot_dir": "./plots/swr_collas_paper/figure_4",
 
