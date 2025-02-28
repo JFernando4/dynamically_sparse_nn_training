@@ -64,7 +64,7 @@ class PolicyCollapseExperiment(Experiment):
         self.use_redo = (self.redo_reinit_threshold > 0.0) and (self.redo_reinit_freq > 0)
         # SWR parameters
         self.reinit_freq = access_dict(exp_params, "reinit_freq", default=0, val_type=int)
-        self.drop_factor = access_dict(exp_params, "drop_factor", default=float, val_type=float)
+        self.drop_factor = access_dict(exp_params, "drop_factor", default=0.0, val_type=float)
         self.prune_method = access_dict(exp_params, "prune_method", default="none", val_type=str,
                                         choices=["none", "magnitude", "gf", "gr", "mr"])
         self.grow_method = access_dict(exp_params, "grow_method", default="none", val_type=str,
