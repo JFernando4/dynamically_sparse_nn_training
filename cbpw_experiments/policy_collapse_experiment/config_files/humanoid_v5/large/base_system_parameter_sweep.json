@@ -23,6 +23,8 @@
     "n_slices": 16,
     "u_adv_scl": true,
     "clip_eps": 0.2,
+    "extended_results": false,
+    "use_checkpoints": false,
     "runs": 30
   },
 
