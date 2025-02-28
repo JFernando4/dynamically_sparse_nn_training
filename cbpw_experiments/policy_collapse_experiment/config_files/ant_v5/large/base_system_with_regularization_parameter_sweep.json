@@ -23,7 +23,9 @@
     "n_slices": 16,
     "u_adv_scl": true,
     "clip_eps": 0.2,
-    "runs": 5
+    "extended_results": false,
+    "use_checkpoints": false,
+    "runs": 30
   },
 
   "learning_params": {
@@ -33,7 +35,7 @@
   },
 
   "slurm_parameters": {
-    "job_name": "lant",
+    "job_name": "reg_ant",
     "time": "10:00:00",
     "max_runs_per_job": 1,
     "mem": "4G",

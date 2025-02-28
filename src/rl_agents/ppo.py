@@ -3,7 +3,7 @@ import torch
 from torch import nn
 
 from src.networks.ppo_networks import MLPPolicy, MLPVF
-from src.cbpw_functions import update_weights
+from src.cbpw_functions import update_weights, compute_utility
 
 class PPO(object):
     """
@@ -137,6 +137,12 @@ class PPO(object):
                     nn.utils.clip_grad_norm_(list(self.pol.parameters()) + list(self.vf.parameters()), self.max_grad_norm)
                 self.opt.step()
 
+                # all_utilities = torch.zeros(0)
+                # for p in list(self.pol.mean_net.parameters()) + list(self.vf.v_net.parameters()):
+                #     if p.requires_grad:
+                #         all_utilities = torch.cat((all_utilities, compute_utility(p, utility_name="gradient")))
+                # print(f"\t{all_utilities.mean() = }")
+
                 self.num_parameter_updates += 1
                 if self.use_swr:
                     summaries_dict = None
@@ -144,6 +150,11 @@ class PPO(object):
                         summaries_dict = update_weights(self.weight_dict, 1/self.swr_reinit_freq)
                     else:
                         if (self.num_parameter_updates % self.swr_reinit_freq) == 0:
+                            self.opt.zero_grad()
+                            pol_output = self.pol.mean_net.forward(os[ind])
+                            vf_output = self.vf.v_net.forward(os[ind])
+                            dummy_loss = pol_output.mean() + vf_output.mean()
+                            dummy_loss.backward()
                             summaries_dict = update_weights(self.weight_dict)
                     if (summaries_dict is not None) and self.extended_summaries:
                         num_pruned = sum([v[1] for v in summaries_dict.values()])
