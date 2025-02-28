@@ -14,5 +14,5 @@
             "average_return_over_run"
         ],
 
-    "max_runs": 10
+    "max_runs": 30
 }
