@@ -23,7 +23,7 @@
     "n_slices": 16,
     "u_adv_scl": true,
     "clip_eps": 0.2,
-    "runs": 15
+    "runs": 30
   },
 
   "learning_params": {
