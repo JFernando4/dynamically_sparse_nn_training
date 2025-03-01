@@ -14,7 +14,7 @@
 
     "compute_weight_magnitude_summaries": false,
 
-    "max_samples": 15,
+    "max_samples": 20,
 
     "plot_dir": "./plots/swr_collas_paper/figure_4",
 
