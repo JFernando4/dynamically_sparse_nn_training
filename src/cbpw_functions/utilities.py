@@ -187,7 +187,7 @@ def initialize_weights_dict_ppo(policy_net: TwoLayerNetwork,
 
     weight_dict = {}
     network_list = [policy_net, val_network]
-    prefix = ["policy_", "value_"]
+    prefix = ["policy.", "value."]
     for i, net in enumerate(network_list):
         for n, p in net.named_parameters():
             is_weight = "weight" in n
