@@ -57,5 +57,5 @@
         ]
     },
 
-    "plot_name_prefix": "figure_4_vit_incremental_shifted_ln"
+    "plot_name_prefix": "figure_4_difference_in_accuracy"
 }
