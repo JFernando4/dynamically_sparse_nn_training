@@ -103,7 +103,7 @@ def handle_missing_measurement(results_dir: str, measurement_name: str, recomput
 
 
 def get_results_data(results_dir: str, measurement_name: str, parameter_combination: list[str], bin_size=1,
-                     convert_to_np_array = True):
+                     convert_to_np_array=True):
 
     results = {}
     for pc in parameter_combination:
@@ -197,7 +197,7 @@ def compute_difference_in_loss_after_reinitialization(results_dir: str, paramete
         average_difference = []
         for i in range(len(loss_before[pc])):
             min_length = min(len(loss_before[pc][i]), len(loss_after[pc][i]))
-            average_difference.append(np.average(loss_after[pc][i][:min_length] - loss_before[pc][i][:min_length]))
+            average_difference.append(np.average(np.abs(loss_after[pc][i][:min_length] - loss_before[pc][i][:min_length])))
         total_average = np.average(average_difference)
         ste_average_difference = np.std(average_difference, ddof=1) / np.sqrt(len(average_difference))
         print(f"\t\tAverage Difference: {total_average:.6f}")
