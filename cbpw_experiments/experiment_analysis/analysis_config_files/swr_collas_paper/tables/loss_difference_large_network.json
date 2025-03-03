@@ -1,0 +1,18 @@
+{
+    "results_dir": "/scratch/jfernan/dynamically_sparse_nn_training/results/permuted_mnist_large_network/",
+
+    "parameter_combinations":
+        [
+            "maturity_threshold-1_replacement_rate-0.0001_cbp_utility-contribution",
+            "reinit_freq-35_reinit_threshold-0.005_redo_utility-original",
+            "topology_update_freq-2400_prune_method-gr_grow_method-kaiming_normal_drop_factor-0.0001",
+            "use_ln-True_maturity_threshold-1_replacement_rate-0.01_cbp_utility-contribution",
+            "use_ln-True_reinit_freq-35_reinit_threshold-0.2_redo_utility-original",
+            "use_ln-True_topology_update_freq-1200_prune_method-gr_grow_method-kaiming_normal_drop_factor-0.0001"
+        ],
+
+    "summary_names":
+        [
+            "difference_in_loss_after_reinitialization"
+        ]
+}
