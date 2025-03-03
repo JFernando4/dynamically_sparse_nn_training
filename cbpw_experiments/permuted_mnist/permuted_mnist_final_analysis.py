@@ -194,16 +194,15 @@ def compute_difference_in_loss_after_reinitialization(results_dir: str, paramete
 
     for pc in parameter_combinations:
         print(f"\t{pc}")
-        difference = []
+        average_difference = []
         for i in range(len(loss_before[pc])):
             min_length = min(len(loss_before[pc][i]), len(loss_after[pc][i]))
-            difference.append(np.average(loss_after[pc][i][:min_length] - loss_before[pc][i][:min_length]))
-        average_difference = np.average(difference, axis=1)
+            average_difference.append(np.average(loss_after[pc][i][:min_length] - loss_before[pc][i][:min_length]))
         total_average = np.average(average_difference)
-        ste_average_difference = np.std(average_difference, ddof=1) / np.sqrt(average_difference.size)
+        ste_average_difference = np.std(average_difference, ddof=1) / np.sqrt(len(average_difference))
         print(f"\t\tAverage Difference: {total_average:.6f}")
         print(f"\t\tStandard Error of Difference: {ste_average_difference:.6f}")
-        print(f"\t\tNumber of Samples: {average_difference.size}")
+        print(f"\t\tNumber of Samples: {len(average_difference)}")
 
 
 def compute_difference_statistics_after_reinitialization(results_dir: str, parameter_combinations: list[str]):
