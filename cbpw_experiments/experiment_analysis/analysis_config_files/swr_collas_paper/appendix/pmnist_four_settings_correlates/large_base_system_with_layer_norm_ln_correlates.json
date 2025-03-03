@@ -20,7 +20,6 @@
     "bin_sizes": [1],
 
     "plot_parameters": {
-        "log_y_scale": true,
         "labels":
         [
             "Base System + LN",
