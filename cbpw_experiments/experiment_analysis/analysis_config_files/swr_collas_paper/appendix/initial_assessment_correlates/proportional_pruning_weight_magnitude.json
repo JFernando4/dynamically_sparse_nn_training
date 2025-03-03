@@ -11,15 +11,12 @@
 
     "summary_names":
         [
-            "average_weight_magnitude_per_permutation",
-            "proportion_dead_units_per_permutation",
-            "average_gradient_magnitude_per_checkpoint",
-            "stable_rank_per_permutation"
+            "average_weight_magnitude_per_permutation"
         ],
 
     "plot_dir": "./plots/swr_collas_paper/appendix/gradient_utility_correlates",
 
-    "bin_sizes": [1, 1, 200, 1],
+    "bin_sizes": [1],
 
     "plot_parameters": {
         "labels":
@@ -36,7 +33,8 @@
             "yellow",
             "sky_blue"
         ],
-        "xlim": [-50, 1050]
+        "xlim": [-50, 1050],
+        "ylim": [0.0, 0.205]
     },
 
     "plot_name_prefix": "proportional_pruning"
