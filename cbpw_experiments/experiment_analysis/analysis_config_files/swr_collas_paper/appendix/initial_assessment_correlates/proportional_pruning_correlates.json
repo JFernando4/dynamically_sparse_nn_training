@@ -19,7 +19,7 @@
 
     "plot_dir": "./plots/swr_collas_paper/appendix/gradient_utility_correlates",
 
-    "bin_sizes": [1, 1, 1, 200],
+    "bin_sizes": [1, 1, 200, 1],
 
     "plot_parameters": {
         "labels":
