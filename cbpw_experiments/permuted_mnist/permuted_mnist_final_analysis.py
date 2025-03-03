@@ -129,6 +129,8 @@ def get_results_data(results_dir: str, measurement_name: str, parameter_combinat
             results[pc].append(get_average_over_bins(temp_measurement_array, bin_size))
             if DEBUG:
                 print(f"\tIndex: {idx}\tAverage Measurement: {np.mean(results[pc][-1]):.5f}")
+        if DEBUG:
+            print(results[pc])
         results[pc] = np.array(results[pc])
 
     return results
