@@ -20,7 +20,7 @@
     "bin_sizes": [1],
 
     "plot_parameters": {
-        "ylim": [-0.05, 1.05],
+        "log_y_scale": true,
         "labels":
         [
             "Base System + LN",
@@ -39,5 +39,5 @@
         ]
     },
 
-    "plot_name_prefix": "base_system_with_layer_norm_correlates"
+    "plot_name_prefix": "large_network_with_layer_norm"
 }
