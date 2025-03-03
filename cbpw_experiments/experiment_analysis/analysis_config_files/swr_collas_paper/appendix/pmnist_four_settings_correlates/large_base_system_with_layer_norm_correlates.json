@@ -20,7 +20,7 @@
 
     "plot_dir": "./plots/swr_collas_paper/appendix/pmnist_four_settings_correlates",
 
-    "bin_sizes": [1, 1, 1, 200],
+    "bin_sizes": [1, 1, 200, 1],
 
     "plot_parameters": {
         "labels":
@@ -41,5 +41,5 @@
         ]
     },
 
-    "plot_name_prefix": "base_system_with_layer_norm_correlates"
+    "plot_name_prefix": "large_network_with_layer_norm"
 }
