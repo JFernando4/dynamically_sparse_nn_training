@@ -189,8 +189,8 @@ def plot_results(results_data: dict, plot_parameters: dict, plot_dir: str, measu
 def compute_difference_in_loss_after_reinitialization(results_dir: str, parameter_combinations: list[str]):
     """ Computes the difference in loss before and after reinitialization """
 
-    loss_before = get_results_data(results_dir, "loss_before_topology_update", parameter_combinations, False)
-    loss_after = get_results_data(results_dir, "loss_after_topology_update", parameter_combinations, False)
+    loss_before = get_results_data(results_dir, "loss_before_topology_update", parameter_combinations, convert_to_np_array=False)
+    loss_after = get_results_data(results_dir, "loss_after_topology_update", parameter_combinations, convert_to_np_array=False)
 
     for pc in parameter_combinations:
         print(f"\t{pc}")
