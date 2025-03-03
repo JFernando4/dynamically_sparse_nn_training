@@ -20,8 +20,22 @@
     "bin_sizes": [200],
 
     "plot_parameters": {
-        "labels": ["Base System", "L2", "ReDo", "SWR-GR-MR", "SWR-GR-SR"],
-        "color_order": ["black", "pale_violet", "blue_green", "vermilion", "blue"],
+        "labels":
+        [
+            "Base System",
+            "L2",
+            "ReDo",
+            "SWR-GR-MR",
+            "SWR-GR-SR"
+        ],
+        "color_order":
+        [
+            "black",
+            "pale_violet",
+            "blue_green",
+            "vermilion",
+            "blue"
+        ],
         "xlim": [-50, 1050],
         "ylim": [0.83, 0.94]
     },
