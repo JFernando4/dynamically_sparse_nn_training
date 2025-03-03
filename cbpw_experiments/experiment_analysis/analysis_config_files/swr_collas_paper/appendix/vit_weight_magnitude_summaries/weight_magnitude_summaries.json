@@ -14,6 +14,7 @@
 
     "summary_names":
         [
+            "ln_weight_magnitude",
             "self_attention_weight_magnitude",
             "mlp_weight_magnitude",
             "network_parameter_magnitude",
@@ -25,20 +26,20 @@
             "sa_in_proj_weight_magnitude_median"
         ],
 
-    "compute_weight_magnitude_summaries": false,
+    "compute_weight_magnitude_summaries": true,
 
     "excluded_indices":
     {
         "num_epochs-2000_stepsize-0.01_weight_decay-6e-06_shifted_ln-True_reset_network-False": [9],
+        "shifted_ln-True_replacement_rate-1e-07_maturity_threshold-10000": [15, 16],
         "shifted_ln-True_reinit_frequency-128_reinit_threshold-0.0005": [13]
     },
 
-    "max_samples": 15,
+    "max_samples": 20,
 
-    "plot_dir": "./plots/swr_collas_paper/appendix_d",
+    "plot_dir": "./plots/swr_collas_paper/appendix/vit_weight_magnitude_summaries",
 
     "plot_parameters": {
-        "log_y_scale": true,
         "x_label": "Number of Classes",
         "xlim": [-0.5, 20.5],
         "xticks": [0, 5, 10, 15, 20],
@@ -64,5 +65,5 @@
         ]
     },
 
-    "plot_name_prefix": "vit_log_scale"
+    "plot_name_prefix": "vit"
 }
