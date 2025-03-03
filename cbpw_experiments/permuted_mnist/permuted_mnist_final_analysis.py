@@ -106,6 +106,8 @@ def get_results_data(results_dir: str, measurement_name: str, parameter_combinat
 
     results = {}
     for pc in parameter_combination:
+        if DEBUG:
+            print(f"Parameter combination {pc}")
         temp_results_dir = os.path.join(results_dir, pc)
         indices = np.load(os.path.join(temp_results_dir, "experiment_indices.npy"))
         measurement_dir = os.path.join(temp_results_dir, measurement_name)
@@ -125,6 +127,8 @@ def get_results_data(results_dir: str, measurement_name: str, parameter_combinat
                     print(f"\n{results_dir = }\n")
                 raise EOFError
             results[pc].append(get_average_over_bins(temp_measurement_array, bin_size))
+            if DEBUG:
+                print(f"\tIndex: {idx}\tAverage Measurement: {np.mean(results[pc][-1]):.5f}")
         results[pc] = np.array(results[pc])
 
     return results
