@@ -211,16 +211,16 @@ def compute_difference_statistics_after_reinitialization(results_dir: str, param
 
     loaded_results = {
         "layer_1": {
-            "average": get_results_data(results_dir, "change_in_average_activation_layer_1", parameter_combinations),
-            "std": get_results_data(results_dir, "change_in_std_activation_layer_1", parameter_combinations)
+            "average": get_results_data(results_dir, "change_in_average_activation_layer_1", parameter_combinations, convert_to_np_array=False),
+            "std": get_results_data(results_dir, "change_in_std_activation_layer_1", parameter_combinations, convert_to_np_array=False)
         },
         "layer_2": {
-            "average": get_results_data(results_dir, "change_in_average_activation_layer_2", parameter_combinations),
-            "std": get_results_data(results_dir, "change_in_std_activation_layer_2", parameter_combinations)
+            "average": get_results_data(results_dir, "change_in_average_activation_layer_2", parameter_combinations, convert_to_np_array=False),
+            "std": get_results_data(results_dir, "change_in_std_activation_layer_2", parameter_combinations, convert_to_np_array=False)
         },
         "layer_3": {
-            "average": get_results_data(results_dir, "change_in_average_activation_layer_3", parameter_combinations),
-            "std": get_results_data(results_dir, "change_in_std_activation_layer_3", parameter_combinations)
+            "average": get_results_data(results_dir, "change_in_average_activation_layer_3", parameter_combinations, convert_to_np_array=False),
+            "std": get_results_data(results_dir, "change_in_std_activation_layer_3", parameter_combinations, convert_to_np_array=False)
         }
     }
 
@@ -230,12 +230,12 @@ def compute_difference_statistics_after_reinitialization(results_dir: str, param
             print(f"\t\tLayer {l + 1}")
             for stat in ["average", "std"]:
                 print(f"\t\t\t{stat}")
-                average_difference = np.average(loaded_results[f"layer_{l + 1}"][stat][pc], axis=1)
-                total_average = np.average(average_difference)
-                ste_average_difference = np.std(average_difference, ddof=1) / np.sqrt(average_difference.size)
+                list_of_averages = [np.average(loaded_results[f"layer_{l + 1}"][stat][pc][i]) for i in range(len(loaded_results[f"layer_{l + 1}"][stat][pc]))]
+                total_average = np.average(list_of_averages)
+                ste_average_difference = np.std(list_of_averages, ddof=1) / np.sqrt(len(list_of_averages))
                 print(f"\t\t\t\tAverage Difference: {total_average:.6f}")
                 print(f"\t\t\t\tStandard Error of Difference: {ste_average_difference:.6f}")
-                print(f"\t\t\t\tNumber of Samples: {average_difference.size}")
+                print(f"\t\t\t\tNumber of Samples: {len(list_of_averages)}")
 
 
 def analyse_results(analysis_parameters: dict, save_plots: bool = True):
