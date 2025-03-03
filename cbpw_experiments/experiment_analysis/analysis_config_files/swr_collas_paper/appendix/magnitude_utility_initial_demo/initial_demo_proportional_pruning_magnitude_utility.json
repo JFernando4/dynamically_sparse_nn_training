@@ -5,7 +5,6 @@
         [
             "stepsize-0.05",
             "stepsize-0.05_l2_factor-0.0001",
-            "maturity_threshold-1_replacement_rate-0.0001_cbp_utility-contribution",
             "topology_update_freq-4800_prune_method-magnitude_grow_method-zero_drop_factor-0.8",
             "topology_update_freq-4800_prune_method-magnitude_grow_method-kaiming_normal_drop_factor-0.8"
         ],
@@ -24,15 +23,13 @@
         [
             "Base System",
             "L2",
-            "CBP",
-            "SWR-GF-MR",
-            "SWR-GF-SR"
+            "SWR-M-MR",
+            "SWR-M-SR"
         ],
         "color_order":
         [
             "black",
             "pale_violet",
-            "orange",
             "yellow",
             "sky_blue"
         ],

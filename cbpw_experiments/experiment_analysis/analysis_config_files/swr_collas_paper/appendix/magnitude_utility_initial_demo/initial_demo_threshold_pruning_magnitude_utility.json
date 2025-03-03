@@ -5,7 +5,6 @@
         [
             "stepsize-0.05",
             "stepsize-0.05_l2_factor-0.0001",
-            "reinit_freq-35_reinit_threshold-0.005_redo_utility-original",
             "topology_update_freq-600_prune_method-mr_grow_method-zero_drop_factor-0.0002",
             "topology_update_freq-8600_prune_method-mr_grow_method-kaiming_normal_drop_factor-0.0005"
         ],
@@ -20,8 +19,8 @@
     "bin_sizes": [200],
 
     "plot_parameters": {
-        "labels": ["Base System", "L2", "ReDo", "SWR-GR-MR", "SWR-GR-SR"],
-        "color_order": ["black", "pale_violet", "blue_green", "vermilion", "blue"],
+        "labels": ["Base System", "L2", "SWR-MR-MR", "SWR-MR-SR"],
+        "color_order": ["black", "pale_violet", "vermilion", "blue"],
         "xlim": [-50, 1050],
         "ylim": [0.83, 0.94]
     },
