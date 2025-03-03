@@ -14,7 +14,7 @@
             "train_accuracy_per_checkpoint"
         ],
 
-    "plot_dir": "./plots/swr_collas_paper/appendix_magnitude_utility_initial_demo",
+    "plot_dir": "./plots/swr_collas_paper/appendix/magnitude_utility_initial_demo",
 
     "bin_sizes": [200],
 
