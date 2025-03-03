@@ -196,9 +196,8 @@ def compute_difference_in_loss_after_reinitialization(results_dir: str, paramete
         print(f"\t{pc}")
         difference = []
         for i in range(len(loss_before[pc])):
-            min_length = min(loss_before[pc][i].shape[1], loss_after[pc][i].shape[1])
-            if DEBUG: print(f"\t{loss_before[pc][i].shape[1] = }, \t{loss_after[pc][i].shape[1] = } ")
-            difference.append(loss_after[pc][i][:, :min_length] - loss_before[pc][i][:, :min_length])
+            min_length = min(len(loss_before[pc][i]), len(loss_after[pc][i]))
+            difference.append(loss_after[pc][i][:min_length] - loss_before[pc][i][:min_length])
         average_difference = np.average(difference, axis=1)
         total_average = np.average(average_difference)
         ste_average_difference = np.std(average_difference, ddof=1) / np.sqrt(average_difference.size)
