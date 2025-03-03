@@ -104,6 +104,6 @@ def initialize_results_dict(
         results_dict["proportion_dead_units_per_permutation"] = torch.zeros(num_permutations, **defaults)
         results_dict["stable_rank_per_permutation"] = torch.zeros(num_permutations, **defaults)
         if use_ln:
-            results_dict["average_ln_weight_magnitude_per_checkpoint"] = torch.zeros(total_ckpts, **defaults)
+            results_dict["average_ln_weight_magnitude_per_checkpoint"] = torch.zeros(num_permutations, **defaults)
 
     return results_dict
