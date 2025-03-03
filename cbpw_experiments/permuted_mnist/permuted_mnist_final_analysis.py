@@ -102,7 +102,8 @@ def handle_missing_measurement(results_dir: str, measurement_name: str, recomput
         raise ValueError(f"{measurement_name} is not a valid measurement type.")
 
 
-def get_results_data(results_dir: str, measurement_name: str, parameter_combination: list[str], bin_size=1):
+def get_results_data(results_dir: str, measurement_name: str, parameter_combination: list[str], bin_size=1,
+                     convert_to_np_array = True):
 
     results = {}
     for pc in parameter_combination:
@@ -129,9 +130,8 @@ def get_results_data(results_dir: str, measurement_name: str, parameter_combinat
             results[pc].append(get_average_over_bins(temp_measurement_array, bin_size))
             if DEBUG:
                 print(f"\tIndex: {idx}\tAverage Measurement: {np.mean(results[pc][-1]):.5f}")
-        if DEBUG:
-            print(results[pc])
-        results[pc] = np.array(results[pc])
+        if convert_to_np_array:
+            results[pc] = np.array(results[pc])
 
     return results
 
@@ -189,14 +189,16 @@ def plot_results(results_data: dict, plot_parameters: dict, plot_dir: str, measu
 def compute_difference_in_loss_after_reinitialization(results_dir: str, parameter_combinations: list[str]):
     """ Computes the difference in loss before and after reinitialization """
 
-    loss_before = get_results_data(results_dir, "loss_before_topology_update", parameter_combinations)
-    loss_after = get_results_data(results_dir, "loss_after_topology_update", parameter_combinations)
+    loss_before = get_results_data(results_dir, "loss_before_topology_update", parameter_combinations, False)
+    loss_after = get_results_data(results_dir, "loss_after_topology_update", parameter_combinations, False)
 
     for pc in parameter_combinations:
         print(f"\t{pc}")
-        min_length = min(loss_before[pc].shape[1], loss_after[pc].shape[1])
-        if DEBUG: print(f"\t{loss_before[pc].shape[1] = }, \t{loss_after[pc].shape[1] = } ")
-        difference = loss_after[pc][:, :min_length] - loss_before[pc][:, :min_length]
+        difference = []
+        for i in range(len(loss_before[pc])):
+            min_length = min(loss_before[pc][i].shape[1], loss_after[pc][i].shape[1])
+            if DEBUG: print(f"\t{loss_before[pc][i].shape[1] = }, \t{loss_after[pc][i].shape[1] = } ")
+            difference.append(loss_after[pc][i][:, :min_length] - loss_before[pc][i][:, :min_length])
         average_difference = np.average(difference, axis=1)
         total_average = np.average(average_difference)
         ste_average_difference = np.std(average_difference, ddof=1) / np.sqrt(average_difference.size)
