@@ -26,7 +26,6 @@
         "y_label": "Best accuracy per task",
         "xlim": [-0.5, 19.5],
         "xticks": [0, 4, 9, 14, 19],
-        "ylim": [0.49, 0.8],
         "labels":
         [
             "Base System",
