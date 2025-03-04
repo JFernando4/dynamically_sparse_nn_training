@@ -28,7 +28,6 @@ WEIGHT_SUMMARY_NAMES = ["ln_weight_magnitude", "self_attention_weight_magnitude"
 def get_results_data(results_dir: str, measurement_name: str, parameter_combination: list[str],
                      excluded_indices: dict, max_samples: int = 15):
     results = {}
-    if DEBUG: print(excluded_indices)
     for pc in parameter_combination:
         pc_excluded_indices = [] if pc not in excluded_indices.keys() else excluded_indices[pc]
         results[pc] = get_parameter_combination_results(pc, results_dir, measurement_name, pc_excluded_indices, max_samples)
@@ -189,7 +188,6 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
             results_data = get_results_data_accuracy_diff(results_dir, parameter_combinations, base_lines, excluded_indices, max_samples)
             plot_results(results_data, plot_parameters, plot_dir, sn, save_plots, plot_name_prefix)
         elif sn in WEIGHT_SUMMARY_NAMES:
-            print(excluded_indices)
             if compute_weight_magnitude_summaries:
                 for param_comb in parameter_combinations:
                     compute_and_store_weight_magnitude_results(param_comb, results_dir)
