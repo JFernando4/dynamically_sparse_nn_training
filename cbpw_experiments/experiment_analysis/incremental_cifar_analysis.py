@@ -28,9 +28,9 @@ WEIGHT_SUMMARY_NAMES = ["ln_weight_magnitude", "self_attention_weight_magnitude"
 def get_results_data(results_dir: str, measurement_name: str, parameter_combination: list[str],
                      excluded_indices: dict, max_samples: int = 15):
     results = {}
+    if DEBUG: print(excluded_indices)
     for pc in parameter_combination:
         pc_excluded_indices = [] if pc not in excluded_indices.keys() else excluded_indices[pc]
-        if DEBUG: print(excluded_indices)
         results[pc] = get_parameter_combination_results(pc, results_dir, measurement_name, pc_excluded_indices, max_samples)
 
     return results
