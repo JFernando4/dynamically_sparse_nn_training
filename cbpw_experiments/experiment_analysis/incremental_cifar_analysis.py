@@ -42,7 +42,8 @@ def get_results_data_accuracy_diff(results_dir: str, parameter_combination: list
     for pc in parameter_combination:
         pc_excluded_indices = [] if pc not in excluded_indices.keys() else excluded_indices[pc]
         pc_results = get_parameter_combination_results(pc, results_dir, "test_accuracy_per_epoch", pc_excluded_indices, max_samples)
-        baseline_results = get_parameter_combination_results(base_lines[pc], results_dir, "test_accuracy_per_epoch", pc_excluded_indices, max_samples)
+        baseline_max_samples = pc_results.shape[0]
+        baseline_results = get_parameter_combination_results(base_lines[pc], results_dir, "test_accuracy_per_epoch", pc_excluded_indices, baseline_max_samples)
         results[pc] = pc_results - baseline_results
 
     return results
