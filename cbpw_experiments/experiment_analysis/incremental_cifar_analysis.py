@@ -30,6 +30,7 @@ def get_results_data(results_dir: str, measurement_name: str, parameter_combinat
     results = {}
     for pc in parameter_combination:
         pc_excluded_indices = [] if pc not in excluded_indices.keys() else excluded_indices[pc]
+        if DEBUG: print(excluded_indices)
         results[pc] = get_parameter_combination_results(pc, results_dir, measurement_name, pc_excluded_indices, max_samples)
 
     return results
@@ -190,9 +191,9 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
         elif sn in WEIGHT_SUMMARY_NAMES:
             if compute_weight_magnitude_summaries:
                 for param_comb in parameter_combinations:
-                    compute_and_store_weight_magnitude_results(param_comb, results_dir, excluded_indices, max_samples)
+                    compute_and_store_weight_magnitude_results(param_comb, results_dir)
                 compute_weight_magnitude_summaries = False
-            results_data = get_results_data(results_dir, sn, parameter_combinations, excluded_indices, max_samples)
+            results_data = get_results_data(results_dir, sn, parameter_combinations, excluded_indices=excluded_indices, max_samples=max_samples)
             plot_results(results_data, plot_parameters, plot_dir, sn, save_plots, plot_name_prefix)
 
 
