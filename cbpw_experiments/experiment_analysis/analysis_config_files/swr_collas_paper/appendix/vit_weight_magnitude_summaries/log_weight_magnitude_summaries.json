@@ -31,7 +31,7 @@
     {
         "num_epochs-2000_stepsize-0.01_weight_decay-6e-06_shifted_ln-True_reset_network-False": [9],
         "shifted_ln-True_replacement_rate-1e-07_maturity_threshold-10000": [15, 16],
-        "shifted_ln-True_reinit_frequency-128_reinit_threshold-0.0005": [13]
+        "shifted_ln-True_reinit_frequency-128_reinit_threshold-0.0005": [13, 19, 16]
     },
 
     "max_samples": 20,

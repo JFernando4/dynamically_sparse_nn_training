@@ -190,7 +190,7 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
         elif sn in WEIGHT_SUMMARY_NAMES:
             if compute_weight_magnitude_summaries:
                 for param_comb in parameter_combinations:
-                    compute_and_store_weight_magnitude_results(param_comb, results_dir)
+                    compute_and_store_weight_magnitude_results(param_comb, results_dir, excluded_indices, max_samples)
                 compute_weight_magnitude_summaries = False
             results_data = get_results_data(results_dir, sn, parameter_combinations, excluded_indices, max_samples)
             plot_results(results_data, plot_parameters, plot_dir, sn, save_plots, plot_name_prefix)
