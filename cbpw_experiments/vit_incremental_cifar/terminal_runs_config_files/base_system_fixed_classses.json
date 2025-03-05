@@ -4,6 +4,7 @@
   "weight_decay": 2e-6,
   "dropout_prob": 0.1,
   "use_lr_schedule": true,
+  "rescaled_wd": true,
   "__comment_2__": "Parameter value used in the original vit paper section B.1.1.",
   "momentum": 0.9,
   "__comment_3__": "Incremental experiment parameters. Classes increase by 5 every 100 epochs.",
