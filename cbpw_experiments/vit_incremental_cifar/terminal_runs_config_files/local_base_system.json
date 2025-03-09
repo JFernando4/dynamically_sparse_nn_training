@@ -20,6 +20,7 @@
     "num_epochs": 100,
     "initial_num_classes": 100,
     "fixed_classes": true,
+    "gpu_index": 0,
     "runs": 5
   },
 

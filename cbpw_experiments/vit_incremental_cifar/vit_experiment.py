@@ -34,6 +34,7 @@ class IncrementalCIFARExperiment(Experiment):
         # set debugging options for pytorch
         turn_off_debugging_processes(access_dict(exp_params, key="debug", default=True, val_type=bool))
         # define torch device
+        gpu_index = access_dict(exp_params, "gpu_index", default=gpu_index, val_type=int)
         self.device = torch.device(f"cuda:{gpu_index}" if torch.cuda.is_available() else "cpu")
 
         """ For reproducibility """
