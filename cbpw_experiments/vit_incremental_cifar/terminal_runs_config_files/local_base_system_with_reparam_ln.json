@@ -1,6 +1,6 @@
 {
   "file_management": {
-    "experiment_name": "regular_ln_vit_cifar",
+    "experiment_name": "reparam_ln_vit_cifar",
     "data_path": "./cbpw_experiments/vit_incremental_cifar/data/",
     "results_path": "./cbpw_experiments/vit_incremental_cifar/results/",
     "relevant_parameters":
