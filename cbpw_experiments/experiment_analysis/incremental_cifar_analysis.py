@@ -183,7 +183,7 @@ def analyse_results(analysis_parameters: dict, save_plots: bool = True):
             results_data = get_results_data(results_dir, sn, parameter_combinations, excluded_indices, max_samples)
             plot_results(results_data, plot_parameters, plot_dir, sn, save_plots, plot_name_prefix)
         elif sn == "average_test_accuracy_per_epoch":
-            results_data = get_results_data(results_dir, "test_accuracy_per_epoch", parameter_combinations, max_samples)
+            results_data = get_results_data(results_dir, "test_accuracy_per_epoch", parameter_combinations, excluded_indices, max_samples)
             print_average_test_accuracy(results_data)
         elif sn == "test_accuracy_with_baseline":
             results_data = get_results_data_accuracy_diff(results_dir, parameter_combinations, base_lines, excluded_indices, max_samples)
