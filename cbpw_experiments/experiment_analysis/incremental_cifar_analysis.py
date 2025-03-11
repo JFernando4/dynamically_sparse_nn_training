@@ -160,7 +160,7 @@ def print_average_test_accuracy(results_dict: dict):
 
     for i, (pc, temp_results) in enumerate(results_dict.items()):
         average = np.mean(temp_results)
-        print(f"Parameter combination: {pc}\n\tAverage test accuracy = {average}")
+        print(f"Parameter combination: {pc}\n\tAverage test accuracy = {average:.4f}")
 
 
 def analyse_results(analysis_parameters: dict, save_plots: bool = True):
