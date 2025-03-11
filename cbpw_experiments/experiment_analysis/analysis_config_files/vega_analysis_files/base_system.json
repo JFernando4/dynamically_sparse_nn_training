@@ -1,0 +1,28 @@
+{
+    "results_dir": "./cbpw_experiments/vit_incremental_cifar/results/regular_ln_vit_cifar/",
+
+    "parameter_combinations":
+        [
+            "num_epochs-100_stepsize-0.01_weight_decay-0.01",
+            "num_epochs-100_stepsize-0.01_weight_decay-0.005",
+            "num_epochs-100_stepsize-0.01_weight_decay-0.001",
+            "num_epochs-100_stepsize-0.01_weight_decay-0.0009",
+            "num_epochs-100_stepsize-0.01_weight_decay-0.0008",
+            "num_epochs-100_stepsize-0.01_weight_decay-0.0007",
+            "num_epochs-100_stepsize-0.01_weight_decay-0.0006",
+            "num_epochs-100_stepsize-0.01_weight_decay-0.0005",
+            "num_epochs-100_stepsize-0.01_weight_decay-0.0004",
+            "num_epochs-100_stepsize-0.01_weight_decay-0.0003",
+            "num_epochs-100_stepsize-0.01_weight_decay-0.0002",
+            "num_epochs-100_stepsize-0.01_weight_decay-0.0001",
+            "num_epochs-100_stepsize-0.01_weight_decay-1e-05",
+            "num_epochs-100_stepsize-0.01_weight_decay-2e-06"
+        ],
+
+    "summary_names":
+        [
+            "average_test_accuracy_per_epoch"
+        ],
+
+    "max_samples": 5
+}
