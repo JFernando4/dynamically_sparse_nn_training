@@ -1,0 +1,23 @@
+{
+    "results_dir": "./cbpw_experiments/vit_incremental_cifar/results/reparam_ln_vit_cifar/",
+
+    "parameter_combinations":
+        [
+            "num_epochs-100_stepsize-0.01_weight_decay-0.01_rescaled_wd-True_shifted_ln-True",
+            "num_epochs-100_stepsize-0.01_weight_decay-0.005_rescaled_wd-True_shifted_ln-True",
+            "num_epochs-100_stepsize-0.01_weight_decay-0.003_rescaled_wd-True_shifted_ln-True",
+            "num_epochs-100_stepsize-0.01_weight_decay-0.002_rescaled_wd-True_shifted_ln-True",
+            "num_epochs-100_stepsize-0.01_weight_decay-0.001_rescaled_wd-True_shifted_ln-True",
+            "num_epochs-100_stepsize-0.01_weight_decay-0.0009_rescaled_wd-True_shifted_ln-True",
+            "num_epochs-100_stepsize-0.01_weight_decay-0.0008_rescaled_wd-True_shifted_ln-True",
+            "num_epochs-100_stepsize-0.01_weight_decay-0.0005_rescaled_wd-True_shifted_ln-True",
+            "num_epochs-100_stepsize-0.01_weight_decay-0.0001_rescaled_wd-True_shifted_ln-True"
+        ],
+
+    "summary_names":
+        [
+            "average_test_accuracy_per_epoch"
+        ],
+
+    "max_samples": 5
+}
